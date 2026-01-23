@@ -1,0 +1,43 @@
+<section class="event-section">
+  <div class="event-background"></div>
+  <div class="event-overlay"></div>
+
+  <div class="container">
+    <div class="event-content">
+      <!-- Badge -->
+      <span class="event-badge">Evento Especial</span>
+
+      <!-- Título -->
+      <h2 class="event-title">Reverência a Cristo</h2>
+
+      <!-- Descrição -->
+      <p class="event-description">
+        Um momento único de conexão com Deus através da oração e adoração.
+        Venha fazer parte desta experiência transformadora.
+      </p>
+
+      <!-- Highlights -->
+      <div class="event-highlights">
+        <div class="highlight-item" *ngFor="let item of highlights">
+          <i class="pi" [ngClass]="item.icon"></i>
+          <div class="highlight-value">
+            <span class="value">{{ item.value }}</span>
+            <span class="unit">{{ item.unit }}</span>
+          </div>
+          <span class="highlight-label">{{ item.label }}</span>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="event-actions">
+        <a href="#" class="btn-event-primary">
+          <i class="pi pi-calendar-plus"></i>
+          Quero Participar
+        </a>
+        <a href="#" class="btn-event-secondary">
+          Saiba Mais
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

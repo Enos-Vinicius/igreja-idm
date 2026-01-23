@@ -1,0 +1,171 @@
+// Container principal - 100% largura e 80% altura
+.hero-container {
+  height: 80vh; // 80% da altura da viewport
+  overflow: hidden; // Garante que tudo que sair dos limites fique escondido
+}
+
+// Imagem de fundo
+.hero-bg-image {
+  object-fit: cover;
+}
+
+// Gradiente preto - de cima pra baixo (mais forte em cima, suavizando)
+.hero-gradient-dark {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+// Gradiente branco - de baixo pra cima (300px de altura)
+.hero-gradient-white {
+  height: 300px;
+  background: linear-gradient(0deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+// Cloud 1 - 100% width, posicionado no bottom -250px com animação
+.cloud-1 {
+  bottom: -250px;
+  animation: cloud-idle 60s ease-in-out infinite alternate;
+  animation-delay: -15s;
+}
+
+// Cloud 2 - max-width 520px com animação (topo esquerdo)
+.cloud-2 {
+  max-width: 520px;
+  top: -124px;
+  left: -60px;
+  animation: cloud-idle 60s ease-in-out infinite alternate;
+  animation-delay: -5s;
+}
+
+// Container wrapper - altura igual ao hero-container e centralizado
+.hero-container-wrapper {
+  height: 80vh;
+  transform: translateX(-50%);
+  // Sem overflow hidden - permite que as nuvens vazem para fora do wrapper
+}
+
+// Cloud 3 - topo direito com animação
+.cloud-3 {
+  top: -300px;
+  right: -396px;
+  width: 100%;
+  max-width: 760px;
+  height: auto;
+  animation: cloud-idle 60s ease-in-out infinite alternate;
+  animation-delay: -25s;
+}
+
+// Cloud 4 - 100% width, bottom -270px com animação
+.cloud-4 {
+  bottom: -270px;
+  animation: cloud-idle 60s ease-in-out infinite alternate;
+  animation-delay: 0s;
+}
+
+// Animação cloud-idle inspirada no Genesis - movimento suave horizontal e vertical
+@keyframes cloud-idle {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(30px, -5px, 0);
+  }
+  50% {
+    transform: translate3d(65px, -10px, 0);
+  }
+  75% {
+    transform: translate3d(30px, -5px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+// Cloud 5 - propriedades comuns
+.cloud-5 {
+  min-width: 520px;
+  width: 1512px;
+  height: auto;
+  margin-top: 50px;
+}
+
+// Cloud 5 variações de posição e animação (delays negativos para iniciar em pontos diferentes)
+.cloud-5-1 {
+  left: -700px;
+  animation: cloud-idle 60s ease-in-out infinite alternate;
+  animation-delay: -30s;
+}
+
+.cloud-5-2 {
+  left: -400px;
+  animation: cloud-idle 60s ease-in-out infinite alternate;
+  animation-delay: -20s;
+}
+
+.cloud-5-3 {
+  left: 160px;
+  animation: cloud-idle 60s ease-in-out infinite alternate;
+  animation-delay: -10s;
+}
+
+// Texto principal do hero
+.hero-text {
+  top: 30%;
+  left: 0;
+  right: 0;
+  padding: 0 2rem;
+}
+
+.hero-title {
+  font-size: clamp(3rem, 12vw, 18rem);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  margin: 0;
+  font-family: InterDisplay, sans-serif;
+  background: linear-gradient(180deg, #FFF -16.99%, rgba(255, 255, 255, 0) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
+
+// Z-index para as nuvens e texto
+.z-1 {
+  z-index: 1;
+}
+
+.z-2 {
+  z-index: 2;
+}
+
+.z-3 {
+  z-index: 3;
+}
+
+.z-4 {
+  z-index: 4;
+}
+
+.z-5 {
+  z-index: 5;
+}
+
+.z-6 {
+  z-index: 6;
+}
+
+.z-7 {
+  z-index: 7;
+}
+
+.z-8 {
+  z-index: 8;
+}
+
+.z-9 {
+  z-index: 9;
+}
+
+.z-10 {
+  z-index: 10;
+}

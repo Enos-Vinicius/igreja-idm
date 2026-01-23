@@ -1,0 +1,384 @@
+// Classes utilitárias customizadas específicas do Genesis
+.h-208 {
+  height: 70vh; // 70% da altura da tela no mobile
+}
+
+.h-88 {
+  height: calc(var(--spacing) * 88); // 308px com spacing 3.5px
+}
+
+.h-auto {
+  height: auto;
+}
+
+.object-cover {
+    object-fit: cover;
+}
+
+.inset-0 {
+    inset: calc(var(--spacing) * 0);
+}
+
+// Gradientes customizados do Genesis
+.bg-gradient-dark {
+  background: linear-gradient(180deg, #00000080 49.65%, #0000) !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+.bg-gradient-white {
+  background: linear-gradient(180deg, rgba(255,255,255,0.00) 0%, #FFF 62.59%, #FFF 100%) !important;
+}
+
+.bg-gradient-subtitle {
+  background: linear-gradient(180deg, rgba(255,255,255,0.80) 4.92%, rgba(255,255,255,0.40) 89.39%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-gradient-title {
+  background: linear-gradient(180deg, #FFF -16.99%, rgba(255,255,255,0.00) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// ============================================
+// Animações customizadas do Genesis
+// ============================================
+
+// Cloud idle animation - movimento suave de nuvens (horizontal e vertical)
+@keyframes cloud-idle {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(30px, -5px, 0);
+  }
+  50% {
+    transform: translate3d(65px, -10px, 0);
+  }
+  75% {
+    transform: translate3d(30px, -5px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-cloud-idle {
+  animation: cloud-idle 60s ease-in-out infinite alternate;
+}
+
+// Slide fade in - entrada suave
+@keyframes slidefadein {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slidefadein {
+  animation: slidefadein 0.5s ease;
+}
+
+// Slide fade in right
+@keyframes slidefadeinright {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slidefadeinright {
+  animation: slidefadeinright 0.5s ease;
+}
+
+// Slide fade in left
+@keyframes slidefadeinleft {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slidefadeinleft {
+  animation: slidefadeinleft 0.5s ease;
+}
+
+// Zoom fade in
+@keyframes zoomfadein {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-zoomfadein {
+  animation: zoomfadein 0.5s ease-in-out;
+}
+
+// Animation duration utilities
+.animate-duration-500 {
+  animation-duration: 0.5s;
+}
+
+.animate-duration-1000 {
+  animation-duration: 1s;
+}
+
+// Animation delays (negativos para começar já em movimento)
+.animation-delay-n30 {
+  animation-delay: -30s;
+}
+
+.animation-delay-n25 {
+  animation-delay: -25s;
+}
+
+.animation-delay-n20 {
+  animation-delay: -20s;
+}
+
+.animation-delay-n15 {
+  animation-delay: -15s;
+}
+
+.animation-delay-n10 {
+  animation-delay: -10s;
+}
+
+.animation-delay-n5 {
+  animation-delay: -5s;
+}
+
+.animation-delay-0 {
+  animation-delay: 0s;
+}
+
+// Z-index utilities específicos
+.z-1 { z-index: 1; }
+.z-2 { z-index: 2; }
+.z-3 { z-index: 3; }
+.z-4 { z-index: 4; }
+.z-5 { z-index: 5; }
+.z-6 { z-index: 6; }
+.z-7 { z-index: 7; }
+.z-8 { z-index: 8; }
+.z-9 { z-index: 9; }
+.z-10 { z-index: 10; }
+
+// ============================================
+// Classes Tailwind necessárias
+// ============================================
+
+// Larguras customizadas - Mobile First
+.w-392 { width: 200px; }
+.w-520 { width: 250px; }
+.w-600 { width: 280px; }
+.w-760 { width: 350px; }
+.w-1272 { width: 500px; }
+.w-1512 { width: 600px; }
+.min-w-520 { min-width: auto; }
+.min-w-600 { min-width: auto; }
+
+// Classe especial para nuvem central (muito maior)
+.cloud-central {
+  min-width: 150vw !important;
+  width: 150vw !important;
+}
+
+// Posicionamento específico da nuvem central
+.cloud-central-position {
+  left: -35% !important;
+  top: 40% !important;
+}
+
+// Posicionamentos - Mobile First (ajustados para telas pequenas)
+.neg-top-24 { top: calc(var(--spacing) * -12); }
+.neg-left-60 { left: calc(var(--spacing) * -30); }
+.neg-left-20 { left: calc(var(--spacing) * -10); }
+.neg-left-782 { left: -300px; }
+.neg-right-96 { right: calc(var(--spacing) * -48); }
+.bottom-80 { bottom: calc(var(--spacing) * 40); }
+.bottom-40 { bottom: calc(var(--spacing) * 20); }
+.bottom-24 { bottom: calc(var(--spacing) * 12); }
+.top-64 { top: 50%; transform: translateY(-50%); } // Centralizado verticalmente no mobile
+.left-0 { left: 0; }
+.left-80 { left: 40px; }
+.left-160 { left: 80px; }
+.neg-left-200 { left: -100px; }
+.top-460 { top: 230px; }
+.top-480 { top: 240px; }
+
+// Transformações
+.translate-x-n50 { transform: translateX(-50%); }
+.translate-y-n50 { transform: translateY(-50%); }
+.left-50 { left: 50%; }
+.top-50 { top: 50%; }
+.rotate-10 { transform: rotate(10deg); }
+
+// Transformação combinada para centralização
+.center-both {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// Tamanhos de texto - Mobile First
+.text-3xl { font-size: 1.25rem; line-height: 1.5rem; }
+.text-5xl { font-size: 2rem; line-height: 1; }
+.text-8xl { font-size: 3rem; line-height: 1; }
+.text-17rem { font-size: 6rem; line-height: 1; }
+
+// Tamanho específico para o título principal no mobile (ajusta ao width)
+.hero-title-mobile {
+  font-size: 9rem; // Tamanho fixo no mobile (126px)
+  width: 100%;
+  max-width: 100%;
+}
+
+// Classe title
+.title {
+  font-weight: 700;
+  font-family: var(--font-family);
+}
+
+// Line height
+.leading-none { line-height: 1; }
+
+// Margem negativa
+.neg-mt-14 { margin-top: calc(var(--spacing) * -14); }
+
+// Flexbox
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+
+// Visibilidade mobile/desktop
+.hide-on-mobile {
+  display: none;
+}
+
+.show-on-mobile {
+  display: block;
+}
+
+// Opacidade para mobile (deixar nuvens mais transparentes)
+.cloud-mobile-opacity {
+  opacity: 0.6;
+}
+
+// Responsividade - lg (1024px)
+@media (min-width: 1024px) {
+  // Altura original no desktop
+  .h-208 {
+    height: calc(var(--spacing) * 208); // 728px com spacing 3.5px
+  }
+
+  // Tamanhos de texto - Desktop
+  .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .text-5xl { font-size: 3rem; line-height: 1; }
+  .text-8xl { font-size: 6rem; line-height: 1; }
+  .text-17rem { font-size: 17rem; }
+
+  .lg-text-5xl { font-size: 3rem; line-height: 1; }
+  .lg-text-12rem { font-size: 12rem; }
+  .lg-neg-mt-14 { margin-top: calc(var(--spacing) * -14); }
+
+  // Bordas
+  .lg-rounded-t-4xl { border-top-left-radius: 2rem; border-top-right-radius: 2rem; }
+
+  // Posicionamentos - Desktop
+  .neg-top-24 { top: calc(var(--spacing) * -24); }
+  .neg-left-60 { left: calc(var(--spacing) * -60); }
+  .neg-left-20 { left: calc(var(--spacing) * -20); }
+  .neg-left-782 { left: -957px; }
+  .neg-right-96 { right: calc(var(--spacing) * -96); }
+  .bottom-80 { bottom: calc(var(--spacing) * 80); }
+  .bottom-40 { bottom: calc(var(--spacing) * 40); }
+  .bottom-24 { bottom: calc(var(--spacing) * 24); }
+  .top-64 { top: calc(var(--spacing) * 64); transform: none; } // Restaura valor original no desktop
+  .left-80 { left: 80px; }
+  .left-160 { left: 160px; }
+  .neg-left-200 { left: -200px; }
+  .top-460 { top: 460px; }
+  .top-480 { top: 480px; }
+
+  .lg-neg-bottom-52 { bottom: calc(var(--spacing) * -70); }
+  .lg-bottom-24 { bottom: calc(var(--spacing) * 24); }
+  .lg-left-20 { left: calc(var(--spacing) * 20); }
+  .lg-left-160 { left: 160px; }
+  .lg-top-24 { top: calc(var(--spacing) * 24); }
+  .lg-top-60 { top: calc(var(--spacing) * 60); }
+  .lg-top-40 { top: calc(var(--spacing) * 40); }
+  .lg-neg-left-400 { left: -900px; }
+  .lg-opacity-50 { opacity: 0.5; }
+
+  // Larguras para desktop
+  .w-392 { width: 392px; }
+  .w-520 { width: 520px; }
+  .w-600 { width: 600px; }
+  .w-760 { width: 760px; }
+  .w-1272 { width: 1272px; }
+  .w-1512 { width: 1512px; }
+  .min-w-520 { min-width: 520px; }
+  .min-w-600 { min-width: 600px; }
+
+  // Visibilidade
+  .hide-on-mobile {
+    display: block;
+  }
+
+  .show-on-mobile {
+    display: none;
+  }
+
+  // Remover opacidade reduzida no desktop
+  .cloud-mobile-opacity {
+    opacity: 1;
+  }
+
+  // Nuvem central maior no desktop
+  .cloud-central {
+    min-width: 120vw !important;
+    width: 120vw !important;
+  }
+
+  // Ajuste de posição para desktop se necessário
+  .cloud-central-position {
+    left: -35% !important;
+    top: 40% !important;
+  }
+
+  // Remover ajuste mobile do título no desktop
+  .hero-title-mobile {
+    font-size: 12rem; // Tamanho fixo no desktop (168px)
+    max-width: 100%;
+  }
+}
+
+// Border radius
+.rounded-b-md { border-bottom-left-radius: 0.375rem; border-bottom-right-radius: 0.375rem; }
+.rounded-t-3xl { border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem; }

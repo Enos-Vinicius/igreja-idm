@@ -1,0 +1,42 @@
+<section class="schedule-section">
+  <div class="container">
+    <!-- Header -->
+    <div class="section-header">
+      <span class="section-label">Programação</span>
+      <h2 class="section-title">Nossos Horários</h2>
+      <p class="section-subtitle">
+        Venha participar dos nossos cultos e fazer parte desta família
+      </p>
+    </div>
+
+    <!-- Grid de localizações -->
+    <div class="locations-grid">
+      <div class="location-card" *ngFor="let location of locations">
+        <div class="location-header">
+          <i class="pi pi-map-marker"></i>
+          <h3 class="location-city">{{ location.city }}</h3>
+        </div>
+
+        <div class="schedule-list">
+          <div class="schedule-item" *ngFor="let schedule of location.schedules">
+            <div class="schedule-day">
+              <i class="pi pi-calendar"></i>
+              <span>{{ schedule.day }}</span>
+            </div>
+            <div class="schedule-time">
+              <span class="time">{{ schedule.time }}</span>
+            </div>
+            <div class="schedule-service">
+              {{ schedule.service }}
+            </div>
+          </div>
+        </div>
+
+        <a href="#" class="location-link">
+          <span>Ver no mapa</span>
+          <i class="pi pi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

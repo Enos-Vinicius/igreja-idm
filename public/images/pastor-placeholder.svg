@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e5e7eb"/>
+      <stop offset="100%" style="stop-color:#d1d5db"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="500" fill="url(#bgGrad)" rx="16"/>
+
+  <!-- Silhouette -->
+  <circle cx="200" cy="160" r="70" fill="#9ca3af"/>
+  <ellipse cx="200" cy="380" rx="100" ry="120" fill="#9ca3af"/>
+
+  <!-- Text -->
+  <text x="200" y="480" text-anchor="middle" fill="#6b7280" font-family="sans-serif" font-size="14">
+    Adicione a foto do Pastor
+  </text>
+</svg>

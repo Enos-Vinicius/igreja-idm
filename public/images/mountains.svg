@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+  <defs>
+    <!-- Gradiente do céu - pôr do sol laranja/roxo -->
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="15%" style="stop-color:#2d1b4e"/>
+      <stop offset="30%" style="stop-color:#4a3f6e"/>
+      <stop offset="50%" style="stop-color:#7c6a8e"/>
+      <stop offset="70%" style="stop-color:#c9a07a"/>
+      <stop offset="85%" style="stop-color:#e8b87a"/>
+      <stop offset="100%" style="stop-color:#f5d4a0"/>
+    </linearGradient>
+
+    <!-- Gradientes das montanhas -->
+    <linearGradient id="mountain1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0d0d15"/>
+    </linearGradient>
+    <linearGradient id="mountain2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d2d4a"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="mountain3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a4a6a"/>
+      <stop offset="100%" style="stop-color:#2d2d4a"/>
+    </linearGradient>
+
+    <!-- Gradiente das árvores/floresta -->
+    <linearGradient id="forest" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a2a1a"/>
+      <stop offset="100%" style="stop-color:#0d150d"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Céu com gradiente de pôr do sol -->
+  <rect width="1920" height="1080" fill="url(#skyGradient)"/>
+
+  <!-- Brilho do sol (no horizonte) -->
+  <ellipse cx="960" cy="750" rx="600" ry="200" fill="#f5d4a0" opacity="0.3"/>
+  <ellipse cx="960" cy="720" rx="400" ry="100" fill="#f8e0b0" opacity="0.4"/>
+
+  <!-- Montanha traseira distante (mais escura) -->
+  <polygon fill="url(#mountain1)" points="
+    0,1080
+    0,550
+    150,480
+    300,520
+    450,420
+    600,480
+    750,380
+    900,450
+    1050,350
+    1200,420
+    1350,320
+    1500,400
+    1650,340
+    1800,420
+    1920,380
+    1920,1080
+  "/>
+
+  <!-- Montanha do meio -->
+  <polygon fill="url(#mountain2)" points="
+    0,1080
+    0,620
+    120,560
+    250,600
+    400,500
+    550,570
+    700,450
+    850,530
+    1000,420
+    1150,500
+    1300,400
+    1450,480
+    1600,420
+    1750,500
+    1920,450
+    1920,1080
+  "/>
+
+  <!-- Montanha da frente com detalhes -->
+  <polygon fill="url(#mountain3)" points="
+    0,1080
+    0,700
+    100,650
+    200,680
+    350,580
+    500,650
+    650,550
+    800,620
+    950,520
+    1100,600
+    1250,500
+    1400,580
+    1550,520
+    1700,600
+    1850,550
+    1920,600
+    1920,1080
+  "/>
+
+  <!-- Silhueta de floresta/árvores no primeiro plano -->
+  <polygon fill="url(#forest)" points="
+    0,1080
+    0,800
+    50,780 60,800 80,770 100,800 120,760 140,800 160,770 180,800
+    200,750 220,800 250,760 280,800 310,740 340,800 370,760 400,800
+    430,750 460,800 490,730 520,800 550,760 580,800 610,750 640,800
+    670,720 700,800 730,760 760,800 790,740 820,800 850,760 880,800
+    910,730 940,800 970,750 1000,800 1030,720 1060,800 1090,760 1120,800
+    1150,740 1180,800 1210,760 1240,800 1270,730 1300,800 1330,750 1360,800
+    1390,720 1420,800 1450,760 1480,800 1510,740 1540,800 1570,760 1600,800
+    1630,750 1660,800 1690,720 1720,800 1750,760 1780,800 1810,740 1840,800
+    1870,760 1900,800 1920,770
+    1920,1080
+  "/>
+
+  <!-- Névoa/atmosfera na base das montanhas -->
+  <rect y="850" width="1920" height="230" fill="url(#skyGradient)" opacity="0.2"/>
+</svg>

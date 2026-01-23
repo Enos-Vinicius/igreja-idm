@@ -1,0 +1,57 @@
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <!-- Logo e descrição -->
+      <div class="footer-brand">
+        <h3 class="footer-logo">Igreja do Deus de Maravilhas</h3>
+        <p class="footer-tagline">
+          Transformando vidas através do amor de Cristo
+        </p>
+        <div class="footer-social">
+          <a *ngFor="let social of socialLinks"
+             [href]="social.url"
+             [attr.aria-label]="social.label"
+             class="social-link"
+             target="_blank"
+             rel="noopener">
+            <i class="pi" [ngClass]="social.icon"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Links rápidos -->
+      <div class="footer-links">
+        <h4 class="footer-title">Links Rápidos</h4>
+        <ul>
+          <li *ngFor="let link of quickLinks">
+            <a [href]="link.url">{{ link.label }}</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Contato -->
+      <div class="footer-contact">
+        <h4 class="footer-title">Contato</h4>
+        <ul>
+          <li>
+            <i class="pi pi-map-marker"></i>
+            <span>Av. Coronel Joaquim de Oliveira Prata, 1817<br>Uberaba - MG</span>
+          </li>
+          <li>
+            <i class="pi pi-phone"></i>
+            <span>(34) 9999-9999</span>
+          </li>
+          <li>
+            <i class="pi pi-envelope"></i>
+            <span>contato&#64;idmaravilhas.com.br</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="footer-bottom">
+      <p>&copy; {{ currentYear }} Igreja do Deus de Maravilhas. Todos os direitos reservados.</p>
+    </div>
+  </div>
+</footer>

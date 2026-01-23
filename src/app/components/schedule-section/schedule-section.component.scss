@@ -1,0 +1,179 @@
+.schedule-section {
+  padding: 6rem 1.5rem;
+  background-color: var(--color-gray-50);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Header da seção
+.section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.section-label {
+  display: inline-block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: 1rem;
+}
+
+.section-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-gray-500);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+// Grid de localizações
+.locations-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+// Card de localização
+.location-card {
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+  }
+}
+
+.location-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--color-gray-100);
+
+  i {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+  }
+}
+
+.location-city {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin: 0;
+}
+
+// Lista de horários
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.schedule-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
+  border-left: 4px solid var(--color-secondary);
+}
+
+.schedule-day {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  grid-column: 1 / 2;
+
+  i {
+    font-size: 0.875rem;
+    color: var(--color-gray-400);
+  }
+
+  span {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-gray-700);
+  }
+}
+
+.schedule-time {
+  grid-column: 2 / 3;
+  grid-row: 1 / 3;
+  display: flex;
+  align-items: center;
+
+  .time {
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    color: var(--color-primary);
+  }
+}
+
+.schedule-service {
+  grid-column: 1 / 2;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+}
+
+// Link do mapa
+.location-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+
+  i {
+    transition: transform var(--transition-fast);
+  }
+
+  &:hover {
+    color: var(--color-primary-dark);
+
+    i {
+      transform: translateX(4px);
+    }
+  }
+}
+
+// Responsividade
+@media (max-width: 768px) {
+  .schedule-section {
+    padding: 4rem 1.5rem;
+  }
+
+  .locations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    margin-bottom: 2.5rem;
+  }
+}
+
+:host {
+  display: block;
+}
