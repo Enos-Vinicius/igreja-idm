@@ -1,0 +1,224 @@
+<div class="users-page">
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">Gestão de Usuários</h1>
+      <button class="btn-primary border-round-lg" (click)="openCreateModal()">
+        <i class="pi pi-plus"></i>
+        Novo Usuário
+      </button>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container mb-4">
+      <div class="search-input-wrapper">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="searchUsers()"
+          placeholder="Buscar por email, nome ou perfil..."
+          class="search-input border-round-lg"
+        >
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage && !showModal" class="error-banner border-round-lg mb-4">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading && users.length === 0" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Carregando usuários...</p>
+    </div>
+
+    <!-- Users Table -->
+    <div *ngIf="!loading || users.length > 0" class="users-table-container">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Perfil</th>
+            <th>Membro Vinculado</th>
+            <th>Data de Criação</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers">
+            <td>{{ user.id }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+              <span class="role-badge" [ngClass]="getRoleBadgeClass(user.role)">
+                {{ getRoleName(user.role) }}
+              </span>
+            </td>
+            <td>
+              <div *ngIf="user.member" class="member-info">
+                <div class="member-avatar">
+                  <img *ngIf="user.member.photoUrl" [src]="user.member.photoUrl" [alt]="user.member.name">
+                  <div *ngIf="!user.member.photoUrl" class="avatar-placeholder">
+                    <i class="pi pi-user"></i>
+                  </div>
+                </div>
+                <span>{{ user.member.name }}</span>
+              </div>
+              <span *ngIf="!user.member" class="text-muted">-</span>
+            </td>
+            <td>{{ user.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-icon btn-edit" (click)="openEditModal(user)" title="Editar">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button class="btn-icon btn-password" (click)="openPasswordModal(user)" title="Trocar Senha">
+                  <i class="pi pi-key"></i>
+                </button>
+                <button class="btn-icon btn-delete" (click)="deleteUser(user)" title="Deletar">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredUsers.length === 0">
+            <td colspan="6" class="no-results">
+              Nenhum usuário encontrado
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content border-round-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span *ngIf="modalMode === 'create'">Novo Usuário</span>
+        <span *ngIf="modalMode === 'edit'">Editar Usuário</span>
+        <span *ngIf="modalMode === 'password'">Trocar Senha</span>
+      </h2>
+      <button class="btn-close" (click)="closeModal()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="errorMessage" class="error-message mb-4">
+        <i class="pi pi-exclamation-triangle"></i>
+        {{ errorMessage }}
+      </div>
+
+      <!-- Create/Edit Form -->
+      <form *ngIf="modalMode !== 'password'" (ngSubmit)="saveUser()">
+        <div class="form-group">
+          <label for="email" class="form-label">Email *</label>
+          <input
+            type="email"
+            id="email"
+            [(ngModel)]="userForm.email"
+            name="email"
+            class="form-input border-round-md w-full"
+            required
+            placeholder="usuario@exemplo.com"
+          >
+        </div>
+
+        <div class="form-group" *ngIf="modalMode === 'create'">
+          <label for="password" class="form-label">Senha *</label>
+          <div class="password-input-wrapper">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              [(ngModel)]="userForm.password"
+              name="password"
+              class="form-input border-round-md w-full"
+              required
+              placeholder="Mínimo 6 caracteres"
+              minlength="6"
+            >
+            <button
+              type="button"
+              class="password-toggle-btn"
+              (click)="togglePasswordVisibility()"
+            >
+              <i class="pi" [ngClass]="showPassword ? 'pi-eye-slash' : 'pi-eye'"></i>
+            </button>
+          </div>
+          <small class="form-hint">A senha deve ter no mínimo 6 caracteres</small>
+        </div>
+
+        <div class="form-group">
+          <label for="role" class="form-label">Perfil *</label>
+          <select
+            id="role"
+            [(ngModel)]="userForm.role"
+            name="role"
+            class="form-input border-round-md w-full"
+            required
+          >
+            <option *ngFor="let option of roleOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <small class="form-hint">Administradores têm acesso total ao sistema</small>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary border-round-lg" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary border-round-lg" [disabled]="loading">
+            <i class="pi" [class.pi-spin]="loading" [class.pi-spinner]="loading" [class.pi-check]="!loading"></i>
+            {{ loading ? 'Salvando...' : 'Salvar' }}
+          </button>
+        </div>
+      </form>
+
+      <!-- Change Password Form -->
+      <form *ngIf="modalMode === 'password'" (ngSubmit)="changePassword()">
+        <div class="user-info-box mb-4">
+          <strong>Usuário:</strong> {{ selectedUser.email }}
+        </div>
+
+        <div class="form-group">
+          <label for="newPassword" class="form-label">Nova Senha *</label>
+          <div class="password-input-wrapper">
+            <input
+              [type]="showNewPassword ? 'text' : 'password'"
+              id="newPassword"
+              [(ngModel)]="newPassword"
+              name="newPassword"
+              class="form-input border-round-md w-full"
+              required
+              placeholder="Mínimo 6 caracteres"
+              minlength="6"
+            >
+            <button
+              type="button"
+              class="password-toggle-btn"
+              (click)="toggleNewPasswordVisibility()"
+            >
+              <i class="pi" [ngClass]="showNewPassword ? 'pi-eye-slash' : 'pi-eye'"></i>
+            </button>
+          </div>
+          <small class="form-hint">A senha deve ter no mínimo 6 caracteres</small>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary border-round-lg" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary border-round-lg" [disabled]="loading">
+            <i class="pi" [class.pi-spin]="loading" [class.pi-spinner]="loading" [class.pi-key]="!loading"></i>
+            {{ loading ? 'Alterando...' : 'Alterar Senha' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

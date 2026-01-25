@@ -1,0 +1,135 @@
+<header class="header" [class.scrolled]="isScrolled">
+  <div class="container">
+    <div class="header-content flex align-items-center justify-content-between">
+      <!-- Logo -->
+      <div class="header-logo">
+        <img [src]="isScrolled ? 'assets/landing/logo-clean.png' : '/assets/landing/logo.png'" alt="Igreja do Deus de Maravilhas">
+      </div>
+
+      <!-- Navigation Links (Desktop) -->
+      <nav class="header-nav">
+        <a href="#home" class="header-link">Início</a>
+        <a href="#schedule" class="header-link">Agenda</a>
+        <a href="#about" class="header-link">Sobre</a>
+        <a href="#projects" class="header-link">Nossos Projetos</a>
+        <a href="#contact" class="header-link">Pedido de Oração</a>
+      </nav>
+
+      <!-- Header Actions (Desktop & Mobile) -->
+      <div class="header-actions">
+        <!-- Mobile Menu Button -->
+        <button class="btn-mobile-menu" (click)="toggleMobileMenu()">
+          <i class="pi pi-bars"></i>
+        </button>
+
+        <!-- Login Button (Desktop) -->
+        <button
+          *ngIf="!isAuthenticated"
+          class="btn-login border-round-lg"
+          (click)="openLoginModal()"
+        >
+          Login
+        </button>
+
+        <!-- User Menu (Desktop) -->
+        <div *ngIf="isAuthenticated" class="user-menu-container">
+          <button class="btn-user-profile border-round-lg" (click)="toggleUserMenu()">
+            <div class="user-avatar">
+              <img *ngIf="currentUser?.member?.photoUrl" [src]="currentUser?.member?.photoUrl" [alt]="getUserDisplayName()">
+              <div *ngIf="!currentUser?.member?.photoUrl" class="avatar-initials">
+                {{ getUserInitials() }}
+              </div>
+            </div>
+            <span class="user-name">{{ getUserDisplayName() }}</span>
+            <i class="pi pi-chevron-down"></i>
+          </button>
+
+          <div *ngIf="showUserMenu" class="user-dropdown border-round-lg">
+            <button class="dropdown-item" (click)="navigateToMembers()">
+              <i class="pi pi-users"></i>
+              <span>Cadastro de Membros</span>
+            </button>
+            <button *ngIf="isAdmin()" class="dropdown-item" (click)="navigateToUsers()">
+              <i class="pi pi-cog"></i>
+              <span>Gestão de Usuários</span>
+            </button>
+            <button class="dropdown-item" (click)="logout()">
+              <i class="pi pi-sign-out"></i>
+              <span>Sair</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile Menu Overlay -->
+<div *ngIf="showMobileMenu" class="mobile-menu-overlay" (click)="closeMobileMenu()"></div>
+
+<!-- Mobile Menu Sidebar -->
+<div class="mobile-menu" [class.open]="showMobileMenu">
+  <div class="mobile-menu-header">
+    <h3>Menu</h3>
+    <button class="btn-close-mobile" (click)="closeMobileMenu()">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <nav class="mobile-menu-nav">
+    <a href="#home" class="mobile-link" (click)="closeMobileMenu()">
+      <i class="pi pi-home"></i>
+      <span>Início</span>
+    </a>
+    <a href="#schedule" class="mobile-link" (click)="closeMobileMenu()">
+      <i class="pi pi-calendar"></i>
+      <span>Agenda</span>
+    </a>
+    <a href="#about" class="mobile-link" (click)="closeMobileMenu()">
+      <i class="pi pi-info-circle"></i>
+      <span>Sobre</span>
+    </a>
+    <a href="#projects" class="mobile-link" (click)="closeMobileMenu()">
+      <i class="pi pi-sparkles"></i>
+      <span>Nossos Projetos</span>
+    </a>
+    <a href="#contact" class="mobile-link" (click)="closeMobileMenu()">
+      <i class="pi pi-heart"></i>
+      <span>Pedido de Oração</span>
+    </a>
+
+    <!-- Authenticated Menu Items -->
+    <div *ngIf="isAuthenticated" class="mobile-menu-divider"></div>
+    <button *ngIf="isAuthenticated" class="mobile-link" (click)="navigateToMembers()">
+      <i class="pi pi-users"></i>
+      <span>Cadastro de Membros</span>
+    </button>
+    <button *ngIf="isAuthenticated && isAdmin()" class="mobile-link" (click)="navigateToUsers()">
+      <i class="pi pi-cog"></i>
+      <span>Gestão de Usuários</span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu-footer">
+    <button
+      *ngIf="!isAuthenticated"
+      class="btn-mobile-login border-round-lg w-full"
+      (click)="openLoginModal(); closeMobileMenu()"
+    >
+      <i class="pi pi-sign-in"></i>
+      Login
+    </button>
+
+    <button
+      *ngIf="isAuthenticated"
+      class="btn-mobile-logout border-round-lg w-full"
+      (click)="logout()"
+    >
+      <i class="pi pi-sign-out"></i>
+      Sair
+    </button>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<app-login-modal *ngIf="showLoginModal" (close)="closeLoginModal()"></app-login-modal>

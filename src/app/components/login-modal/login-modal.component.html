@@ -1,0 +1,88 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-content flex">
+      <!-- Left Side - Image -->
+      <div class="modal-left">
+        <img src="/assets/landing/login-bg.jpg" alt="Login Background" class="login-image">
+        <div class="overlay-content">
+          <h2 class="text-white font-bold text-4xl mb-3">Bem-vindo!</h2>
+          <p class="text-white text-lg">Acesse sua conta para continuar</p>
+        </div>
+      </div>
+
+      <!-- Right Side - Login Form -->
+      <div class="modal-right">
+        <button class="close-btn" (click)="closeModal()">
+          <i class="pi pi-times"></i>
+        </button>
+
+        <div class="login-form">
+          <h3 class="form-title">Login</h3>
+          <p class="form-subtitle">Entre com suas credenciais</p>
+
+          <form (ngSubmit)="onLogin()">
+            <!-- Error Message -->
+            <div *ngIf="errorMessage" class="error-message mb-3">
+              {{ errorMessage }}
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group">
+              <label for="email" class="form-label">Email</label>
+              <input
+                type="email"
+                id="email"
+                [(ngModel)]="email"
+                name="email"
+                class="form-input border-round-md w-full p-3"
+                placeholder="Digite seu email"
+                required
+                [disabled]="loading"
+              >
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+              <label for="password" class="form-label">Senha</label>
+              <div class="password-input-wrapper">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  id="password"
+                  [(ngModel)]="password"
+                  name="password"
+                  class="form-input border-round-md w-full p-3"
+                  placeholder="Digite sua senha"
+                  required
+                  [disabled]="loading"
+                >
+                <button
+                  type="button"
+                  class="password-toggle-btn"
+                  (click)="togglePasswordVisibility()"
+                  [disabled]="loading"
+                >
+                  <i class="pi" [ngClass]="showPassword ? 'pi-eye-slash' : 'pi-eye'"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Forgot Password -->
+            <div class="flex justify-content-end mb-4">
+              <a href="#" class="forgot-link">Esqueceu a senha?</a>
+            </div>
+
+            <!-- Login Button -->
+            <button
+              type="submit"
+              class="btn-submit border-round-lg w-full p-3"
+              [disabled]="loading"
+            >
+              <span *ngIf="!loading">Entrar</span>
+              <span *ngIf="loading">Carregando...</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

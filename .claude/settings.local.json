@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(dir \"C:\\\\Users\\\\User\\\\Desktop\" /b)",
+      "Bash(findstr:*)",
+      "Bash(ng generate:*)",
+      "Bash(npx ng generate:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

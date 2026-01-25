@@ -1,0 +1,410 @@
+$primary-orange: #FF5722;
+$dark-orange: #E64A19;
+$light-orange: #FF7043;
+$accent-orange: #FFCCBC;
+
+.verses-section {
+  position: relative;
+  padding: 120px 0 6rem 0;
+  overflow: hidden;
+
+  .verses-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/assets/landing/biblia.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 87, 34, 0.85) 0%, rgba(230, 74, 25, 0.9) 100%);
+      z-index: 1;
+    }
+
+    .verses-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+      z-index: 2;
+    }
+
+    .floating-element {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      z-index: 3;
+
+      &.element-1 {
+        width: 300px;
+        height: 300px;
+        top: -100px;
+        left: -100px;
+        animation: float 20s ease-in-out infinite;
+      }
+
+      &.element-2 {
+        width: 200px;
+        height: 200px;
+        bottom: -50px;
+        right: 10%;
+        animation: float 15s ease-in-out infinite reverse;
+      }
+
+      &.element-3 {
+        width: 150px;
+        height: 150px;
+        top: 50%;
+        right: -50px;
+        animation: float 25s ease-in-out infinite;
+      }
+    }
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 10;
+  }
+
+  .verses-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    animation: fadeInDown 0.8s ease-out;
+
+    .header-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      animation: pulse 2s ease-in-out infinite;
+
+      i {
+        font-size: 2.5rem;
+        color: #ffffff;
+      }
+    }
+
+    .verses-title {
+      font-size: 3rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0 0 1rem 0;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+
+      @media (max-width: 768px) {
+        font-size: 2rem;
+      }
+    }
+
+    .verses-subtitle {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.95);
+      margin: 0;
+      font-weight: 300;
+    }
+  }
+
+  .verses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 4rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+
+  .verse-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    animation: fadeInUp 0.8s ease-out backwards;
+
+    &[data-verse="1"] {
+      animation-delay: 0.2s;
+    }
+
+    &[data-verse="2"] {
+      animation-delay: 0.4s;
+    }
+
+    &[data-verse="3"] {
+      animation-delay: 0.6s;
+    }
+
+    &:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 20px 60px rgba(255, 87, 34, 0.4);
+
+      .icon-circle {
+        transform: scale(1.1) rotate(10deg);
+        background: linear-gradient(135deg, $primary-orange, $dark-orange);
+      }
+
+      .icon-glow {
+        opacity: 1;
+        transform: scale(1.3);
+      }
+
+      .card-decoration {
+        opacity: 1;
+        transform: scale(1.5);
+      }
+    }
+
+    .card-icon-wrapper {
+      position: absolute;
+      top: -40px;
+      right: 2rem;
+      z-index: 2;
+
+      .icon-circle {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, $dark-orange, $primary-orange);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 30px rgba(255, 87, 34, 0.4);
+        transition: all 0.4s ease;
+        position: relative;
+        z-index: 2;
+
+        i {
+          font-size: 2rem;
+          color: #ffffff;
+        }
+      }
+
+      .icon-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(1);
+        width: 80px;
+        height: 80px;
+        background: radial-gradient(circle, $light-orange, transparent);
+        border-radius: 50%;
+        opacity: 0;
+        transition: all 0.4s ease;
+        animation: pulse 2s ease-in-out infinite;
+      }
+    }
+
+    .card-content {
+      margin-top: 2rem;
+    }
+
+    .verse-reference {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: $primary-orange;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      i {
+        font-size: 1.2rem;
+        animation: swing 2s ease-in-out infinite;
+      }
+    }
+
+    .verse-text {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #37474F;
+      margin: 0 0 1.5rem 0;
+      padding: 0;
+      border: none;
+      font-style: italic;
+      font-weight: 400;
+      position: relative;
+
+      &::before {
+        content: '"';
+        position: absolute;
+        left: -1.5rem;
+        top: -0.5rem;
+        font-size: 4rem;
+        color: $accent-orange;
+        font-family: Georgia, serif;
+        opacity: 0.5;
+      }
+    }
+
+    .verse-theme {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, $accent-orange, lighten($accent-orange, 10%));
+      color: $dark-orange;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.875rem;
+
+      i {
+        font-size: 1rem;
+        animation: sparkle 1.5s ease-in-out infinite;
+      }
+    }
+
+    .card-decoration {
+      position: absolute;
+      bottom: -50px;
+      left: -50px;
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, $accent-orange, transparent);
+      border-radius: 50%;
+      opacity: 0;
+      transition: all 0.4s ease;
+    }
+  }
+
+  .verses-cta {
+    text-align: center;
+    animation: fadeInUp 0.8s ease-out 0.8s backwards;
+
+    .cta-content {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem 3rem;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 50px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        padding: 1.5rem 2rem;
+      }
+
+      i {
+        font-size: 2rem;
+        color: #ffffff;
+        animation: heartbeat 1.5s ease-in-out infinite;
+      }
+
+      p {
+        font-size: 1.1rem;
+        color: #ffffff;
+        margin: 0;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-30px) rotate(180deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes swing {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10%, 30% {
+    transform: scale(1.1);
+  }
+  20%, 40% {
+    transform: scale(1);
+  }
+}

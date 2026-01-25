@@ -18,10 +18,10 @@ export class FooterComponent {
   currentYear = new Date().getFullYear();
 
   socialLinks: SocialLink[] = [
-    { icon: 'pi-facebook', url: '#', label: 'Facebook' },
-    { icon: 'pi-instagram', url: '#', label: 'Instagram' },
-    { icon: 'pi-youtube', url: '#', label: 'YouTube' },
-    { icon: 'pi-whatsapp', url: '#', label: 'WhatsApp' }
+    { icon: 'pi-facebook', url: 'https://www.facebook.com/Igrejadeusdemaravilhas/', label: 'Facebook' },
+    // { icon: 'pi-instagram', url: '#', label: 'Instagram' },
+    { icon: 'pi-youtube', url: 'https://www.youtube.com/@igrejadodeusdemaravilhas8554', label: 'YouTube' },
+    // { icon: 'pi-whatsapp', url: '#', label: 'WhatsApp' }
   ];
 
   quickLinks = [

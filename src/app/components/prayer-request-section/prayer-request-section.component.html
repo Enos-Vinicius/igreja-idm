@@ -1,0 +1,127 @@
+<section class="prayer-section" id="contact">
+  <div class="container">
+    <!-- Header -->
+    <div class="section-header">
+      <span class="section-label">Fale Conosco</span>
+      <h2 class="section-title">Pedido de Oração</h2>
+      <p class="section-subtitle">
+        Compartilhe seu pedido de oração conosco. Estaremos intercedendo por você
+      </p>
+    </div>
+
+    <div class="prayer-content">
+      <!-- Informações de Contato -->
+      <div class="contact-info">
+        <div class="info-card">
+          <div class="info-icon">
+            <i class="pi pi-map-marker"></i>
+          </div>
+          <div class="info-content">
+            <h3>Endereço</h3>
+            <p>Av. Coronel Joaquim de Oliveira Prata, 1817</p>
+            <p>Belo Horizonte - MG</p>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">
+            <i class="pi pi-envelope"></i>
+          </div>
+          <div class="info-content">
+            <h3>Email</h3>
+            <p>idmigreja&#64;gmail.com</p>
+          </div>
+        </div>
+
+        <!-- <div class="info-card">
+          <div class="info-icon">
+            <i class="pi pi-phone"></i>
+          </div>
+          <div class="info-content">
+            <h3>Telefone</h3>
+            <p>Entre em contato conosco</p>
+          </div>
+        </div> -->
+      </div>
+
+      <!-- Formulário -->
+      <div class="prayer-form-container">
+        <form class="prayer-form" (ngSubmit)="onSubmit()" #prayerForm="ngForm">
+          <div class="form-group">
+            <label for="name">Nome Completo *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              [(ngModel)]="formData.name"
+              required
+              [disabled]="isSubmitting"
+              placeholder="Digite seu nome completo"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                [(ngModel)]="formData.email"
+                required
+                [disabled]="isSubmitting"
+                placeholder="seu@email.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Telefone</label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                [(ngModel)]="formData.phone"
+                [disabled]="isSubmitting"
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="message">Seu Pedido de Oração *</label>
+            <textarea
+              id="message"
+              name="message"
+              [(ngModel)]="formData.message"
+              required
+              [disabled]="isSubmitting"
+              rows="6"
+              placeholder="Compartilhe seu pedido de oração..."
+            ></textarea>
+          </div>
+
+          <!-- Success Message -->
+          <div *ngIf="showSuccessMessage" class="alert alert-success">
+            <i class="pi pi-check-circle"></i>
+            <span>Pedido enviado com sucesso! Estaremos orando por você.</span>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="showErrorMessage" class="alert alert-error">
+            <i class="pi pi-times-circle"></i>
+            <span>Erro ao enviar pedido. Por favor, tente novamente.</span>
+          </div>
+
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="!prayerForm.form.valid || isSubmitting"
+          >
+            <i class="pi" [ngClass]="isSubmitting ? 'pi-spin pi-spinner' : 'pi-send'"></i>
+            <span>{{ isSubmitting ? 'Enviando...' : 'Enviar Pedido' }}</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

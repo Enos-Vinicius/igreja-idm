@@ -1,0 +1,89 @@
+<div class="members-page">
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">Cadastro de Membros</h1>
+      <button class="btn-primary border-round-lg" (click)="createMember()">
+        <i class="pi pi-plus"></i>
+        Novo Membro
+      </button>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container mb-4">
+      <div class="search-input-wrapper">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="searchMembers()"
+          placeholder="Buscar por nome, email ou telefone..."
+          class="search-input border-round-lg"
+        >
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="error-banner border-round-lg mb-4">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading && members.length === 0" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Carregando membros...</p>
+    </div>
+
+    <!-- Members Table -->
+    <div *ngIf="!loading || members.length > 0" class="members-table-container">
+      <table class="members-table">
+        <thead>
+          <tr>
+            <th>Foto</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>Status</th>
+            <th>Data de Entrada</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let member of filteredMembers">
+            <td>
+              <div class="member-photo">
+                <img *ngIf="member.photoUrl" [src]="member.photoUrl" [alt]="member.name">
+                <div *ngIf="!member.photoUrl" class="photo-placeholder">
+                  <i class="pi pi-user"></i>
+                </div>
+              </div>
+            </td>
+            <td>{{ member.name }}</td>
+            <td>{{ member.email || '-' }}</td>
+            <td>{{ member.primaryPhone || '-' }}</td>
+            <td>
+              <span class="status-badge" [class.active]="member.membershipStatus === 'Ativo'">
+                {{ member.membershipStatus || 'N/A' }}
+              </span>
+            </td>
+            <td>{{ member.joinDate ? (member.joinDate | date: 'dd/MM/yyyy') : '-' }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-icon btn-edit" (click)="editMember(member)" title="Editar">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button class="btn-icon btn-delete" (click)="deleteMember(member)" title="Deletar">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredMembers.length === 0">
+            <td colspan="7" class="no-results">
+              Nenhum membro encontrado
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
