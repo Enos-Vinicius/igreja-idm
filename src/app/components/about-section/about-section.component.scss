@@ -1,11 +1,12 @@
 .about-section {
-  padding: 120px 1.5rem 6rem 1.5rem;
+  padding: 120px 0 6rem 0;
   background-color: var(--color-white);
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
 .about-grid {
@@ -107,7 +108,7 @@
 // Responsividade
 @media (max-width: 768px) {
   .about-section {
-    padding: 4rem 1.5rem;
+    padding: 4rem 0;
   }
 
   .about-grid {

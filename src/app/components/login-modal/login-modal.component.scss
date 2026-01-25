@@ -176,7 +176,12 @@
   border: 2px solid var(--color-gray-200);
   font-size: 1rem;
   color: var(--color-gray-900);
+  background-color: #ffffff;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  color-scheme: light;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 
   &:focus {
     outline: none;

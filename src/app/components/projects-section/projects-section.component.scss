@@ -269,7 +269,8 @@ $accent-blue: #dbeafe;
 
       @media (max-width: 768px) {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        text-align: center;
       }
 
       .card-icon {

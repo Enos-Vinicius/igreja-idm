@@ -180,3 +180,13 @@ body {
 .bg-white { background-color: var(--color-white); }
 .bg-gray { background-color: var(--color-gray-50); }
 .bg-primary-light { background-color: var(--color-primary-50); }
+
+/* Força tema claro em inputs para mobile (evita tema escuro do sistema) */
+input,
+textarea,
+select {
+  color-scheme: light;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
