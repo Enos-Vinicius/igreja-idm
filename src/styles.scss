@@ -9,17 +9,19 @@
    ============================================ */
 
 :root {
-  /* Cores principais */
-  --color-primary: #1e40af;       /* Azul */
-  --color-secondary: #f59e0b;     /* Amarelo/Dourado */
-  --color-accent-orange: #ea580c; /* Laranja */
-  --color-accent-green: #16a34a;  /* Verde */
+  /* Cor principal - Paleta monocromática azul */
+  --color-primary: #1e40af;       /* Azul base */
 
-  /* Variações */
-  --color-primary-light: #3b82f6;
-  --color-primary-dark: #1e3a8a;
-  --color-secondary-light: #fbbf24;
-  --color-secondary-dark: #d97706;
+  /* Variações da cor primária */
+  --color-primary-lighter: #60a5fa;  /* Azul muito claro */
+  --color-primary-light: #3b82f6;    /* Azul claro */
+  --color-primary-dark: #1e3a8a;     /* Azul escuro */
+  --color-primary-darker: #1e293b;   /* Azul muito escuro */
+
+  /* Tons suaves para backgrounds */
+  --color-primary-50: #eff6ff;      /* Azul claríssimo para backgrounds */
+  --color-primary-100: #dbeafe;     /* Azul bem claro */
+  --color-primary-200: #bfdbfe;     /* Azul suave */
 
   /* Neutros */
   --color-white: #ffffff;
@@ -150,11 +152,11 @@ body {
 }
 
 .btn-secondary {
-  background-color: var(--color-secondary);
-  color: var(--color-gray-900);
+  background-color: var(--color-primary-light);
+  color: var(--color-white);
 
   &:hover {
-    background-color: var(--color-secondary-dark);
+    background-color: var(--color-primary);
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
   }
@@ -174,6 +176,7 @@ body {
 /* Utilitários */
 .text-center { text-align: center; }
 .text-primary { color: var(--color-primary); }
-.text-secondary { color: var(--color-secondary); }
+.text-secondary { color: var(--color-primary-light); }
 .bg-white { background-color: var(--color-white); }
 .bg-gray { background-color: var(--color-gray-50); }
+.bg-primary-light { background-color: var(--color-primary-50); }

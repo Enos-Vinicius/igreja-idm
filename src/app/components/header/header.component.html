@@ -1,9 +1,9 @@
-<header class="header" [class.scrolled]="isScrolled">
+<header class="header" [class.scrolled]="isScrolled" [class.internal-page]="!isHomePage">
   <div class="container">
     <div class="header-content flex align-items-center justify-content-between">
       <!-- Logo -->
       <div class="header-logo">
-        <img [src]="isScrolled ? 'assets/landing/logo-clean.png' : '/assets/landing/logo-white.png'" alt="Igreja do Deus de Maravilhas">
+        <img [src]="isScrolled || !isHomePage ? 'assets/landing/logo-clean.png' : '/assets/landing/logo-white.png'" alt="Igreja do Deus de Maravilhas">
       </div>
 
       <!-- Navigation Links (Desktop) -->

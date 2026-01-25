@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { LoginModalComponent } from '../login-modal/login-modal.component';
 import { AuthService, CurrentUser } from '../../services/auth.service';
 
@@ -18,13 +19,30 @@ export class HeaderComponent implements OnInit {
   showMobileMenu = false;
   isAuthenticated = false;
   currentUser: CurrentUser | null = null;
+  isHomePage = true;
 
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) {
+    // Detecta mudanças de rota para saber se estamos na home
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.checkIfHomePage();
+    });
+  }
+
+  private checkIfHomePage(): void {
+    const url = this.router.url;
+    // Considera home page se for "/" ou "/#alguma-coisa" (âncoras da landing)
+    this.isHomePage = url === '/' || url === '' || url.startsWith('/#');
+  }
 
   ngOnInit() {
+    // Inicializa o estado da página
+    this.checkIfHomePage();
+
     this.authService.isAuthenticated().subscribe(
       isAuth => this.isAuthenticated = isAuth
     );

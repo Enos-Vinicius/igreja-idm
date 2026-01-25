@@ -90,7 +90,7 @@
     transition: color var(--transition-fast);
 
     &:hover {
-      color: var(--color-secondary);
+      color: var(--color-primary-light);
     }
   }
 }
@@ -102,7 +102,7 @@
   font-size: var(--font-size-sm);
 
   i {
-    color: var(--color-secondary);
+    color: var(--color-primary-light);
     margin-top: 0.15rem;
   }
 

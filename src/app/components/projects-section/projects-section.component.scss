@@ -1,12 +1,12 @@
 // Cores oficiais da igreja
-$primary-green: #64DD17;
-$dark-green: #558B2F;
-$light-green: #76FF03;
-$accent-green: #CCFF90;
+$primary-blue: #1e40af;
+$dark-blue: #1e3a8a;
+$light-blue: #3b82f6;
+$accent-blue: #dbeafe;
 
 .projects-section {
   padding: 120px 0 6rem 0;
-  background: linear-gradient(180deg, #ffffff 0%, #f7fcf5 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f0f5ff 100%);
   position: relative;
   overflow: hidden;
 
@@ -17,7 +17,7 @@ $accent-green: #CCFF90;
     left: -10%;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(100, 221, 23, 0.06) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(30, 64, 175, 0.06) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
   }
@@ -29,7 +29,7 @@ $accent-green: #CCFF90;
     right: -10%;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(100, 221, 23, 0.06) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(30, 64, 175, 0.06) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
   }
@@ -53,7 +53,7 @@ $accent-green: #CCFF90;
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 1.5rem;
-      background: linear-gradient(135deg, $primary-green, $dark-green);
+      background: linear-gradient(135deg, $primary-blue, $dark-blue);
       color: #ffffff;
       border-radius: 50px;
       font-size: 0.875rem;
@@ -61,7 +61,7 @@ $accent-green: #CCFF90;
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 1rem;
-      box-shadow: 0 4px 15px rgba(100, 221, 23, 0.3);
+      box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
 
       i {
         font-size: 1rem;
@@ -104,8 +104,8 @@ $accent-green: #CCFF90;
     padding: 2rem 2.5rem;
     background: #ffffff;
     border-radius: 1rem;
-    border: 2px solid rgba(100, 221, 23, 0.2);
-    box-shadow: 0 4px 20px rgba(100, 221, 23, 0.12);
+    border: 2px solid rgba(30, 64, 175, 0.2);
+    box-shadow: 0 4px 20px rgba(30, 64, 175, 0.12);
     animation: fadeInUp 0.8s ease-out 0.4s backwards;
 
     @media (max-width: 768px) {
@@ -124,7 +124,7 @@ $accent-green: #CCFF90;
       align-items: center;
       justify-content: center;
       animation: rotate 10s linear infinite;
-      border: 3px solid $primary-green;
+      border: 3px solid $primary-blue;
       position: relative;
 
       &::before {
@@ -133,7 +133,7 @@ $accent-green: #CCFF90;
         inset: -3px;
         border-radius: 50%;
         padding: 3px;
-        background: linear-gradient(135deg, $primary-green, $dark-green);
+        background: linear-gradient(135deg, $primary-blue, $dark-blue);
         -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
         -webkit-mask-composite: xor;
         mask-composite: exclude;
@@ -142,7 +142,7 @@ $accent-green: #CCFF90;
 
       i {
         font-size: 2.5rem;
-        color: $primary-green;
+        color: $primary-blue;
         position: relative;
         z-index: 1;
       }
@@ -154,7 +154,7 @@ $accent-green: #CCFF90;
       .banner-title {
         font-size: 1.75rem;
         font-weight: 700;
-        color: $dark-green;
+        color: $dark-blue;
         margin: 0 0 0.5rem 0;
       }
 
@@ -174,7 +174,7 @@ $accent-green: #CCFF90;
     padding: 2.5rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
-    border: 1px solid rgba(100, 221, 23, 0.15);
+    border: 1px solid rgba(30, 64, 175, 0.15);
     animation: fadeInUp 0.8s ease-out backwards;
 
     &[data-project="1"] {
@@ -195,8 +195,8 @@ $accent-green: #CCFF90;
 
     &:hover {
       transform: translateY(-5px);
-      box-shadow: 0 8px 30px rgba(100, 221, 23, 0.2);
-      border-color: rgba(100, 221, 23, 0.3);
+      box-shadow: 0 8px 30px rgba(30, 64, 175, 0.2);
+      border-color: rgba(30, 64, 175, 0.3);
 
       .card-icon {
         transform: scale(1.05);
@@ -205,13 +205,13 @@ $accent-green: #CCFF90;
 
     // Standalone project (Sala dos Milagres)
     &.standalone {
-      border-left: 4px solid $primary-green;
+      border-left: 4px solid $primary-blue;
     }
 
     // Cycle parts
     &.cycle-part {
       position: relative;
-      border-left: 4px solid rgba(100, 221, 23, 0.5);
+      border-left: 4px solid rgba(30, 64, 175, 0.5);
 
       .connection-line {
         position: absolute;
@@ -220,7 +220,7 @@ $accent-green: #CCFF90;
         transform: translateX(-50%);
         width: 3px;
         height: 2.5rem;
-        background: linear-gradient(180deg, rgba(118, 255, 3, 0.3), rgba(204, 255, 144, 0.4));
+        background: linear-gradient(180deg, rgba(59, 130, 246, 0.3), rgba(219, 234, 254, 0.4));
         z-index: 1;
 
         &::after {
@@ -233,7 +233,7 @@ $accent-green: #CCFF90;
           height: 0;
           border-left: 8px solid transparent;
           border-right: 8px solid transparent;
-          border-top: 8px solid rgba(204, 255, 144, 0.4);
+          border-top: 8px solid rgba(219, 234, 254, 0.4);
         }
 
         @media (max-width: 768px) {
@@ -251,14 +251,14 @@ $accent-green: #CCFF90;
       top: -15px;
       left: 2rem;
       padding: 0.5rem 1rem;
-      background: linear-gradient(135deg, rgba(100, 221, 23, 0.18), rgba(85, 139, 47, 0.15));
-      color: $dark-green;
+      background: linear-gradient(135deg, rgba(30, 64, 175, 0.18), rgba(30, 58, 138, 0.15));
+      color: $dark-blue;
       border-radius: 50px;
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
-      box-shadow: 0 2px 8px rgba(100, 221, 23, 0.12);
-      border: 1px solid rgba(100, 221, 23, 0.25);
+      box-shadow: 0 2px 8px rgba(30, 64, 175, 0.12);
+      border: 1px solid rgba(30, 64, 175, 0.25);
     }
 
     .card-header {
@@ -276,12 +276,12 @@ $accent-green: #CCFF90;
         flex-shrink: 0;
         width: 70px;
         height: 70px;
-        background: linear-gradient(135deg, $primary-green, $dark-green);
+        background: linear-gradient(135deg, $primary-blue, $dark-blue);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 15px rgba(100, 221, 23, 0.3);
+        box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
         transition: all 0.4s ease;
 
         i {
@@ -307,13 +307,13 @@ $accent-green: #CCFF90;
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem 1rem;
-        background: rgba(204, 255, 144, 0.3);
-        color: $dark-green;
+        background: rgba(219, 234, 254, 0.3);
+        color: $dark-blue;
         border-radius: 50px;
         font-size: 0.875rem;
         font-weight: 600;
         white-space: nowrap;
-        border: 1px solid rgba(100, 221, 23, 0.2);
+        border: 1px solid rgba(30, 64, 175, 0.2);
 
         @media (max-width: 768px) {
           align-self: flex-start;
@@ -333,7 +333,7 @@ $accent-green: #CCFF90;
         margin: 0 0 1.5rem 0;
 
         strong {
-          color: $primary-green;
+          color: $primary-blue;
           font-weight: 600;
         }
       }
@@ -343,9 +343,9 @@ $accent-green: #CCFF90;
         justify-content: space-between;
         align-items: center;
         padding: 1.5rem;
-        background: linear-gradient(135deg, rgba(100, 221, 23, 0.06), rgba(85, 139, 47, 0.04));
+        background: linear-gradient(135deg, rgba(30, 64, 175, 0.06), rgba(30, 58, 138, 0.04));
         border-radius: 0.75rem;
-        border-left: 3px solid rgba(100, 221, 23, 0.4);
+        border-left: 3px solid rgba(30, 64, 175, 0.4);
 
         @media (max-width: 768px) {
           flex-direction: column;
@@ -362,7 +362,7 @@ $accent-green: #CCFF90;
           font-weight: 500;
 
           i {
-            color: rgba(100, 221, 23, 0.8);
+            color: rgba(30, 64, 175, 0.8);
             font-size: 1.2rem;
           }
         }
@@ -382,19 +382,19 @@ $accent-green: #CCFF90;
           align-items: center;
           gap: 0.75rem;
           padding: 0.75rem 1rem;
-          background: rgba(100, 221, 23, 0.06);
+          background: rgba(30, 64, 175, 0.06);
           border-radius: 0.5rem;
-          border-left: 3px solid rgba(100, 221, 23, 0.35);
+          border-left: 3px solid rgba(30, 64, 175, 0.35);
           transition: all 0.3s ease;
 
           &:hover {
-            background: rgba(100, 221, 23, 0.1);
+            background: rgba(30, 64, 175, 0.1);
             transform: translateX(5px);
           }
 
           i {
             font-size: 1.2rem;
-            color: rgba(100, 221, 23, 0.8);
+            color: rgba(30, 64, 175, 0.8);
           }
 
           span {
@@ -414,9 +414,9 @@ $accent-green: #CCFF90;
     gap: 2rem;
     padding: 2.5rem;
     border-radius: 1.5rem;
-    border: 2px solid rgba(100, 221, 23, 0.25);
+    border: 2px solid rgba(30, 64, 175, 0.25);
     animation: fadeInUp 0.8s ease-out 1.2s backwards;
-    box-shadow: 0 4px 20px rgba(100, 221, 23, 0.1);
+    box-shadow: 0 4px 20px rgba(30, 64, 175, 0.1);
 
     @media (max-width: 768px) {
       flex-direction: column;
@@ -434,7 +434,7 @@ $accent-green: #CCFF90;
       align-items: center;
       justify-content: center;
       animation: pulse 2s ease-in-out infinite;
-      border: 3px solid $primary-green;
+      border: 3px solid $primary-blue;
       position: relative;
 
       &::before {
@@ -443,7 +443,7 @@ $accent-green: #CCFF90;
         inset: -3px;
         border-radius: 50%;
         padding: 3px;
-        background: linear-gradient(135deg, $primary-green, $dark-green);
+        background: linear-gradient(135deg, $primary-blue, $dark-blue);
         -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
         -webkit-mask-composite: xor;
         mask-composite: exclude;
@@ -452,7 +452,7 @@ $accent-green: #CCFF90;
 
       i {
         font-size: 3rem;
-        color: $primary-green;
+        color: $primary-blue;
         position: relative;
         z-index: 1;
       }
@@ -464,7 +464,7 @@ $accent-green: #CCFF90;
       .completion-title {
         font-size: 1.75rem;
         font-weight: 700;
-        color: rgba(100, 221, 23, 0.9);
+        color: rgba(30, 64, 175, 0.9);
         margin: 0 0 0.75rem 0;
 
         @media (max-width: 768px) {
@@ -479,7 +479,7 @@ $accent-green: #CCFF90;
         margin: 0;
 
         strong {
-          color: rgba(100, 221, 23, 0.85);
+          color: rgba(30, 64, 175, 0.85);
           font-weight: 700;
         }
       }
