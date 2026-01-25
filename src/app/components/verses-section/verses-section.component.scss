@@ -1,3 +1,5 @@
+@use "sass:color";
+
 $primary-orange: #FF5722;
 $dark-orange: #E64A19;
 $light-orange: #FF7043;
@@ -271,7 +273,7 @@ $accent-orange: #FFCCBC;
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 1rem;
-      background: linear-gradient(135deg, $accent-orange, lighten($accent-orange, 10%));
+      background: linear-gradient(135deg, $accent-orange, color.adjust($accent-orange, $lightness: 10%));
       color: $dark-orange;
       border-radius: 50px;
       font-weight: 600;
