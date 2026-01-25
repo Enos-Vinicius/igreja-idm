@@ -1,12 +1,16 @@
 .hero-carousel {
   width: 100%;
-  margin-top: 120px; // Espaço para o header
+  margin-top: 0;
   overflow: hidden;
 
   .carousel-item {
+    position: relative;
     width: 100%;
-    height: calc(100vh - 120px);
+    height: 80vh;
     min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .carousel-image {
@@ -14,5 +18,75 @@
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+  }
+
+  .banner-content {
+    position: absolute;
+    z-index: 2;
+    text-align: center;
+    color: white;
+    padding: 0 20px;
+    max-width: 100%;
+    margin-top: 120px;
+
+    .banner-subtitle {
+      font-size: clamp(1rem, 2vw, 1.5rem);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.95;
+    }
+
+    .banner-title {
+      font-size: clamp(3rem, 12vw, 12rem);
+      font-weight: 700;
+      margin: 0;
+      line-height: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      background: linear-gradient(to bottom, #ffffff 0%, rgba(255, 255, 255, 0.6) 30%, rgba(255, 255, 255, 0) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.5));
+
+      .mobile-text {
+        display: none;
+      }
+
+      .desktop-text {
+        display: inline;
+      }
+    }
+  }
+
+  // Ajustes para mobile
+  @media (max-width: 768px) {
+    .banner-content {
+      margin-top: 0;
+
+      .banner-title {
+        .mobile-text {
+          display: inline;
+          font-size: 7rem;
+          font-weight: 900;
+        }
+
+        .desktop-text {
+          display: none;
+        }
+      }
+    }
   }
 }
