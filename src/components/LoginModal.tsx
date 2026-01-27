@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import skyClouds from "@/assets/sky-clouds.jpg";
 
 interface LoginModalProps {
   open: boolean;
@@ -30,15 +31,27 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
         <div className="flex min-h-[400px]">
-          {/* Left Side - Branding */}
-          <div className="hidden sm:flex w-[30%] bg-gradient-to-br from-secondary to-secondary/90 flex-col items-center justify-center p-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-golden to-golden-light flex items-center justify-center mb-4">
-              <span className="text-secondary font-bold text-2xl">M</span>
+          {/* Left Side - Branding with Sky Image */}
+          <div className="hidden sm:flex w-[30%] relative flex-col items-center justify-center p-6 text-center overflow-hidden">
+            {/* Background Image */}
+            <img 
+              src={skyClouds} 
+              alt="" 
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            {/* Primary Overlay with Transparency */}
+            <div className="absolute inset-0 bg-primary/70" />
+            
+            {/* Content */}
+            <div className="relative z-10">
+              <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30">
+                <span className="text-white font-bold text-2xl">M</span>
+              </div>
+              <h2 className="text-white font-bold text-xl mb-2">Graça e Paz!</h2>
+              <p className="text-white/90 text-sm">
+                Acesse sua conta para continuar.
+              </p>
             </div>
-            <h2 className="text-white font-bold text-xl mb-2">Graça e Paz!</h2>
-            <p className="text-white/80 text-sm">
-              Acesse sua conta para continuar.
-            </p>
           </div>
 
           {/* Right Side - Form */}
