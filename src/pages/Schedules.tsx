@@ -162,6 +162,8 @@ const Schedules = () => {
                   <TableRow>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Data</TableHead>
+                    <TableHead>Igreja</TableHead>
+                    <TableHead>Categoria</TableHead>
                     <TableHead>Responsável</TableHead>
                     <TableHead>Detalhes</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -171,7 +173,7 @@ const Schedules = () => {
                   {filteredSchedules.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={5}
+                        colSpan={7}
                         className="text-center py-8 text-muted-foreground"
                       >
                         Nenhuma escala encontrada
@@ -207,19 +209,22 @@ const Schedules = () => {
                           </div>
                         </TableCell>
                         <TableCell>
+                          <Badge variant="outline">{schedule.church}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{schedule.category}</span>
+                        </TableCell>
+                        <TableCell>
                           {schedule.type === "worship" ? schedule.minister : schedule.preacher}
                         </TableCell>
                         <TableCell>
                           {schedule.type === "worship" ? (
-                            <div className="text-sm text-muted-foreground max-w-[300px] truncate">
+                            <div className="text-sm text-muted-foreground max-w-[200px] truncate">
                               {getWorshipTitles(schedule.selectedWorships) || "Nenhum louvor selecionado"}
                             </div>
                           ) : (
                             <div className="text-sm">
                               <span className="font-medium">{schedule.theme}</span>
-                              <div className="text-muted-foreground truncate max-w-[300px]">
-                                {schedule.keyVerse}
-                              </div>
                             </div>
                           )}
                         </TableCell>
