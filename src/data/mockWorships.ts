@@ -1,0 +1,47 @@
+import { Worship } from "@/types/worship";
+
+export const mockWorships: Worship[] = [
+  {
+    id: "1",
+    title: "Quão Grande é o Meu Deus",
+    youtubeLink: "https://www.youtube.com/watch?v=example1",
+    key: "G",
+    bpm: 72,
+    ministers: ["João Silva", "Maria Santos"],
+    notes: "Louvor para momentos de adoração intensa",
+    createdAt: new Date("2024-01-15"),
+    updatedAt: new Date("2024-01-15"),
+  },
+  {
+    id: "2",
+    title: "Amor Maior",
+    youtubeLink: "https://www.youtube.com/watch?v=example2",
+    key: "D",
+    bpm: 68,
+    ministers: ["Pedro Oliveira"],
+    createdAt: new Date("2024-02-20"),
+    updatedAt: new Date("2024-02-20"),
+  },
+  {
+    id: "3",
+    title: "Reckless Love",
+    youtubeLink: "https://www.youtube.com/watch?v=example3",
+    key: "C",
+    bpm: 84,
+    ministers: ["Ana Costa", "Lucas Mendes", "Carla Souza"],
+    fileName: "reckless-love-cifra.pdf",
+    notes: "Versão em português disponível",
+    createdAt: new Date("2024-03-10"),
+    updatedAt: new Date("2024-03-10"),
+  },
+  {
+    id: "4",
+    title: "Oceanos",
+    youtubeLink: "https://www.youtube.com/watch?v=example4",
+    key: "Am",
+    bpm: 66,
+    ministers: ["Fernanda Lima"],
+    createdAt: new Date("2024-03-25"),
+    updatedAt: new Date("2024-03-25"),
+  },
+];
