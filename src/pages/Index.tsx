@@ -1,14 +1,21 @@
+import Header from "@/components/Header";
+import HeroSection from "@/components/HeroSection";
+import VersesSection from "@/components/VersesSection";
+import HistorySection from "@/components/HistorySection";
+import PrayerSection from "@/components/PrayerSection";
+import Footer from "@/components/Footer";
+
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-semibold tracking-tight text-foreground">
-          Projeto em Branco
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Pronto para começar. O que vamos construir?
-        </p>
-      </div>
+    <div className="min-h-screen">
+      <Header />
+      <main>
+        <HeroSection />
+        <VersesSection />
+        <HistorySection />
+        <PrayerSection />
+      </main>
+      <Footer />
     </div>
   );
 };
