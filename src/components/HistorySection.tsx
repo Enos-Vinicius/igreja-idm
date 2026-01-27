@@ -1,84 +1,91 @@
-import { Church, Heart, Sparkles } from "lucide-react";
+import { Church, Users, Globe, Award } from "lucide-react";
 
 const HistorySection = () => {
+  const milestones = [
+    {
+      year: "2010",
+      title: "Fundação",
+      description: "A Igreja do Deus de Maravilhas nasce em Uberaba, MG.",
+      icon: Church,
+    },
+    {
+      year: "2015",
+      title: "Crescimento",
+      description: "Inauguração do novo templo com capacidade ampliada.",
+      icon: Users,
+    },
+    {
+      year: "2020",
+      title: "Expansão",
+      description: "Abertura da filial em Conceição das Alagoas.",
+      icon: Globe,
+    },
+    {
+      year: "2025",
+      title: "Alinhamento",
+      description: "Ano profético de alinhamento e novos projetos.",
+      icon: Award,
+    },
+  ];
+
   return (
-    <section id="historia" className="py-24 md:py-32 bg-muted/30">
+    <section className="py-24 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
           <span className="text-golden font-semibold text-sm uppercase tracking-widest">
-            A Fundação da Igreja
+            Nossa Jornada
           </span>
           <h2 className="mt-3 text-4xl md:text-5xl font-bold text-secondary">
-            Nossa História
+            Linha do Tempo
           </h2>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid gap-8 lg:gap-12 max-w-5xl mx-auto">
-          {/* O Chamado Divino */}
-          <div className="bg-card border border-border rounded-2xl p-8 md:p-10 shadow-sm hover:shadow-lg transition-shadow">
-            <div className="flex items-start gap-5">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-royal-700 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-7 h-7 text-white" />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-secondary">O Chamado Divino</h3>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  A conversão do fundador, Pastor Alceu da Silva, teve início em um período em que 
-                  aconteciam muitas maravilhas e sinais da parte de Deus. Na década de 70, ele 
-                  presenciou muitas vezes o sobrenatural. Inclusive, por três vezes teve a 
-                  experiência de ouvir a voz de Jesus nas manifestações do Espírito Santo na vida de pessoas.
-                </p>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  Em um momento de oração, recebeu uma palavra de Jesus, que disse:
-                </p>
-                {/* Quote Highlight */}
-                <blockquote className="relative my-6 pl-6 py-4 border-l-4 border-golden bg-golden/5 rounded-r-xl">
-                  <p className="text-xl md:text-2xl font-serif italic text-secondary leading-relaxed">
-                    "Onde você estiver ali estarei com você, não será só flores, terá também espinhos, 
-                    mas eu sei como arrancar os espinhos"
-                  </p>
-                </blockquote>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  Através dessa experiência surgiu uma convicção de fundar o seu próprio ministério.
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* Timeline */}
+        <div className="max-w-4xl mx-auto">
+          <div className="relative">
+            {/* Center Line */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border -translate-x-1/2 hidden md:block" />
 
-          {/* A Fundação */}
-          <div className="bg-card border border-border rounded-2xl p-8 md:p-10 shadow-sm hover:shadow-lg transition-shadow">
-            <div className="flex items-start gap-5">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-golden to-golden-light flex items-center justify-center flex-shrink-0">
-                <Church className="w-7 h-7 text-white" />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-secondary">A Fundação</h3>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  A Igreja do Deus de Maravilhas, fundada pelo Pastor Alceu da Silva em{" "}
-                  <span className="font-semibold text-foreground">4 de junho de 2004</span>, com sede 
-                  na Avenida Coronel Joaquim de Oliveira Prata, número 1817, é constituída por tempo 
-                  indeterminado, uma associação religiosa de caráter evangélico.
-                </p>
-              </div>
-            </div>
-          </div>
+            {/* Milestones */}
+            <div className="space-y-12">
+              {milestones.map((milestone, index) => (
+                <div
+                  key={milestone.year}
+                  className={`flex flex-col md:flex-row items-center gap-8 ${
+                    index % 2 === 0 ? "md:flex-row-reverse" : ""
+                  }`}
+                >
+                  {/* Content */}
+                  <div className="flex-1 text-center md:text-left">
+                    <div
+                      className={`bg-muted p-6 rounded-2xl hover-lift ${
+                        index % 2 === 0 ? "md:text-right" : ""
+                      }`}
+                    >
+                      <span className="text-golden font-bold text-lg">
+                        {milestone.year}
+                      </span>
+                      <h3 className="text-xl font-bold text-secondary mt-2 mb-2">
+                        {milestone.title}
+                      </h3>
+                      <p className="text-muted-foreground">
+                        {milestone.description}
+                      </p>
+                    </div>
+                  </div>
 
-          {/* Fidelidade de Deus */}
-          <div className="bg-card border border-border rounded-2xl p-8 md:p-10 shadow-sm hover:shadow-lg transition-shadow">
-            <div className="flex items-start gap-5">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-royal-700 flex items-center justify-center flex-shrink-0">
-                <Heart className="w-7 h-7 text-white" />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-secondary">Fidelidade de Deus</h3>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  No decorrer desses anos, Deus vem cumprindo todas as promessas. O ministério tem 
-                  sido marcado por inúmeras manifestações da graça e do poder de Deus, alcançando 
-                  vidas e transformando famílias através da pregação do evangelho.
-                </p>
-              </div>
+                  {/* Icon Node */}
+                  <div className="relative z-10">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-royal-700 flex items-center justify-center shadow-xl">
+                      <milestone.icon className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Spacer for alignment */}
+                  <div className="flex-1 hidden md:block" />
+                </div>
+              ))}
             </div>
           </div>
         </div>

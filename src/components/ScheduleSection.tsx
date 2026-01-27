@@ -1,27 +1,25 @@
-import { MapPin, Clock, ChevronRight } from "lucide-react";
+import { MapPin, Clock, Calendar } from "lucide-react";
 
 const ScheduleSection = () => {
   const locations = [
     {
       city: "Uberaba",
-      address: "Rua Exemplo, 123 - Centro",
       state: "MG",
-      schedules: [
-        { day: "Domingo", time: "9h e 18h", service: "Culto de Celebração" },
-        { day: "Quarta-feira", time: "19h30", service: "Culto de Ensino" },
-        { day: "Sexta-feira", time: "19h30", service: "Culto de Oração" },
+      address: "Rua Principal, 123 - Centro",
+      schedule: [
+        { day: "Domingo", time: "09:00 e 19:00" },
+        { day: "Quarta-feira", time: "19:30" },
+        { day: "Sexta-feira", time: "19:30" },
       ],
-      mapLink: "#",
     },
     {
       city: "Conceição das Alagoas",
-      address: "Av. Principal, 456 - Centro",
       state: "MG",
-      schedules: [
-        { day: "Domingo", time: "18h", service: "Culto de Celebração" },
-        { day: "Quinta-feira", time: "19h30", service: "Culto de Ensino" },
+      address: "Av. Central, 456 - Centro",
+      schedule: [
+        { day: "Domingo", time: "19:00" },
+        { day: "Quinta-feira", time: "19:30" },
       ],
-      mapLink: "#",
     },
   ];
 
@@ -31,78 +29,60 @@ const ScheduleSection = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <span className="text-golden font-semibold text-sm uppercase tracking-widest">
-            Nossos Cultos
+            Venha nos Visitar
           </span>
           <h2 className="mt-3 text-4xl md:text-5xl font-bold text-secondary">
-            Horários e Localizações
+            Horários & Locais
           </h2>
-          <p className="mt-4 text-muted-foreground text-lg max-w-2xl mx-auto">
-            Encontre-nos em uma de nossas unidades. Será uma alegria recebê-lo!
-          </p>
         </div>
 
         {/* Location Cards */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {locations.map((location, index) => (
+          {locations.map((location) => (
             <div
               key={location.city}
-              className="bg-card rounded-2xl shadow-lg overflow-hidden hover-lift"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="bg-background rounded-2xl shadow-xl overflow-hidden hover-lift group"
             >
               {/* Card Header */}
-              <div className="bg-gradient-royal p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold">{location.city}</h3>
-                    <p className="text-white/70 text-sm mt-1">{location.state}</p>
+              <div className="bg-gradient-royal p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                    <MapPin className="w-6 h-6 text-golden" />
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                    <MapPin className="w-6 h-6" />
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">{location.city}</h3>
+                    <p className="text-white/70">{location.state}</p>
                   </div>
                 </div>
-                <p className="text-white/80 text-sm mt-4 flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  {location.address}
-                </p>
               </div>
 
-              {/* Schedule List */}
+              {/* Card Body */}
               <div className="p-6">
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                  Programação Semanal
-                </h4>
+                {/* Address */}
+                <div className="flex items-start gap-3 mb-6 pb-6 border-b border-border">
+                  <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <p className="text-muted-foreground">{location.address}</p>
+                </div>
+
+                {/* Schedule */}
                 <div className="space-y-4">
-                  {location.schedules.map((schedule, idx) => (
+                  <div className="flex items-center gap-2 text-secondary font-semibold">
+                    <Calendar className="w-5 h-5" />
+                    <span>Programação Semanal</span>
+                  </div>
+                  {location.schedule.map((item) => (
                     <div
-                      key={idx}
-                      className="flex items-center gap-4 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                      key={item.day}
+                      className="flex items-center justify-between py-3 px-4 bg-muted rounded-lg"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Clock className="w-5 h-5 text-primary" />
+                      <span className="font-medium text-secondary">{item.day}</span>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        <span>{item.time}</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-secondary text-sm">
-                          {schedule.day}
-                        </p>
-                        <p className="text-muted-foreground text-sm truncate">
-                          {schedule.service}
-                        </p>
-                      </div>
-                      <span className="text-golden font-bold text-sm">
-                        {schedule.time}
-                      </span>
                     </div>
                   ))}
                 </div>
-
-                {/* Map Link */}
-                <a
-                  href={location.mapLink}
-                  className="mt-6 flex items-center justify-center gap-2 w-full py-3 border-2 border-primary rounded-xl text-primary font-semibold hover:bg-primary hover:text-white transition-all duration-300"
-                >
-                  <span>Ver no Mapa</span>
-                  <ChevronRight className="w-4 h-4" />
-                </a>
               </div>
             </div>
           ))}
