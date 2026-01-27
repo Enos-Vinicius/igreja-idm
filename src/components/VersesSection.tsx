@@ -3,49 +3,56 @@ import { BookOpen } from "lucide-react";
 const verses = [
   {
     reference: "Apocalipse 3:11",
+    title: "Perseverança",
     text: "Eis que venho sem demora; guarda o que tens, para que ninguém tome a tua coroa.",
   },
   {
     reference: "Hebreus 10:38",
+    title: "Fé",
     text: "Mas o meu justo viverá pela fé; e, se retroceder, nele não se compraz a minha alma.",
   },
   {
     reference: "Salmos 23:1",
+    title: "Confiança",
     text: "O Senhor é o meu pastor; nada me faltará.",
   },
 ];
 
 const VersesSection = () => {
   return (
-    <section id="versiculos" className="section-padding bg-section-light">
+    <section id="versiculos" className="section-padding bg-muted/30">
       <div className="container-main">
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mb-4">
-            Palavras de Vida
+            Versículos que nos Guiam
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Versículos que nos guiam e fortalecem em nossa caminhada com Cristo
+            Palavras de vida que fortalecem nossa caminhada
           </p>
         </div>
 
         {/* Verses Grid */}
         <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-          {verses.map((verse, index) => (
+          {verses.map((verse) => (
             <div
               key={verse.reference}
-              className="card-verse group"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow duration-300"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center group-hover:bg-primary transition-colors duration-300">
-                  <BookOpen className="w-6 h-6 text-accent-foreground group-hover:text-primary-foreground transition-colors duration-300" />
+                <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-accent" />
                 </div>
-                <span className="font-serif font-semibold text-primary text-lg">
-                  {verse.reference}
-                </span>
+                <div>
+                  <span className="font-semibold text-foreground text-sm">
+                    {verse.reference}
+                  </span>
+                  <span className="text-accent font-medium text-sm ml-2">
+                    — {verse.title}
+                  </span>
+                </div>
               </div>
-              <p className="text-muted-foreground leading-relaxed italic">
+              <p className="text-muted-foreground leading-relaxed text-sm">
                 "{verse.text}"
               </p>
             </div>
