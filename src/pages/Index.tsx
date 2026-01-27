@@ -1,19 +1,19 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import VersesSection from "@/components/VersesSection";
-import HistorySection from "@/components/HistorySection";
-import PrayerSection from "@/components/PrayerSection";
+import AboutSection from "@/components/AboutSection";
+import ScheduleSection from "@/components/ScheduleSection";
+import ProjectsSection from "@/components/ProjectsSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Header />
       <main>
         <HeroSection />
-        <VersesSection />
-        <HistorySection />
-        <PrayerSection />
+        <AboutSection />
+        <ScheduleSection />
+        <ProjectsSection />
       </main>
       <Footer />
     </div>
