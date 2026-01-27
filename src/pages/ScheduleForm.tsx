@@ -18,6 +18,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -755,22 +756,14 @@ const ScheduleForm = () => {
                       <FormItem>
                         <FormLabel>Esboço da Pregação</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Escreva aqui o esboço da sua pregação...
-
-Você pode organizar por tópicos:
-• Introdução
-• Desenvolvimento
-  - Ponto 1
-  - Ponto 2
-• Aplicação
-• Conclusão"
-                            className="min-h-[250px] font-mono text-sm"
-                            {...field}
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Escreva aqui o esboço da sua pregação..."
                           />
                         </FormControl>
                         <p className="text-sm text-muted-foreground">
-                          Use este campo para estruturar sua pregação com pontos principais, ilustrações e aplicações
+                          Use a barra de ferramentas para formatar seu esboço com títulos, listas e citações
                         </p>
                         <FormMessage />
                       </FormItem>
