@@ -20,8 +20,8 @@ const verses = [
 
 const VersesSection = () => {
   return (
-    <section id="versiculos" className="section-padding bg-muted/30">
-      <div className="container-main">
+    <section id="versiculos" className="py-24 md:py-32 bg-muted/30">
+      <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mb-4">
