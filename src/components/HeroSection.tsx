@@ -1,4 +1,4 @@
-import { Play } from "lucide-react";
+
 import heroImage from "@/assets/hero-road.jpg";
 
 const HeroSection = () => {
@@ -51,28 +51,6 @@ const HeroSection = () => {
             Isaías 45:13
           </p>
 
-          {/* CTA Buttons */}
-          <div 
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up"
-            style={{ animationDelay: "0.5s" }}
-          >
-            <a
-              href="#"
-              className="group flex items-center gap-3 px-8 py-4 glass-button rounded-full text-white font-semibold text-lg"
-            >
-              <span className="w-10 h-10 rounded-full bg-gradient-to-r from-golden to-golden-light flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Play size={18} fill="currentColor" className="text-secondary ml-0.5" />
-              </span>
-              <span>Assista ao Vivo</span>
-            </a>
-
-            <a
-              href="#sobre"
-              className="px-8 py-4 border border-white/30 rounded-full text-white font-medium hover:bg-white/10 transition-all"
-            >
-              Conheça Nossa Igreja
-            </a>
-          </div>
         </div>
 
         {/* Scroll Indicator */}
