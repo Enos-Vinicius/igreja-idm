@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { MapPin, Clock, Calendar, ChevronLeft, ChevronRight, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import heroWorship from "@/assets/hero-worship.jpg";
 
 interface ScheduleEvent {
   id: string;
@@ -8,9 +9,9 @@ interface ScheduleEvent {
   state: string;
   address: string;
   dayOfWeek: string;
-  dayNumber: number; // 0 = Sunday, 1 = Monday, etc.
+  dayNumber: number;
   time: string;
-  timeValue: number; // time in minutes for sorting (e.g., 19:30 = 1170)
+  timeValue: number;
 }
 
 const scheduleEvents: ScheduleEvent[] = [
@@ -82,7 +83,6 @@ const getNextEventDate = (event: ScheduleEvent, now: Date): Date => {
 
   let daysUntilEvent = event.dayNumber - currentDay;
 
-  // If it's the same day but the event time has passed, go to next week
   if (daysUntilEvent === 0 && currentTimeInMinutes >= event.timeValue) {
     daysUntilEvent = 7;
   } else if (daysUntilEvent < 0) {
@@ -116,32 +116,84 @@ const ScheduleSection = () => {
   }, []);
 
   const handlePrev = () => {
-    setActiveIndex((prev) => (prev === 0 ? sortedEvents.length - 1 : prev - 1));
+    setActiveIndex((prev) => (prev === 0 ? sortedEvents.length - 2 : prev - 2));
   };
 
   const handleNext = () => {
-    setActiveIndex((prev) => (prev === sortedEvents.length - 1 ? 0 : prev + 1));
-  };
-
-  // Group events in pairs for display
-  const eventPairs = useMemo(() => {
-    const pairs: (typeof sortedEvents)[] = [];
-    for (let i = 0; i < sortedEvents.length; i += 2) {
-      pairs.push(sortedEvents.slice(i, i + 2));
-    }
-    return pairs;
-  }, [sortedEvents]);
-
-  const handlePairPrev = () => {
-    setActiveIndex((prev) => (prev === 0 ? eventPairs.length - 1 : prev - 1));
-  };
-
-  const handlePairNext = () => {
-    setActiveIndex((prev) => (prev === eventPairs.length - 1 ? 0 : prev + 1));
+    setActiveIndex((prev) => (prev >= sortedEvents.length - 2 ? 0 : prev + 2));
   };
 
   const handleCreateReminder = (event: typeof sortedEvents[0]) => {
     alert(`Lembrete criado para ${event.dayOfWeek}, ${formatDate(event.nextDate)} às ${event.time} em ${event.city}!`);
+  };
+
+  // Get card position and style based on distance from center
+  const getCardStyle = (index: number) => {
+    // Two center cards at positions 0 and 1 relative to activeIndex
+    const centerLeft = activeIndex;
+    const centerRight = activeIndex + 1;
+    
+    // Calculate relative position (-2, -1, 0, 1, 2, 3)
+    let relativePos = index - centerLeft;
+    
+    // Wrap around for infinite feel
+    if (relativePos > sortedEvents.length / 2) relativePos -= sortedEvents.length;
+    if (relativePos < -sortedEvents.length / 2) relativePos += sortedEvents.length;
+
+    // Only show positions -2, -1, 0, 1, 2, 3
+    if (relativePos < -2 || relativePos > 3) return null;
+
+    // Center cards (positions 0 and 1)
+    const isCenter = relativePos === 0 || relativePos === 1;
+    
+    // Calculate visual properties
+    let translateX = 0;
+    let scale = 1;
+    let zIndex = 10;
+    let opacity = 1;
+
+    if (relativePos === 0) {
+      // Left center card
+      translateX = -140;
+      scale = 1;
+      zIndex = 20;
+    } else if (relativePos === 1) {
+      // Right center card
+      translateX = 140;
+      scale = 1;
+      zIndex = 20;
+    } else if (relativePos === -1) {
+      // Far left (first depth level)
+      translateX = -340;
+      scale = 0.85;
+      zIndex = 15;
+      opacity = 0.85;
+    } else if (relativePos === 2) {
+      // Far right (first depth level)
+      translateX = 340;
+      scale = 0.85;
+      zIndex = 15;
+      opacity = 0.85;
+    } else if (relativePos === -2) {
+      // Extreme left (second depth level)
+      translateX = -500;
+      scale = 0.7;
+      zIndex = 10;
+      opacity = 0.7;
+    } else if (relativePos === 3) {
+      // Extreme right (second depth level)
+      translateX = 500;
+      scale = 0.7;
+      zIndex = 10;
+      opacity = 0.7;
+    }
+
+    return {
+      transform: `translateX(${translateX}px) scale(${scale})`,
+      zIndex,
+      opacity,
+      isCenter,
+    };
   };
 
   return (
@@ -157,14 +209,14 @@ const ScheduleSection = () => {
           </h2>
         </div>
 
-        {/* 3D Carousel Container */}
+        {/* Carousel Container */}
         <div className="relative max-w-6xl mx-auto">
           {/* Navigation Buttons */}
           <Button
             variant="outline"
             size="icon"
             onClick={handlePrev}
-            className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
+            className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 z-[70] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
@@ -173,69 +225,85 @@ const ScheduleSection = () => {
             variant="outline"
             size="icon"
             onClick={handleNext}
-            className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
+            className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 z-[70] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
           >
             <ChevronRight className="w-5 h-5" />
           </Button>
 
-          {/* 3D Cards Container */}
-          <div className="flex items-center justify-center py-8 px-12">
+          {/* Fade Gradient Overlays */}
+          <div 
+            className="absolute left-0 top-0 bottom-0 w-32 md:w-48 z-[60] pointer-events-none"
+            style={{
+              background: 'linear-gradient(to right, hsl(var(--muted)) 0%, hsl(var(--muted)) 30%, transparent 100%)',
+            }}
+          />
+          <div 
+            className="absolute right-0 top-0 bottom-0 w-32 md:w-48 z-[60] pointer-events-none"
+            style={{
+              background: 'linear-gradient(to left, hsl(var(--muted)) 0%, hsl(var(--muted)) 30%, transparent 100%)',
+            }}
+          />
+
+          {/* Cards Container */}
+          <div className="flex items-center justify-center py-8 h-[400px]">
             {sortedEvents.map((event, index) => {
-              // Calculate position relative to active index
-              let position = index - activeIndex;
-              
-              // Handle wrapping for infinite carousel feel
-              if (position > sortedEvents.length / 2) position -= sortedEvents.length;
-              if (position < -sortedEvents.length / 2) position += sortedEvents.length;
-
-              // Only show cards within range of -2 to +2
-              if (position < -2 || position > 2) return null;
-
-              const isActive = position === 0;
-              const absPosition = Math.abs(position);
+              const style = getCardStyle(index);
+              if (!style) return null;
 
               return (
                 <div
                   key={event.id}
                   className="absolute transition-all duration-500 ease-out"
                   style={{
-                    transform: `translateX(${position * 140}px) scale(${1 - absPosition * 0.15}) translateZ(${-absPosition * 50}px)`,
-                    zIndex: 10 - absPosition,
-                    opacity: 1 - absPosition * 0.25,
-                    filter: isActive ? 'none' : 'brightness(0.8)',
+                    transform: style.transform,
+                    zIndex: style.zIndex,
+                    opacity: style.opacity,
                   }}
                 >
                   <div
                     className={`bg-background rounded-xl shadow-xl overflow-hidden transition-shadow duration-300 w-64 ${
-                      isActive ? 'shadow-2xl' : ''
+                      style.isCenter ? 'shadow-2xl' : ''
                     }`}
                   >
-                    {/* Card Header */}
-                    <div className="bg-gradient-royal p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        {/* Date Badge */}
-                        <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-md px-2 py-1">
-                          <Calendar className="w-3.5 h-3.5 text-golden" />
-                          <span className="text-lg font-bold text-gradient-golden">
-                            {formatDate(event.nextDate)}
-                          </span>
-                        </div>
-                        {/* Day of Week Badge */}
-                        <div className="bg-golden/20 rounded-md px-2 py-0.5">
-                          <span className="text-golden font-medium text-xs">
-                            {event.dayOfWeek}
-                          </span>
-                        </div>
+                    {/* Card Header with Background Image */}
+                    <div className="relative p-3 overflow-hidden">
+                      {/* Background Image */}
+                      <div className="absolute inset-0">
+                        <img 
+                          src={heroWorship} 
+                          alt="" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/85 to-secondary/90" />
                       </div>
+                      
+                      {/* Header Content */}
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-2">
+                          {/* Date Badge */}
+                          <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-md px-2 py-1">
+                            <Calendar className="w-3.5 h-3.5 text-golden" />
+                            <span className="text-lg font-bold text-gradient-golden">
+                              {formatDate(event.nextDate)}
+                            </span>
+                          </div>
+                          {/* Day of Week Badge */}
+                          <div className="bg-golden/25 backdrop-blur-sm rounded-md px-2 py-0.5">
+                            <span className="text-golden font-medium text-xs">
+                              {event.dayOfWeek}
+                            </span>
+                          </div>
+                        </div>
 
-                      {/* City & State */}
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-golden" />
-                        <div>
-                          <h3 className="text-sm font-bold text-white">
-                            {event.city}
-                          </h3>
-                          <p className="text-white/70 text-xs">{event.state}</p>
+                        {/* City & State */}
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-golden" />
+                          <div>
+                            <h3 className="text-sm font-bold text-white">
+                              {event.city}
+                            </h3>
+                            <p className="text-white/70 text-xs">{event.state}</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -280,12 +348,12 @@ const ScheduleSection = () => {
 
         {/* Carousel Indicators */}
         <div className="flex justify-center gap-2 mt-8">
-          {sortedEvents.map((_, index) => (
+          {Array.from({ length: Math.ceil(sortedEvents.length / 2) }).map((_, index) => (
             <button
               key={index}
-              onClick={() => setActiveIndex(index)}
+              onClick={() => setActiveIndex(index * 2)}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === activeIndex
+                Math.floor(activeIndex / 2) === index
                   ? "bg-golden w-6"
                   : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
               }`}
