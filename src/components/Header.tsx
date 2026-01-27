@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import heroRoad from "@/assets/hero-road.jpg";
+import { Button } from "@/components/ui/button";
+import LoginModal from "@/components/LoginModal";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -74,6 +77,12 @@ const Header = () => {
                 {link.name}
               </a>
             ))}
+            <Button
+              onClick={() => setIsLoginOpen(true)}
+              className="bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity"
+            >
+              Acessar
+            </Button>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -106,9 +115,20 @@ const Header = () => {
                 {link.name}
               </a>
             ))}
+            <Button
+              onClick={() => {
+                setIsLoginOpen(true);
+                setIsOpen(false);
+              }}
+              className="mt-3 w-full bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity"
+            >
+              Acessar
+            </Button>
           </nav>
         )}
       </div>
+
+      <LoginModal open={isLoginOpen} onOpenChange={setIsLoginOpen} />
     </header>
   );
 };
