@@ -15,6 +15,7 @@ import Repertoire from "./pages/Repertoire";
 import WorshipForm from "./pages/WorshipForm";
 import Schedules from "./pages/Schedules";
 import ScheduleForm from "./pages/ScheduleForm";
+import CalendarPage from "./pages/CalendarPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/schedules" element={<Schedules />} />
           <Route path="/schedules/new" element={<ScheduleForm />} />
           <Route path="/schedules/edit/:id" element={<ScheduleForm />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
