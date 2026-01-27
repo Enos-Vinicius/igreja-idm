@@ -35,6 +35,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent)
   },
   {
+    path: 'cadastro',
+    loadComponent: () => import('./pages/public-register/public-register.component').then(m => m.PublicRegisterComponent)
+  },
+  {
     path: 'members',
     loadComponent: () => import('./pages/members/members.component').then(m => m.MembersComponent),
     canActivate: [authGuard]
@@ -52,6 +56,11 @@ export const routes: Routes = [
   {
     path: 'users',
     loadComponent: () => import('./pages/users/users.component').then(m => m.UsersComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/solicitacoes',
+    loadComponent: () => import('./pages/member-requests/member-requests.component').then(m => m.MemberRequestsComponent),
     canActivate: [adminGuard]
   }
 ];

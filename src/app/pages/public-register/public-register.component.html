@@ -1,27 +1,47 @@
-<div class="member-form-page">
+<div class="public-register-page">
   <div class="container py-6">
-    <div class="form-header mb-5">
-      <button class="btn-back" (click)="cancel()">
+    <!-- Header -->
+    <div class="page-header">
+      <button class="btn-back" (click)="goToHome()">
         <i class="pi pi-arrow-left"></i>
         Voltar
       </button>
-      <h1 class="form-title">
-        {{ isEditMode ? 'Editar Membro' : 'Novo Membro' }}
-      </h1>
+      <div class="header-content">
+        <img src="/assets/landing/logo-clean.png" alt="IDM" class="page-logo">
+        <h1 class="page-title">Cadastro de Membro</h1>
+        <p class="page-subtitle">Preencha o formulário abaixo para se cadastrar como membro da Igreja do Deus de Maravilhas</p>
+      </div>
     </div>
 
-    <div class="form-card border-round-lg">
-      <div *ngIf="errorMessage" class="error-message mb-4">
+    <!-- Success Message -->
+    <div *ngIf="isSuccess" class="success-card">
+      <div class="success-icon">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <h2 class="success-title">Solicitação Enviada com Sucesso!</h2>
+      <p class="success-message">
+        Sua solicitação de cadastro foi recebida e está aguardando aprovação.
+        Você receberá uma confirmação por email assim que seu cadastro for aprovado.
+      </p>
+      <button class="btn btn-primary" (click)="goToHome()">
+        <i class="pi pi-home"></i>
+        Voltar para a Página Inicial
+      </button>
+    </div>
+
+    <!-- Form -->
+    <div *ngIf="!isSuccess" class="form-card">
+      <div *ngIf="errorMessage" class="error-message">
         <i class="pi pi-exclamation-triangle"></i>
         {{ errorMessage }}
       </div>
 
-      <form (ngSubmit)="saveMember()">
+      <form (ngSubmit)="submitForm()">
         <!-- Photo Upload Section -->
         <div class="form-section">
           <h2 class="section-title">
             <i class="pi pi-image"></i>
-            Foto do Membro
+            Foto (Opcional)
           </h2>
           <div class="section-content">
             <div class="photo-upload-container">
@@ -30,13 +50,13 @@
                   <img *ngIf="photoPreview" [src]="photoPreview" alt="Preview da foto">
                   <div *ngIf="!photoPreview" class="photo-placeholder">
                     <i class="pi pi-user"></i>
-                    <p>Nenhuma foto selecionada</p>
+                    <p>Nenhuma foto</p>
                   </div>
                 </div>
               </div>
 
               <div class="photo-actions">
-                <label class="btn-upload border-round-lg">
+                <label class="btn-upload">
                   <i class="pi pi-upload"></i>
                   {{ photoPreview ? 'Alterar Foto' : 'Selecionar Foto' }}
                   <input
@@ -50,16 +70,15 @@
                 <button
                   *ngIf="photoPreview"
                   type="button"
-                  class="btn-remove-photo border-round-lg"
+                  class="btn-remove-photo"
                   (click)="removePhoto()"
-                  [disabled]="isUploadingPhoto"
                 >
                   <i class="pi pi-trash"></i>
-                  Remover Foto
+                  Remover
                 </button>
 
                 <p class="photo-hint">
-                  Formatos aceitos: JPEG, PNG, WebP. Tamanho máximo: 5MB.
+                  Formatos: JPEG, PNG, WebP. Máximo: 5MB.
                 </p>
               </div>
             </div>
@@ -70,7 +89,7 @@
         <div class="form-section">
           <h2 class="section-title">
             <i class="pi pi-user"></i>
-            Informações Básicas
+            Informações Pessoais
           </h2>
           <div class="section-content">
             <div class="grid">
@@ -79,21 +98,23 @@
                 <input
                   type="text"
                   class="form-input w-full"
-                  [(ngModel)]="member.name"
+                  [(ngModel)]="formData.name"
                   name="name"
                   required
-                  placeholder="Digite o nome completo"
+                  minlength="3"
+                  placeholder="Digite seu nome completo"
                 />
               </div>
 
               <div class="col-12 md:col-6">
-                <label class="form-label">Email</label>
+                <label class="form-label">Email *</label>
                 <input
                   type="email"
                   class="form-input w-full"
-                  [(ngModel)]="member.email"
+                  [(ngModel)]="formData.email"
                   name="email"
-                  placeholder="email@exemplo.com"
+                  required
+                  placeholder="seu@email.com"
                 />
               </div>
 
@@ -102,15 +123,15 @@
                 <input
                   type="date"
                   class="form-input w-full"
-                  [(ngModel)]="member.birthDate"
+                  [(ngModel)]="formData.birthDate"
                   name="birthDate"
                   required
                 />
               </div>
 
               <div class="col-12 md:col-4">
-                <label class="form-label">Gênero</label>
-                <select class="form-input w-full" [(ngModel)]="member.gender" name="gender">
+                <label class="form-label">Gênero *</label>
+                <select class="form-input w-full" [(ngModel)]="formData.gender" name="gender" required>
                   <option value="">Selecione...</option>
                   <option *ngFor="let option of genderOptions" [value]="option">
                     {{ option }}
@@ -120,7 +141,7 @@
 
               <div class="col-12 md:col-4">
                 <label class="form-label">Estado Civil *</label>
-                <select class="form-input w-full" [(ngModel)]="member.maritalStatus" name="maritalStatus" required>
+                <select class="form-input w-full" [(ngModel)]="formData.maritalStatus" name="maritalStatus" required>
                   <option value="">Selecione...</option>
                   <option *ngFor="let option of maritalStatusOptions" [value]="option">
                     {{ option }}
@@ -129,13 +150,14 @@
               </div>
 
               <div class="col-12">
-                <label class="form-label">Profissão</label>
+                <label class="form-label">Profissão *</label>
                 <input
                   type="text"
                   class="form-input w-full"
-                  [(ngModel)]="member.occupation"
+                  [(ngModel)]="formData.occupation"
                   name="occupation"
-                  placeholder="Profissão"
+                  required
+                  placeholder="Sua profissão"
                 />
               </div>
             </div>
@@ -146,19 +168,20 @@
         <div class="form-section">
           <h2 class="section-title">
             <i class="pi pi-phone"></i>
-            Informações de Contato
+            Contato
           </h2>
           <div class="section-content">
             <div class="grid">
               <div class="col-12 md:col-4">
-                <label class="form-label">Telefone Principal</label>
+                <label class="form-label">Telefone Principal *</label>
                 <input
                   type="text"
                   class="form-input w-full"
-                  [value]="member.primaryPhone"
+                  [value]="formData.primaryPhone"
                   (input)="formatPhoneNumber($event, 'primaryPhone')"
                   name="primaryPhone"
-                  placeholder="(34) 99278-2875"
+                  required
+                  placeholder="(34) 99999-9999"
                   maxlength="15"
                 />
               </div>
@@ -168,10 +191,10 @@
                 <input
                   type="text"
                   class="form-input w-full"
-                  [value]="member.secondaryPhone"
+                  [value]="formData.secondaryPhone"
                   (input)="formatPhoneNumber($event, 'secondaryPhone')"
                   name="secondaryPhone"
-                  placeholder="(34) 99278-2875"
+                  placeholder="(34) 99999-9999"
                   maxlength="15"
                 />
               </div>
@@ -181,10 +204,10 @@
                 <input
                   type="text"
                   class="form-input w-full"
-                  [value]="member.emergencyContact"
+                  [value]="formData.emergencyContact"
                   (input)="formatPhoneNumber($event, 'emergencyContact')"
                   name="emergencyContact"
-                  placeholder="(34) 99278-2875"
+                  placeholder="(34) 99999-9999"
                   maxlength="15"
                 />
               </div>
@@ -196,10 +219,9 @@
         <div class="form-section">
           <h2 class="section-title">
             <i class="pi pi-map-marker"></i>
-            Endereço *
+            Endereço (Opcional)
           </h2>
           <div class="section-content">
-            <p class="field-hint mb-3">* Preencha pelo menos um campo de endereço</p>
             <div class="grid">
               <div class="col-12 md:col-3">
                 <label class="form-label">CEP</label>
@@ -207,7 +229,7 @@
                   <input
                     type="text"
                     class="form-input w-full"
-                    [value]="member.zipCode"
+                    [value]="formData.zipCode"
                     (input)="formatZipCode($event)"
                     name="zipCode"
                     placeholder="00000-000"
@@ -222,7 +244,7 @@
                 <input
                   type="text"
                   class="form-input w-full"
-                  [(ngModel)]="member.street"
+                  [(ngModel)]="formData.street"
                   name="street"
                   placeholder="Nome da rua"
                 />
@@ -233,7 +255,7 @@
                 <input
                   type="text"
                   class="form-input w-full"
-                  [(ngModel)]="member.number"
+                  [(ngModel)]="formData.number"
                   name="number"
                   placeholder="123"
                 />
@@ -244,7 +266,7 @@
                 <input
                   type="text"
                   class="form-input w-full"
-                  [(ngModel)]="member.complement"
+                  [(ngModel)]="formData.complement"
                   name="complement"
                   placeholder="Apto, bloco, etc."
                 />
@@ -255,7 +277,7 @@
                 <input
                   type="text"
                   class="form-input w-full"
-                  [(ngModel)]="member.neighborhood"
+                  [(ngModel)]="formData.neighborhood"
                   name="neighborhood"
                   placeholder="Bairro"
                 />
@@ -266,71 +288,21 @@
                 <input
                   type="text"
                   class="form-input w-full"
-                  [(ngModel)]="member.city"
+                  [(ngModel)]="formData.city"
                   name="city"
                   placeholder="Cidade"
                 />
               </div>
 
               <div class="col-12 md:col-1">
-                <label class="form-label">Estado</label>
+                <label class="form-label">UF</label>
                 <input
                   type="text"
                   class="form-input w-full"
-                  [(ngModel)]="member.state"
+                  [(ngModel)]="formData.state"
                   name="state"
-                  placeholder="UF"
+                  placeholder="MG"
                   maxlength="2"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Church Information Section -->
-        <div class="form-section">
-          <h2 class="section-title">
-            <i class="pi pi-home"></i>
-            Informações Eclesiásticas
-          </h2>
-          <div class="section-content">
-            <div class="grid">
-              <div class="col-12 md:col-6">
-                <label class="form-label">Função na Igreja</label>
-                <select class="form-input w-full" [(ngModel)]="member.churchRole" name="churchRole">
-                  <option *ngFor="let role of churchRoleOptions" [value]="role">
-                    {{ role }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="col-12 md:col-6">
-                <label class="form-label">Status de Membro</label>
-                <select class="form-input w-full" [(ngModel)]="member.membershipStatus" name="membershipStatus">
-                  <option value="">Selecione...</option>
-                  <option *ngFor="let status of membershipStatusOptions" [value]="status">
-                    {{ status }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="col-12 md:col-6">
-                <label class="form-label">Data de Batismo</label>
-                <input
-                  type="date"
-                  class="form-input w-full"
-                  [(ngModel)]="member.baptismDate"
-                  name="baptismDate"
-                />
-              </div>
-
-              <div class="col-12 md:col-6">
-                <label class="form-label">Data de Ingresso</label>
-                <input
-                  type="date"
-                  class="form-input w-full"
-                  [(ngModel)]="member.joinDate"
-                  name="joinDate"
                 />
               </div>
             </div>
@@ -348,7 +320,7 @@
               <label class="consent-label">
                 <input
                   type="checkbox"
-                  [(ngModel)]="member.imageConsentGiven"
+                  [(ngModel)]="formData.imageConsentGiven"
                   name="imageConsentGiven"
                   class="consent-checkbox"
                 />
@@ -362,7 +334,7 @@
               <label class="consent-label">
                 <input
                   type="checkbox"
-                  [(ngModel)]="member.emailConsentGiven"
+                  [(ngModel)]="formData.emailConsentGiven"
                   name="emailConsentGiven"
                   class="consent-checkbox"
                 />
@@ -376,7 +348,7 @@
               <label class="consent-label">
                 <input
                   type="checkbox"
-                  [(ngModel)]="member.whatsappConsentGiven"
+                  [(ngModel)]="formData.whatsappConsentGiven"
                   name="whatsappConsentGiven"
                   class="consent-checkbox"
                 />
@@ -388,42 +360,31 @@
           </div>
         </div>
 
-        <!-- Notes Section -->
-        <div class="form-section">
-          <h2 class="section-title">
-            <i class="pi pi-file-edit"></i>
-            Observações
-          </h2>
-          <div class="section-content">
-            <textarea
-              class="form-textarea w-full"
-              [(ngModel)]="member.notes"
-              name="notes"
-              rows="4"
-              placeholder="Observações adicionais..."
-            ></textarea>
-          </div>
-        </div>
-
         <!-- Form Actions -->
         <div class="form-actions">
           <button
             type="button"
-            class="btn btn-cancel border-round-lg"
-            (click)="cancel()"
+            class="btn btn-cancel"
+            (click)="goToHome()"
             [disabled]="isLoading"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            class="btn btn-save border-round-lg"
-            [disabled]="isLoading || isUploadingPhoto || !member.name"
+            class="btn btn-submit"
+            [disabled]="isLoading"
           >
-            <i class="pi" [class.pi-spin]="isLoading || isUploadingPhoto" [class.pi-spinner]="isLoading || isUploadingPhoto" [class.pi-check]="!isLoading && !isUploadingPhoto"></i>
-            {{ (isLoading || isUploadingPhoto) ? (isUploadingPhoto ? 'Enviando foto...' : 'Salvando...') : 'Salvar Membro' }}
+            <i class="pi" [class.pi-spin]="isLoading" [class.pi-spinner]="isLoading" [class.pi-send]="!isLoading"></i>
+            {{ isLoading ? 'Enviando...' : 'Enviar Cadastro' }}
           </button>
         </div>
+
+        <p class="recaptcha-notice">
+          Este site é protegido pelo reCAPTCHA e as
+          <a href="https://policies.google.com/privacy" target="_blank">Políticas de Privacidade</a> e
+          <a href="https://policies.google.com/terms" target="_blank">Termos de Serviço</a> do Google se aplicam.
+        </p>
       </form>
     </div>
   </div>

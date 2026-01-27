@@ -114,6 +114,12 @@ export class HeaderComponent implements OnInit {
     this.router.navigate(['/users']);
   }
 
+  navigateToRequests() {
+    this.showUserMenu = false;
+    this.showMobileMenu = false;
+    this.router.navigate(['/admin/solicitacoes']);
+  }
+
   logout() {
     this.showUserMenu = false;
     this.showMobileMenu = false;

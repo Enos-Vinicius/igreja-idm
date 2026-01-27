@@ -1,0 +1,305 @@
+<div class="member-requests-page">
+  <div class="container py-6">
+    <!-- Header -->
+    <div class="page-header">
+      <button class="btn-back" (click)="goBack()">
+        <i class="pi pi-arrow-left"></i>
+        Voltar
+      </button>
+      <h1 class="page-title">Solicitações de Cadastro</h1>
+      <p class="page-subtitle">Gerencie as solicitações de cadastro de novos membros</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card stat-pending" (click)="onStatusFilterChange('pending')" [class.active]="statusFilter === 'pending'">
+        <div class="stat-icon">
+          <i class="pi pi-clock"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ pendingCount }}</span>
+          <span class="stat-label">Pendentes</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-approved" (click)="onStatusFilterChange('approved')" [class.active]="statusFilter === 'approved'">
+        <div class="stat-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ approvedCount }}</span>
+          <span class="stat-label">Aprovados</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-rejected" (click)="onStatusFilterChange('rejected')" [class.active]="statusFilter === 'rejected'">
+        <div class="stat-icon">
+          <i class="pi pi-times-circle"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ rejectedCount }}</span>
+          <span class="stat-label">Rejeitados</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-all" (click)="onStatusFilterChange('all')" [class.active]="statusFilter === 'all'">
+        <div class="stat-icon">
+          <i class="pi pi-list"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ requests.length }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <div class="search-box">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+          placeholder="Buscar por nome, email ou telefone..."
+          class="search-input"
+        />
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="error-message">
+      <i class="pi pi-exclamation-triangle"></i>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-container">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Carregando solicitações...</span>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredRequests.length === 0" class="empty-state">
+      <i class="pi pi-inbox"></i>
+      <h3>Nenhuma solicitação encontrada</h3>
+      <p>
+        <span *ngIf="statusFilter === 'pending'">Não há solicitações pendentes no momento.</span>
+        <span *ngIf="statusFilter === 'approved'">Não há solicitações aprovadas.</span>
+        <span *ngIf="statusFilter === 'rejected'">Não há solicitações rejeitadas.</span>
+        <span *ngIf="statusFilter === 'all'">Não há solicitações cadastradas.</span>
+      </p>
+    </div>
+
+    <!-- Requests List -->
+    <div *ngIf="!isLoading && filteredRequests.length > 0" class="requests-list">
+      <div class="request-card" *ngFor="let request of filteredRequests">
+        <div class="request-photo">
+          <img *ngIf="request.photoUrl" [src]="request.photoUrl" [alt]="request.name">
+          <div *ngIf="!request.photoUrl" class="photo-placeholder">
+            <i class="pi pi-user"></i>
+          </div>
+        </div>
+
+        <div class="request-info">
+          <h3 class="request-name">{{ request.name }}</h3>
+          <p class="request-email">{{ request.email }}</p>
+          <p class="request-phone">{{ formatPhone(request.primaryPhone) }}</p>
+          <span class="request-date">
+            <i class="pi pi-calendar"></i>
+            {{ formatDate(request.createdAt) }}
+          </span>
+        </div>
+
+        <div class="request-status">
+          <span class="status-badge" [ngClass]="getStatusClass(request.status)">
+            {{ getStatusLabel(request.status) }}
+          </span>
+          <span *ngIf="request.status === 'rejected' && request.rejectionReason" class="rejection-reason">
+            {{ request.rejectionReason }}
+          </span>
+        </div>
+
+        <div class="request-actions">
+          <button class="btn-action btn-view" (click)="openViewModal(request)" title="Ver detalhes">
+            <i class="pi pi-eye"></i>
+          </button>
+
+          <ng-container *ngIf="request.status === 'pending'">
+            <button class="btn-action btn-approve" (click)="approveRequest(request)" title="Aprovar">
+              <i class="pi pi-check"></i>
+            </button>
+            <button class="btn-action btn-reject" (click)="openRejectModal(request)" title="Rejeitar">
+              <i class="pi pi-times"></i>
+            </button>
+          </ng-container>
+
+          <button class="btn-action btn-delete" (click)="deleteRequest(request)" title="Excluir">
+            <i class="pi pi-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalhes -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ modalMode === 'view' ? 'Detalhes da Solicitação' : 'Rejeitar Solicitação' }}</h2>
+      <button class="btn-close" (click)="closeModal()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedRequest">
+      <!-- View Mode -->
+      <ng-container *ngIf="modalMode === 'view'">
+        <div class="detail-section">
+          <div class="detail-photo">
+            <img *ngIf="selectedRequest.photoUrl" [src]="selectedRequest.photoUrl" [alt]="selectedRequest.name">
+            <div *ngIf="!selectedRequest.photoUrl" class="photo-placeholder-large">
+              <i class="pi pi-user"></i>
+            </div>
+          </div>
+
+          <div class="detail-status">
+            <span class="status-badge" [ngClass]="getStatusClass(selectedRequest.status)">
+              {{ getStatusLabel(selectedRequest.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-group">
+            <label>Nome Completo</label>
+            <span>{{ selectedRequest.name }}</span>
+          </div>
+
+          <div class="detail-group">
+            <label>Email</label>
+            <span>{{ selectedRequest.email }}</span>
+          </div>
+
+          <div class="detail-group">
+            <label>Telefone Principal</label>
+            <span>{{ formatPhone(selectedRequest.primaryPhone) }}</span>
+          </div>
+
+          <div class="detail-group" *ngIf="selectedRequest.secondaryPhone">
+            <label>Telefone Secundário</label>
+            <span>{{ formatPhone(selectedRequest.secondaryPhone) }}</span>
+          </div>
+
+          <div class="detail-group" *ngIf="selectedRequest.emergencyContact">
+            <label>Contato de Emergência</label>
+            <span>{{ formatPhone(selectedRequest.emergencyContact) }}</span>
+          </div>
+
+          <div class="detail-group">
+            <label>Data de Nascimento</label>
+            <span>{{ formatBirthDate(selectedRequest.birthDate) }}</span>
+          </div>
+
+          <div class="detail-group">
+            <label>Gênero</label>
+            <span>{{ selectedRequest.gender }}</span>
+          </div>
+
+          <div class="detail-group">
+            <label>Estado Civil</label>
+            <span>{{ selectedRequest.maritalStatus }}</span>
+          </div>
+
+          <div class="detail-group">
+            <label>Profissão</label>
+            <span>{{ selectedRequest.occupation }}</span>
+          </div>
+
+          <div class="detail-group full-width" *ngIf="selectedRequest.street || selectedRequest.city">
+            <label>Endereço</label>
+            <span>
+              {{ selectedRequest.street }}{{ selectedRequest.number ? ', ' + selectedRequest.number : '' }}
+              {{ selectedRequest.complement ? ' - ' + selectedRequest.complement : '' }}
+              <br *ngIf="selectedRequest.neighborhood || selectedRequest.city">
+              {{ selectedRequest.neighborhood }}{{ selectedRequest.neighborhood && selectedRequest.city ? ' - ' : '' }}{{ selectedRequest.city }}{{ selectedRequest.state ? '/' + selectedRequest.state : '' }}
+              {{ selectedRequest.zipCode ? ' - CEP: ' + selectedRequest.zipCode : '' }}
+            </span>
+          </div>
+
+          <div class="detail-group">
+            <label>Data da Solicitação</label>
+            <span>{{ formatDate(selectedRequest.createdAt) }}</span>
+          </div>
+        </div>
+
+        <div class="detail-consents">
+          <h4>Consentimentos</h4>
+          <div class="consent-item">
+            <i class="pi" [ngClass]="selectedRequest.imageConsentGiven ? 'pi-check-circle text-success' : 'pi-times-circle text-danger'"></i>
+            <span>Uso de Imagem</span>
+          </div>
+          <div class="consent-item">
+            <i class="pi" [ngClass]="selectedRequest.emailConsentGiven ? 'pi-check-circle text-success' : 'pi-times-circle text-danger'"></i>
+            <span>Comunicação por E-mail</span>
+          </div>
+          <div class="consent-item">
+            <i class="pi" [ngClass]="selectedRequest.whatsappConsentGiven ? 'pi-check-circle text-success' : 'pi-times-circle text-danger'"></i>
+            <span>Comunicação por WhatsApp</span>
+          </div>
+        </div>
+
+        <div *ngIf="selectedRequest.status === 'rejected' && selectedRequest.rejectionReason" class="rejection-info">
+          <h4>Motivo da Rejeição</h4>
+          <p>{{ selectedRequest.rejectionReason }}</p>
+        </div>
+      </ng-container>
+
+      <!-- Reject Mode -->
+      <ng-container *ngIf="modalMode === 'reject'">
+        <p class="reject-message">
+          Você está prestes a rejeitar a solicitação de <strong>{{ selectedRequest.name }}</strong>.
+          Por favor, informe o motivo da rejeição.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Motivo da Rejeição *</label>
+          <textarea
+            class="form-textarea"
+            [(ngModel)]="rejectionReason"
+            rows="4"
+            placeholder="Informe o motivo da rejeição..."
+          ></textarea>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="modal-footer">
+      <ng-container *ngIf="modalMode === 'view' && selectedRequest?.status === 'pending'">
+        <button class="btn btn-approve-modal" (click)="approveRequest(selectedRequest!)" [disabled]="isProcessing">
+          <i class="pi" [ngClass]="isProcessing ? 'pi-spin pi-spinner' : 'pi-check'"></i>
+          Aprovar
+        </button>
+        <button class="btn btn-reject-modal" (click)="modalMode = 'reject'" [disabled]="isProcessing">
+          <i class="pi pi-times"></i>
+          Rejeitar
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="modalMode === 'reject'">
+        <button class="btn btn-cancel" (click)="modalMode = 'view'" [disabled]="isProcessing">
+          Voltar
+        </button>
+        <button class="btn btn-reject-confirm" (click)="rejectRequest()" [disabled]="isProcessing || !rejectionReason.trim()">
+          <i class="pi" [ngClass]="isProcessing ? 'pi-spin pi-spinner' : 'pi-times'"></i>
+          Confirmar Rejeição
+        </button>
+      </ng-container>
+
+      <button *ngIf="modalMode === 'view' && selectedRequest?.status !== 'pending'" class="btn btn-cancel" (click)="closeModal()">
+        Fechar
+      </button>
+    </div>
+  </div>
+</div>

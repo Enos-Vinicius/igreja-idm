@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MembersService, Member } from '../../services/members.service';
+import { ViaCepService } from '../../services/viacep.service';
 
 @Component({
   selector: 'app-member-form',
@@ -43,6 +44,7 @@ export class MemberFormComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   memberId: number | null = null;
+  isLoadingCep = false;
 
   // Photo upload
   selectedFile: File | null = null;
@@ -72,6 +74,7 @@ export class MemberFormComponent implements OnInit {
 
   constructor(
     private membersService: MembersService,
+    private viaCepService: ViaCepService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -211,6 +214,39 @@ export class MemberFormComponent implements OnInit {
     }
 
     this.member.zipCode = value;
+
+    // Busca automaticamente quando completa 8 dígitos
+    if (value.replace(/\D/g, '').length === 8) {
+      this.buscarCep();
+    }
+  }
+
+  buscarCep() {
+    const cep = this.member.zipCode;
+    if (!cep || cep.replace(/\D/g, '').length !== 8) {
+      return;
+    }
+
+    this.isLoadingCep = true;
+    this.viaCepService.buscarCep(cep).subscribe({
+      next: (address) => {
+        if (address) {
+          // Preenche os campos apenas se estiverem vazios
+          if (!this.member.street) this.member.street = address.street;
+          if (!this.member.neighborhood) this.member.neighborhood = address.neighborhood;
+          if (!this.member.city) this.member.city = address.city;
+          if (!this.member.state) this.member.state = address.state;
+        } else {
+          // CEP não encontrado ou inválido
+          console.warn('CEP não encontrado');
+        }
+        this.isLoadingCep = false;
+      },
+      error: (error) => {
+        console.error('Erro ao buscar CEP:', error);
+        this.isLoadingCep = false;
+      }
+    });
   }
 
   saveMember() {

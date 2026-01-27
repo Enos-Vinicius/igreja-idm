@@ -25,10 +25,10 @@
         <!-- Login Button (Desktop) -->
         <button
           *ngIf="!isAuthenticated"
-          class="btn-login border-round-lg"
+          class="btn-login"
           (click)="openLoginModal()"
         >
-          Login
+          Entrar
         </button>
 
         <!-- User Menu (Desktop) -->
@@ -48,6 +48,10 @@
             <button class="dropdown-item" (click)="navigateToMembers()">
               <i class="pi pi-users"></i>
               <span>Cadastro de Membros</span>
+            </button>
+            <button *ngIf="isAdmin()" class="dropdown-item" (click)="navigateToRequests()">
+              <i class="pi pi-inbox"></i>
+              <span>Solicitações de Cadastro</span>
             </button>
             <button *ngIf="isAdmin()" class="dropdown-item" (click)="navigateToUsers()">
               <i class="pi pi-cog"></i>
@@ -104,6 +108,10 @@
       <i class="pi pi-users"></i>
       <span>Cadastro de Membros</span>
     </button>
+    <button *ngIf="isAuthenticated && isAdmin()" class="mobile-link" (click)="navigateToRequests()">
+      <i class="pi pi-inbox"></i>
+      <span>Solicitações de Cadastro</span>
+    </button>
     <button *ngIf="isAuthenticated && isAdmin()" class="mobile-link" (click)="navigateToUsers()">
       <i class="pi pi-cog"></i>
       <span>Gestão de Usuários</span>
@@ -113,11 +121,11 @@
   <div class="mobile-menu-footer">
     <button
       *ngIf="!isAuthenticated"
-      class="btn-mobile-login border-round-lg w-full"
+      class="btn-mobile-login w-full"
       (click)="openLoginModal(); closeMobileMenu()"
     >
       <i class="pi pi-sign-in"></i>
-      Login
+      Entrar
     </button>
 
     <button
