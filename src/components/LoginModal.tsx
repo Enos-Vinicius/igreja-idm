@@ -14,17 +14,21 @@ import skyClouds from "@/assets/sky-clouds.jpg";
 interface LoginModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onLoginSuccess?: () => void;
 }
 
-const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
+const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
+    // Simula login bem-sucedido
     console.log("Login attempt:", { email, password });
+    onLoginSuccess?.();
+    setEmail("");
+    setPassword("");
   };
 
   return (
