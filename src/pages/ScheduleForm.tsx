@@ -47,13 +47,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { mockSchedules } from "@/data/mockSchedules";
 import { mockWorships } from "@/data/mockWorships";
-import { ScheduleType } from "@/types/schedule";
+import { ScheduleType, WORSHIP_CATEGORIES, CHURCHES, WorshipCategory, Church } from "@/types/schedule";
 import { Worship } from "@/types/worship";
 import { cn } from "@/lib/utils";
 
 const worshipScheduleSchema = z.object({
   date: z.date({ required_error: "Selecione a data do culto" }),
   minister: z.string().min(1, "Selecione o ministro"),
+  category: z.string().min(1, "Selecione a categoria do culto"),
+  church: z.string().min(1, "Selecione a igreja"),
   notes: z.string().optional(),
 });
 
@@ -63,6 +65,8 @@ const preachingScheduleSchema = z.object({
   theme: z.string().min(1, "Informe o tema da pregação"),
   keyVerse: z.string().min(1, "Informe o versículo chave"),
   outline: z.string().optional(),
+  category: z.string().min(1, "Selecione a categoria do culto"),
+  church: z.string().min(1, "Selecione a igreja"),
   notes: z.string().optional(),
 });
 
@@ -86,6 +90,9 @@ const ScheduleForm = () => {
   const worshipForm = useForm<z.infer<typeof worshipScheduleSchema>>({
     resolver: zodResolver(worshipScheduleSchema),
     defaultValues: {
+      minister: "",
+      category: "",
+      church: "",
       notes: "",
     },
   });
@@ -97,6 +104,8 @@ const ScheduleForm = () => {
       theme: "",
       keyVerse: "",
       outline: "",
+      category: "",
+      church: "",
       notes: "",
     },
   });
@@ -113,6 +122,8 @@ const ScheduleForm = () => {
           worshipForm.reset({
             date: schedule.date,
             minister: schedule.minister,
+            category: schedule.category,
+            church: schedule.church,
             notes: schedule.notes || "",
           });
           setSelectedWorships(schedule.selectedWorships);
@@ -123,6 +134,8 @@ const ScheduleForm = () => {
             theme: schedule.theme,
             keyVerse: schedule.keyVerse,
             outline: schedule.outline,
+            category: schedule.category,
+            church: schedule.church,
             notes: schedule.notes || "",
           });
         }
@@ -400,6 +413,59 @@ const ScheduleForm = () => {
                     />
                   </div>
 
+                  {/* Category and Church */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={worshipForm.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Categoria do Culto</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione a categoria" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {WORSHIP_CATEGORIES.map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={worshipForm.control}
+                      name="church"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Igreja</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione a igreja" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {CHURCHES.map((church) => (
+                                <SelectItem key={church} value={church}>
+                                  {church}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   {/* Suggestions */}
                   {selectedMinister && (
                     <div className="space-y-4">
@@ -585,6 +651,59 @@ const ScheduleForm = () => {
                           <FormControl>
                             <Input placeholder="Nome do pregador" {...field} />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Category and Church */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={preachingForm.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Categoria do Culto</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione a categoria" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {WORSHIP_CATEGORIES.map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={preachingForm.control}
+                      name="church"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Igreja</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione a igreja" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {CHURCHES.map((church) => (
+                                <SelectItem key={church} value={church}>
+                                  {church}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

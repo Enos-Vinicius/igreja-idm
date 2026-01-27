@@ -1,29 +1,44 @@
 import { useState } from "react";
 import { format, startOfWeek, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, addWeeks, subWeeks, addYears, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Music, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import DashboardLayout from "@/components/DashboardLayout";
+import { mockSchedules } from "@/data/mockSchedules";
+import { Schedule } from "@/types/schedule";
+import { useNavigate } from "react-router-dom";
 
 type ViewType = "day" | "week" | "month" | "year";
 
-// Mock events for demonstration
-const mockEvents = [
-  { id: 1, title: "Culto Dominical", date: new Date(2026, 0, 25), time: "09:00", color: "bg-primary" },
-  { id: 2, title: "Reunião de Oração", date: new Date(2026, 0, 27), time: "19:00", color: "bg-accent" },
-  { id: 3, title: "Ensaio do Louvor", date: new Date(2026, 0, 28), time: "20:00", color: "bg-destructive" },
-  { id: 4, title: "Estudo Bíblico", date: new Date(2026, 0, 29), time: "19:30", color: "bg-primary" },
-  { id: 5, title: "Culto de Jovens", date: new Date(2026, 0, 31), time: "19:00", color: "bg-accent" },
-];
+// Convert schedules to calendar events
+const scheduleToEvents = (schedules: Schedule[]) => {
+  return schedules.map(schedule => ({
+    id: schedule.id,
+    title: schedule.type === "worship" 
+      ? `Louvor - ${schedule.minister}` 
+      : `Pregação - ${schedule.preacher}`,
+    date: schedule.date,
+    time: "09:00", // Default time
+    color: schedule.type === "worship" ? "bg-primary" : "bg-accent",
+    type: schedule.type,
+    category: schedule.category,
+    church: schedule.church,
+    responsible: schedule.type === "worship" ? schedule.minister : schedule.preacher,
+  }));
+};
 
 const hours = Array.from({ length: 24 }, (_, i) => i);
 
 export default function CalendarPage() {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>("month");
+  
+  const events = scheduleToEvents(mockSchedules);
 
   const navigatePrev = () => {
     switch (view) {
@@ -62,7 +77,7 @@ export default function CalendarPage() {
   const goToToday = () => setCurrentDate(new Date());
 
   const getEventsForDate = (date: Date) => {
-    return mockEvents.filter(event => isSameDay(event.date, date));
+    return events.filter(event => isSameDay(event.date, date));
   };
 
   const getTitle = () => {
@@ -97,11 +112,21 @@ export default function CalendarPage() {
                 <div
                   key={event.id}
                   className={cn(
-                    "px-2 py-1 rounded text-xs text-primary-foreground mb-1",
+                    "px-2 py-2 rounded text-xs text-primary-foreground mb-1",
                     event.color
                   )}
                 >
-                  {event.time} - {event.title}
+                  <div className="flex items-center gap-1 mb-1">
+                    {event.type === "worship" ? (
+                      <Music className="h-3 w-3" />
+                    ) : (
+                      <BookOpen className="h-3 w-3" />
+                    )}
+                    <span className="font-medium">{event.responsible}</span>
+                  </div>
+                  <div className="text-[10px] opacity-90">
+                    {event.category} • {event.church}
+                  </div>
                 </div>
               ))}
             </div>
@@ -164,11 +189,17 @@ export default function CalendarPage() {
                     <div
                       key={event.id}
                       className={cn(
-                        "px-1 py-0.5 rounded text-[10px] text-primary-foreground truncate",
+                        "px-1 py-0.5 rounded text-[10px] text-primary-foreground truncate flex items-center gap-1",
                         event.color
                       )}
+                      title={`${event.category} • ${event.church}`}
                     >
-                      {event.title}
+                      {event.type === "worship" ? (
+                        <Music className="h-2.5 w-2.5 flex-shrink-0" />
+                      ) : (
+                        <BookOpen className="h-2.5 w-2.5 flex-shrink-0" />
+                      )}
+                      <span className="truncate">{event.church}</span>
                     </div>
                   ))}
                 </div>
@@ -229,11 +260,20 @@ export default function CalendarPage() {
                       <div
                         key={event.id}
                         className={cn(
-                          "px-1.5 py-0.5 rounded text-[10px] text-primary-foreground truncate",
+                          "px-1.5 py-1 rounded text-[10px] text-primary-foreground",
                           event.color
                         )}
+                        title={`${event.responsible} - ${event.category}`}
                       >
-                        {event.title}
+                        <div className="flex items-center gap-1">
+                          {event.type === "worship" ? (
+                            <Music className="h-2.5 w-2.5 flex-shrink-0" />
+                          ) : (
+                            <BookOpen className="h-2.5 w-2.5 flex-shrink-0" />
+                          )}
+                          <span className="truncate font-medium">{event.church}</span>
+                        </div>
+                        <div className="truncate opacity-90">{event.category}</div>
                       </div>
                     ))}
                     {dayEvents.length > 3 && (
@@ -269,7 +309,7 @@ export default function CalendarPage() {
             weeks.push(days.slice(i, i + 7));
           }
 
-          const monthEvents = mockEvents.filter(e => 
+          const monthEvents = events.filter(e => 
             e.date.getMonth() === month.getMonth() && 
             e.date.getFullYear() === month.getFullYear()
           );
@@ -332,9 +372,9 @@ export default function CalendarPage() {
             <h1 className="text-3xl font-bold text-foreground">Calendário</h1>
             <p className="text-muted-foreground">Gerencie eventos e programações</p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate("/schedules/new")}>
             <Plus className="h-4 w-4" />
-            Novo Evento
+            Nova Escala
           </Button>
         </div>
 
