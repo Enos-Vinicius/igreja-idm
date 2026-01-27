@@ -13,6 +13,8 @@ import AdminRegistrationRequests from "./pages/AdminRegistrationRequests";
 import AttendanceControl from "./pages/AttendanceControl";
 import Repertoire from "./pages/Repertoire";
 import WorshipForm from "./pages/WorshipForm";
+import Schedules from "./pages/Schedules";
+import ScheduleForm from "./pages/ScheduleForm";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,9 @@ const App = () => (
           <Route path="/repertoire" element={<Repertoire />} />
           <Route path="/repertoire/new" element={<WorshipForm />} />
           <Route path="/repertoire/edit/:id" element={<WorshipForm />} />
+          <Route path="/schedules" element={<Schedules />} />
+          <Route path="/schedules/new" element={<ScheduleForm />} />
+          <Route path="/schedules/edit/:id" element={<ScheduleForm />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
