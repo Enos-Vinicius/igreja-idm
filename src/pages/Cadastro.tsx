@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import DashboardLayout from "@/components/DashboardLayout";
 
 const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const cepRegex = /^\d{5}-\d{3}$/;
@@ -150,17 +151,10 @@ const Cadastro = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        <Link 
-          to="/" 
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar ao início
-        </Link>
-
-        <Card>
+    <DashboardLayout>
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-3xl mx-auto">
+          <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl md:text-3xl font-bold text-primary">
               Solicitação de Cadastro
@@ -604,11 +598,12 @@ const Cadastro = () => {
                 </Button>
               </form>
             </Form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
 };
 
 export default Cadastro;
