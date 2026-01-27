@@ -8,6 +8,7 @@ import Cadastro from "./pages/Cadastro";
 import MembersList from "./pages/MembersList";
 import MemberForm from "./pages/MemberForm";
 import Users from "./pages/Users";
+import AdminRegistrationRequests from "./pages/AdminRegistrationRequests";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/members/new" element={<MemberForm />} />
           <Route path="/members/edit/:id" element={<MemberForm />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/admin/solicitacoes" element={<AdminRegistrationRequests />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
