@@ -83,7 +83,7 @@ const Header = () => {
               className={`rounded-full border-2 font-semibold transition-all ${
                 isScrolled 
                   ? "border-primary text-primary hover:bg-primary hover:text-white" 
-                  : "border-white text-white hover:bg-white hover:text-secondary"
+                  : "border-white text-white bg-transparent hover:bg-white hover:text-secondary"
               }`}
             >
               Acessar
@@ -129,7 +129,7 @@ const Header = () => {
               className={`mt-3 w-full rounded-full border-2 font-semibold transition-all ${
                 isScrolled 
                   ? "border-primary text-primary hover:bg-primary hover:text-white" 
-                  : "border-white text-white hover:bg-white hover:text-secondary"
+                  : "border-white text-white bg-transparent hover:bg-white hover:text-secondary"
               }`}
             >
               Acessar
