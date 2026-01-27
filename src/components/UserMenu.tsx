@@ -1,4 +1,5 @@
 import { ChevronDown, Users, UserPlus, Settings, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,7 @@ interface UserMenuProps {
 }
 
 const UserMenu = ({ user, onLogout, isScrolled = false }: UserMenuProps) => {
+  const navigate = useNavigate();
   const initials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
   const displayName = `${user.firstName} ${user.lastName}`;
 
@@ -26,7 +28,7 @@ const UserMenu = ({ user, onLogout, isScrolled = false }: UserMenuProps) => {
     {
       label: "Cadastro de Membros",
       icon: UserPlus,
-      onClick: () => console.log("Cadastro de Membros"),
+      onClick: () => navigate("/cadastro"),
     },
     {
       label: "Solicitação de Cadastro",
