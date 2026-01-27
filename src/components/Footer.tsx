@@ -1,67 +1,97 @@
-import { Cross, MapPin, Phone, Mail, Clock } from "lucide-react";
+import { Facebook, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
 
 const Footer = () => {
+  const socialLinks = [
+    { icon: Facebook, href: "#", label: "Facebook" },
+    { icon: Instagram, href: "#", label: "Instagram" },
+    { icon: Youtube, href: "#", label: "YouTube" },
+  ];
+
+  const quickLinks = [
+    { name: "Início", href: "#inicio" },
+    { name: "Sobre", href: "#sobre" },
+    { name: "Horários", href: "#horarios" },
+    { name: "Projetos", href: "#projetos" },
+  ];
+
   return (
-    <footer id="contato" className="bg-foreground text-primary-foreground">
-      <div className="container-main section-padding">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8">
-          {/* Logo & About */}
+    <footer id="contato" className="bg-secondary text-white">
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
+          {/* Brand */}
           <div className="lg:col-span-2">
-            <a href="#inicio" className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-                <Cross className="w-7 h-7 text-primary-foreground" />
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-golden to-golden-light flex items-center justify-center">
+                <span className="text-secondary font-bold text-xl">M</span>
               </div>
-              <span className="font-serif text-xl font-bold">
-                Comunidade da Redenção
-              </span>
-            </a>
-            <p className="text-primary-foreground/70 leading-relaxed max-w-md">
-              Somos uma igreja que acredita no poder transformador do evangelho de Cristo.
-              Venha nos visitar e faça parte desta família!
+              <div>
+                <span className="text-sm font-semibold text-white/70">Igreja do Deus de</span>
+                <span className="block text-xl font-bold text-gradient-golden">Maravilhas</span>
+              </div>
+            </div>
+            <p className="text-white/60 max-w-md leading-relaxed mb-6">
+              Uma igreja pentecostal comprometida com a transformação de vidas 
+              através do poder do Evangelho de Jesus Cristo.
             </p>
+
+            {/* Social Links */}
+            <div className="flex gap-4">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  aria-label={social.label}
+                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-golden hover:text-secondary transition-all duration-300"
+                >
+                  <social.icon className="w-5 h-5" />
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* Contact Info */}
+          {/* Quick Links */}
           <div>
-            <h4 className="font-serif text-lg font-bold mb-4">Contato</h4>
+            <h4 className="text-lg font-bold mb-6">Links Rápidos</h4>
             <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 mt-0.5 text-primary" />
-                <span className="text-primary-foreground/70">
-                  Rua da Igreja, 123
-                  <br />
-                  Centro - Sua Cidade, UF
-                </span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-primary" />
-                <span className="text-primary-foreground/70">(11) 99999-9999</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-primary" />
-                <span className="text-primary-foreground/70">contato@redencao.com.br</span>
-              </li>
+              {quickLinks.map((link) => (
+                <li key={link.name}>
+                  <a
+                    href={link.href}
+                    className="text-white/60 hover:text-golden transition-colors"
+                  >
+                    {link.name}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Schedule */}
+          {/* Contact */}
           <div>
-            <h4 className="font-serif text-lg font-bold mb-4">Horários</h4>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <Clock className="w-5 h-5 mt-0.5 text-primary" />
-                <div className="text-primary-foreground/70">
-                  <strong className="text-primary-foreground">Domingo</strong>
-                  <br />
-                  09h e 18h
-                </div>
+            <h4 className="text-lg font-bold mb-6">Contato</h4>
+            <ul className="space-y-4">
+              <li>
+                <a
+                  href="tel:+5534999999999"
+                  className="flex items-center gap-3 text-white/60 hover:text-golden transition-colors"
+                >
+                  <Phone className="w-5 h-5 flex-shrink-0" />
+                  <span>(34) 99999-9999</span>
+                </a>
               </li>
-              <li className="flex items-start gap-3">
-                <Clock className="w-5 h-5 mt-0.5 text-primary" />
-                <div className="text-primary-foreground/70">
-                  <strong className="text-primary-foreground">Quarta-feira</strong>
-                  <br />
-                  19h30
+              <li>
+                <a
+                  href="mailto:contato@igrejadm.com.br"
+                  className="flex items-center gap-3 text-white/60 hover:text-golden transition-colors"
+                >
+                  <Mail className="w-5 h-5 flex-shrink-0" />
+                  <span>contato@igrejadm.com.br</span>
+                </a>
+              </li>
+              <li>
+                <div className="flex items-start gap-3 text-white/60">
+                  <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <span>Uberaba - MG</span>
                 </div>
               </li>
             </ul>
@@ -69,9 +99,12 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-primary-foreground/10 mt-12 pt-8 text-center">
-          <p className="text-primary-foreground/50 text-sm">
-            © {new Date().getFullYear()} Comunidade da Redenção. Todos os direitos reservados.
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-white/40 text-sm">
+            © 2025 Igreja do Deus de Maravilhas. Todos os direitos reservados.
+          </p>
+          <p className="text-white/40 text-sm">
+            Desenvolvido com ❤️ para a glória de Deus
           </p>
         </div>
       </div>
