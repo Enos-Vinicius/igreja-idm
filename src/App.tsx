@@ -11,6 +11,8 @@ import MemberForm from "./pages/MemberForm";
 import Users from "./pages/Users";
 import AdminRegistrationRequests from "./pages/AdminRegistrationRequests";
 import AttendanceControl from "./pages/AttendanceControl";
+import Repertoire from "./pages/Repertoire";
+import WorshipForm from "./pages/WorshipForm";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +33,9 @@ const App = () => (
           <Route path="/users" element={<Users />} />
           <Route path="/admin/solicitacoes" element={<AdminRegistrationRequests />} />
           <Route path="/attendance" element={<AttendanceControl />} />
+          <Route path="/repertoire" element={<Repertoire />} />
+          <Route path="/repertoire/new" element={<WorshipForm />} />
+          <Route path="/repertoire/edit/:id" element={<WorshipForm />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

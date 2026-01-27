@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   Home,
   CalendarCheck,
+  Music,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -58,6 +59,12 @@ const menuItems = [
     label: "Presença",
     icon: CalendarCheck,
     path: "/attendance",
+  },
+  {
+    id: "repertoire",
+    label: "Repertório",
+    icon: Music,
+    path: "/repertoire",
   },
   {
     id: "users",
