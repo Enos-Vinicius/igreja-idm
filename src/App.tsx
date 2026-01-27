@@ -10,6 +10,7 @@ import MembersList from "./pages/MembersList";
 import MemberForm from "./pages/MemberForm";
 import Users from "./pages/Users";
 import AdminRegistrationRequests from "./pages/AdminRegistrationRequests";
+import AttendanceControl from "./pages/AttendanceControl";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/members/edit/:id" element={<MemberForm />} />
           <Route path="/users" element={<Users />} />
           <Route path="/admin/solicitacoes" element={<AdminRegistrationRequests />} />
+          <Route path="/attendance" element={<AttendanceControl />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
