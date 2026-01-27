@@ -38,7 +38,7 @@ const UserMenu = ({ user, onLogout, isScrolled = false }: UserMenuProps) => {
     {
       label: "Gestão de Usuários",
       icon: Settings,
-      onClick: () => console.log("Gestão de Usuários"),
+      onClick: () => navigate("/users"),
     },
   ];
 
