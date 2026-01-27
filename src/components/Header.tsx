@@ -79,7 +79,12 @@ const Header = () => {
             ))}
             <Button
               onClick={() => setIsLoginOpen(true)}
-              className="bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity"
+              variant="outline"
+              className={`rounded-full border-2 font-semibold transition-all ${
+                isScrolled 
+                  ? "border-primary text-primary hover:bg-primary hover:text-white" 
+                  : "border-white text-white hover:bg-white hover:text-secondary"
+              }`}
             >
               Acessar
             </Button>
@@ -120,7 +125,12 @@ const Header = () => {
                 setIsLoginOpen(true);
                 setIsOpen(false);
               }}
-              className="mt-3 w-full bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity"
+              variant="outline"
+              className={`mt-3 w-full rounded-full border-2 font-semibold transition-all ${
+                isScrolled 
+                  ? "border-primary text-primary hover:bg-primary hover:text-white" 
+                  : "border-white text-white hover:bg-white hover:text-secondary"
+              }`}
             >
               Acessar
             </Button>
