@@ -28,12 +28,12 @@ const UserMenu = ({ user, onLogout, isScrolled = false }: UserMenuProps) => {
     {
       label: "Cadastro de Membros",
       icon: UserPlus,
-      onClick: () => navigate("/cadastro"),
+      onClick: () => console.log("Cadastro de Membros"),
     },
     {
       label: "Solicitação de Cadastro",
       icon: Users,
-      onClick: () => console.log("Solicitação de Cadastro"),
+      onClick: () => navigate("/cadastro"),
     },
     {
       label: "Gestão de Usuários",
