@@ -74,6 +74,12 @@ const menuItems = [
     path: "/schedules",
   },
   {
+    id: "calendar",
+    label: "Calendário",
+    icon: CalendarCheck,
+    path: "/calendar",
+  },
+  {
     id: "users",
     label: "Usuários",
     icon: Settings,
