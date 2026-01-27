@@ -5,6 +5,7 @@ export interface Worship {
   key: string; // Tonalidade
   singer?: string; // Cantor de referência
   ministers: string[]; // Pode ter múltiplos ministros
+  tags?: string[]; // Temas/palavras-chave para busca
   fileUrl?: string;
   fileName?: string;
   notes?: string;
