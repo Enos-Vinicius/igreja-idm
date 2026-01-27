@@ -123,53 +123,24 @@ const ScheduleSection = () => {
     setActiveIndex((prev) => (prev === sortedEvents.length - 1 ? 0 : prev + 1));
   };
 
-  const getCardStyle = (index: number) => {
-    const diff = index - activeIndex;
-    const totalItems = sortedEvents.length;
-    
-    // Handle wrapping for circular carousel
-    let normalizedDiff = diff;
-    if (diff > totalItems / 2) normalizedDiff = diff - totalItems;
-    if (diff < -totalItems / 2) normalizedDiff = diff + totalItems;
-
-    const absDistance = Math.abs(normalizedDiff);
-
-    if (absDistance === 0) {
-      return {
-        transform: "translateX(-50%) scale(1)",
-        zIndex: 50,
-        opacity: 1,
-        left: "50%",
-      };
-    } else if (absDistance === 1) {
-      const direction = normalizedDiff > 0 ? 1 : -1;
-      return {
-        transform: `translateX(${direction * 60 - 50}%) scale(0.85)`,
-        zIndex: 40,
-        opacity: 0.9,
-        left: "50%",
-      };
-    } else if (absDistance === 2) {
-      const direction = normalizedDiff > 0 ? 1 : -1;
-      return {
-        transform: `translateX(${direction * 110 - 50}%) scale(0.7)`,
-        zIndex: 30,
-        opacity: 0.5,
-        left: "50%",
-      };
-    } else {
-      return {
-        transform: "translateX(-50%) scale(0.5)",
-        zIndex: 10,
-        opacity: 0,
-        left: "50%",
-        pointerEvents: "none" as const,
-      };
+  // Group events in pairs for display
+  const eventPairs = useMemo(() => {
+    const pairs: (typeof sortedEvents)[] = [];
+    for (let i = 0; i < sortedEvents.length; i += 2) {
+      pairs.push(sortedEvents.slice(i, i + 2));
     }
+    return pairs;
+  }, [sortedEvents]);
+
+  const handlePairPrev = () => {
+    setActiveIndex((prev) => (prev === 0 ? eventPairs.length - 1 : prev - 1));
+  };
+
+  const handlePairNext = () => {
+    setActiveIndex((prev) => (prev === eventPairs.length - 1 ? 0 : prev + 1));
   };
 
   const handleCreateReminder = (event: typeof sortedEvents[0]) => {
-    // For now, just show an alert - can be integrated with calendar API later
     alert(`Lembrete criado para ${event.dayOfWeek}, ${formatDate(event.nextDate)} às ${event.time} em ${event.city}!`);
   };
 
@@ -187,13 +158,13 @@ const ScheduleSection = () => {
         </div>
 
         {/* Carousel Container */}
-        <div className="relative h-[480px] max-w-6xl mx-auto">
+        <div className="relative max-w-5xl mx-auto">
           {/* Navigation Buttons */}
           <Button
             variant="outline"
             size="icon"
-            onClick={handlePrev}
-            className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
+            onClick={handlePairPrev}
+            className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
@@ -201,109 +172,99 @@ const ScheduleSection = () => {
           <Button
             variant="outline"
             size="icon"
-            onClick={handleNext}
-            className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
+            onClick={handlePairNext}
+            className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
           >
             <ChevronRight className="w-5 h-5" />
           </Button>
 
-          {/* Cards */}
-          <div className="relative w-full h-full">
-            {sortedEvents.map((event, index) => {
-              const style = getCardStyle(index);
-              const isActive = index === activeIndex;
-
-              return (
-                <div
-                  key={event.id}
-                  className="absolute top-0 w-[320px] md:w-[380px] transition-all duration-500 ease-out cursor-pointer"
-                  style={style}
-                  onClick={() => setActiveIndex(index)}
+          {/* Cards Grid - 2 per view */}
+          <div className="overflow-hidden">
+            <div 
+              className="flex transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+            >
+              {eventPairs.map((pair, pairIndex) => (
+                <div 
+                  key={pairIndex} 
+                  className="w-full flex-shrink-0 grid grid-cols-1 md:grid-cols-2 gap-6 px-2"
                 >
-                  <div
-                    className={`bg-background rounded-2xl shadow-2xl overflow-hidden h-full transition-shadow duration-300 ${
-                      isActive ? "shadow-golden/20" : ""
-                    }`}
-                  >
-                    {/* Card Header - Date, City, State */}
-                    <div className="bg-gradient-royal p-6 relative overflow-hidden">
-                      {/* Decorative circles */}
-                      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-golden/10" />
-                      <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-white/5" />
-
-                      <div className="relative z-10">
-                        {/* Date */}
-                        <div className="flex items-center gap-2 mb-3">
-                          <Calendar className="w-5 h-5 text-golden" />
-                          <span className="text-4xl font-bold text-gradient-golden">
-                            {formatDate(event.nextDate)}
-                          </span>
+                  {pair.map((event) => (
+                    <div
+                      key={event.id}
+                      className="bg-background rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300"
+                    >
+                      {/* Card Header - Redesigned */}
+                      <div className="bg-gradient-royal p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          {/* Date Badge */}
+                          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
+                            <Calendar className="w-5 h-5 text-golden" />
+                            <span className="text-2xl font-bold text-gradient-golden">
+                              {formatDate(event.nextDate)}
+                            </span>
+                          </div>
+                          {/* Day of Week Badge */}
+                          <div className="bg-golden/20 rounded-lg px-3 py-1">
+                            <span className="text-golden font-medium text-sm">
+                              {event.dayOfWeek}
+                            </span>
+                          </div>
                         </div>
 
                         {/* City & State */}
                         <div className="flex items-center gap-2">
                           <MapPin className="w-5 h-5 text-golden" />
                           <div>
-                            <h3 className="text-2xl font-bold text-white">
+                            <h3 className="text-xl font-bold text-white">
                               {event.city}
                             </h3>
                             <p className="text-white/70 text-sm">{event.state}</p>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Card Body */}
-                    <div className="p-6 space-y-4">
-                      {/* Address */}
-                      <a
-                        href="#localizacao"
-                        className="flex items-start gap-3 group hover:text-primary transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0 group-hover:text-primary" />
-                        <p className="text-muted-foreground group-hover:text-primary underline-offset-2 group-hover:underline">
-                          {event.address}
-                        </p>
-                      </a>
+                      {/* Card Body */}
+                      <div className="p-6 space-y-4">
+                        {/* Address */}
+                        <a
+                          href="#localizacao"
+                          className="flex items-start gap-3 group hover:text-primary transition-colors"
+                        >
+                          <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0 group-hover:text-primary" />
+                          <p className="text-muted-foreground group-hover:text-primary underline-offset-2 group-hover:underline text-sm">
+                            {event.address}
+                          </p>
+                        </a>
 
-                      {/* Time */}
-                      <div className="flex items-center gap-3">
-                        <Clock className="w-5 h-5 text-muted-foreground" />
-                        <span className="text-foreground font-semibold text-lg">
-                          {event.time}
-                        </span>
+                        {/* Time */}
+                        <div className="flex items-center gap-3">
+                          <Clock className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-foreground font-semibold text-lg">
+                            {event.time}
+                          </span>
+                        </div>
+
+                        {/* Create Reminder Button */}
+                        <Button
+                          onClick={() => handleCreateReminder(event)}
+                          className="w-full mt-4 bg-golden hover:bg-golden-light text-secondary font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
+                          <Bell className="w-4 h-4 mr-2" />
+                          Criar Lembrete
+                        </Button>
                       </div>
-
-                      {/* Day of Week */}
-                      <div className="inline-block px-4 py-2 bg-muted rounded-full">
-                        <span className="text-secondary font-medium">
-                          {event.dayOfWeek}
-                        </span>
-                      </div>
-
-                      {/* Create Reminder Button */}
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCreateReminder(event);
-                        }}
-                        className="w-full mt-4 bg-golden hover:bg-golden-light text-secondary font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                      >
-                        <Bell className="w-4 h-4 mr-2" />
-                        Criar Lembrete
-                      </Button>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Carousel Indicators */}
         <div className="flex justify-center gap-2 mt-8">
-          {sortedEvents.map((_, index) => (
+          {eventPairs.map((_, index) => (
             <button
               key={index}
               onClick={() => setActiveIndex(index)}
