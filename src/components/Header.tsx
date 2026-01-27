@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import heroRoad from "@/assets/hero-road.jpg";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,12 +25,23 @@ const Header = () => {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 overflow-hidden ${
         isScrolled 
           ? "bg-white shadow-lg" 
-          : "bg-transparent"
+          : ""
       }`}
     >
+      {/* Background Image with Gradient Overlay */}
+      {!isScrolled && (
+        <div className="absolute inset-0 -z-10">
+          <img 
+            src={heroRoad} 
+            alt="" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-secondary/80 to-primary/60" />
+        </div>
+      )}
       <div className="container mx-auto px-4">
         <div className={`flex items-center justify-between transition-all duration-300 ${
           isScrolled ? "h-16" : "h-20"

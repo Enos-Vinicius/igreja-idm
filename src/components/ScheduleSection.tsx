@@ -157,14 +157,14 @@ const ScheduleSection = () => {
           </h2>
         </div>
 
-        {/* Carousel Container */}
-        <div className="relative max-w-5xl mx-auto">
+        {/* 3D Carousel Container */}
+        <div className="relative max-w-6xl mx-auto">
           {/* Navigation Buttons */}
           <Button
             variant="outline"
             size="icon"
-            onClick={handlePairPrev}
-            className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
+            onClick={handlePrev}
+            className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
@@ -172,99 +172,115 @@ const ScheduleSection = () => {
           <Button
             variant="outline"
             size="icon"
-            onClick={handlePairNext}
-            className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
+            onClick={handleNext}
+            className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 z-[60] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
           >
             <ChevronRight className="w-5 h-5" />
           </Button>
 
-          {/* Cards Grid - 2 per view */}
-          <div className="overflow-hidden">
-            <div 
-              className="flex transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-            >
-              {eventPairs.map((pair, pairIndex) => (
-                <div 
-                  key={pairIndex} 
-                  className="w-full flex-shrink-0 grid grid-cols-1 md:grid-cols-2 gap-6 px-2"
+          {/* 3D Cards Container */}
+          <div className="flex items-center justify-center py-8 px-12">
+            {sortedEvents.map((event, index) => {
+              // Calculate position relative to active index
+              let position = index - activeIndex;
+              
+              // Handle wrapping for infinite carousel feel
+              if (position > sortedEvents.length / 2) position -= sortedEvents.length;
+              if (position < -sortedEvents.length / 2) position += sortedEvents.length;
+
+              // Only show cards within range of -2 to +2
+              if (position < -2 || position > 2) return null;
+
+              const isActive = position === 0;
+              const absPosition = Math.abs(position);
+
+              return (
+                <div
+                  key={event.id}
+                  className="absolute transition-all duration-500 ease-out"
+                  style={{
+                    transform: `translateX(${position * 140}px) scale(${1 - absPosition * 0.15}) translateZ(${-absPosition * 50}px)`,
+                    zIndex: 10 - absPosition,
+                    opacity: 1 - absPosition * 0.25,
+                    filter: isActive ? 'none' : 'brightness(0.8)',
+                  }}
                 >
-                  {pair.map((event) => (
-                    <div
-                      key={event.id}
-                      className="bg-background rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300"
-                    >
-                      {/* Card Header - Redesigned */}
-                      <div className="bg-gradient-royal p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          {/* Date Badge */}
-                          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-                            <Calendar className="w-5 h-5 text-golden" />
-                            <span className="text-2xl font-bold text-gradient-golden">
-                              {formatDate(event.nextDate)}
-                            </span>
-                          </div>
-                          {/* Day of Week Badge */}
-                          <div className="bg-golden/20 rounded-lg px-3 py-1">
-                            <span className="text-golden font-medium text-sm">
-                              {event.dayOfWeek}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* City & State */}
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-5 h-5 text-golden" />
-                          <div>
-                            <h3 className="text-xl font-bold text-white">
-                              {event.city}
-                            </h3>
-                            <p className="text-white/70 text-sm">{event.state}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Card Body */}
-                      <div className="p-6 space-y-4">
-                        {/* Address */}
-                        <a
-                          href="#localizacao"
-                          className="flex items-start gap-3 group hover:text-primary transition-colors"
-                        >
-                          <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0 group-hover:text-primary" />
-                          <p className="text-muted-foreground group-hover:text-primary underline-offset-2 group-hover:underline text-sm">
-                            {event.address}
-                          </p>
-                        </a>
-
-                        {/* Time */}
-                        <div className="flex items-center gap-3">
-                          <Clock className="w-5 h-5 text-muted-foreground" />
-                          <span className="text-foreground font-semibold text-lg">
-                            {event.time}
+                  <div
+                    className={`bg-background rounded-xl shadow-xl overflow-hidden transition-shadow duration-300 w-64 ${
+                      isActive ? 'shadow-2xl' : ''
+                    }`}
+                  >
+                    {/* Card Header */}
+                    <div className="bg-gradient-royal p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        {/* Date Badge */}
+                        <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-md px-2 py-1">
+                          <Calendar className="w-3.5 h-3.5 text-golden" />
+                          <span className="text-lg font-bold text-gradient-golden">
+                            {formatDate(event.nextDate)}
                           </span>
                         </div>
+                        {/* Day of Week Badge */}
+                        <div className="bg-golden/20 rounded-md px-2 py-0.5">
+                          <span className="text-golden font-medium text-xs">
+                            {event.dayOfWeek}
+                          </span>
+                        </div>
+                      </div>
 
-                        {/* Create Reminder Button */}
-                        <Button
-                          onClick={() => handleCreateReminder(event)}
-                          className="w-full mt-4 bg-golden hover:bg-golden-light text-secondary font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                          <Bell className="w-4 h-4 mr-2" />
-                          Criar Lembrete
-                        </Button>
+                      {/* City & State */}
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-golden" />
+                        <div>
+                          <h3 className="text-sm font-bold text-white">
+                            {event.city}
+                          </h3>
+                          <p className="text-white/70 text-xs">{event.state}</p>
+                        </div>
                       </div>
                     </div>
-                  ))}
+
+                    {/* Card Body */}
+                    <div className="p-3 space-y-2">
+                      {/* Address */}
+                      <a
+                        href="#localizacao"
+                        className="flex items-start gap-2 group hover:text-primary transition-colors"
+                      >
+                        <MapPin className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0 group-hover:text-primary" />
+                        <p className="text-muted-foreground group-hover:text-primary underline-offset-2 group-hover:underline text-xs line-clamp-2">
+                          {event.address}
+                        </p>
+                      </a>
+
+                      {/* Time */}
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-foreground font-semibold text-sm">
+                          {event.time}
+                        </span>
+                      </div>
+
+                      {/* Create Reminder Button */}
+                      <Button
+                        onClick={() => handleCreateReminder(event)}
+                        size="sm"
+                        className="w-full mt-2 bg-golden hover:bg-golden-light text-secondary font-semibold shadow-md hover:shadow-lg transition-all duration-300 text-xs py-1"
+                      >
+                        <Bell className="w-3 h-3 mr-1" />
+                        Criar Lembrete
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Carousel Indicators */}
         <div className="flex justify-center gap-2 mt-8">
-          {eventPairs.map((_, index) => (
+          {sortedEvents.map((_, index) => (
             <button
               key={index}
               onClick={() => setActiveIndex(index)}
