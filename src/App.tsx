@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Cadastro from "./pages/Cadastro";
 import MembersList from "./pages/MembersList";
 import MemberForm from "./pages/MemberForm";
+import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/members" element={<MembersList />} />
           <Route path="/members/new" element={<MemberForm />} />
           <Route path="/members/edit/:id" element={<MemberForm />} />
+          <Route path="/users" element={<Users />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
