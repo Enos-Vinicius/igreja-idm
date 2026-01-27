@@ -29,27 +29,27 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
-        <div className="flex min-h-[400px]">
-          {/* Left Side - Branding with Sky Image */}
-          <div className="hidden sm:flex w-[30%] relative flex-col items-center justify-center p-6 text-center overflow-hidden">
+      <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
+        <div className="flex min-h-[480px]">
+          {/* Left Side - Church Image */}
+          <div className="hidden sm:flex w-[45%] relative flex-col items-center justify-end p-8 text-center overflow-hidden">
             {/* Background Image */}
             <img 
               src={skyClouds} 
-              alt="" 
+              alt="Igreja do Deus de Maravilhas" 
               className="absolute inset-0 w-full h-full object-cover"
             />
-            {/* Primary Overlay with Transparency */}
-            <div className="absolute inset-0 bg-primary/70" />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-secondary/95 via-secondary/60 to-transparent" />
             
-            {/* Content */}
-            <div className="relative z-10">
-              <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30">
-                <span className="text-white font-bold text-2xl">M</span>
+            {/* Content at bottom */}
+            <div className="relative z-10 text-left w-full">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-golden to-golden-light flex items-center justify-center mb-4 shadow-lg">
+                <span className="text-secondary font-bold text-xl">M</span>
               </div>
-              <h2 className="text-white font-bold text-xl mb-2">Graça e Paz!</h2>
-              <p className="text-white/90 text-sm">
-                Acesse sua conta para continuar.
+              <h2 className="text-white font-bold text-2xl mb-2">Graça e Paz!</h2>
+              <p className="text-white/80 text-sm leading-relaxed">
+                Bem-vindo à área de membros da Igreja do Deus de Maravilhas.
               </p>
             </div>
           </div>
