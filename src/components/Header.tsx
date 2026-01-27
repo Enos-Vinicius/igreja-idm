@@ -3,12 +3,24 @@ import { Menu, X } from "lucide-react";
 import heroRoad from "@/assets/hero-road.jpg";
 import { Button } from "@/components/ui/button";
 import LoginModal from "@/components/LoginModal";
+import UserMenu from "@/components/UserMenu";
+
+// TODO: Replace with real authentication state
+const mockUser = {
+  firstName: "João",
+  lastName: "Silva",
+  avatarUrl: "",
+};
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -77,17 +89,21 @@ const Header = () => {
                 {link.name}
               </a>
             ))}
-            <Button
-              onClick={() => setIsLoginOpen(true)}
-              variant="outline"
-              className={`rounded-full border-2 font-semibold transition-all ${
-                isScrolled 
-                  ? "border-primary text-primary hover:bg-primary hover:text-white" 
-                  : "border-white text-white bg-transparent hover:bg-white hover:text-secondary"
-              }`}
-            >
-              Acessar
-            </Button>
+            {isLoggedIn ? (
+              <UserMenu user={mockUser} onLogout={handleLogout} isScrolled={isScrolled} />
+            ) : (
+              <Button
+                onClick={() => setIsLoginOpen(true)}
+                variant="outline"
+                className={`rounded-full border-2 font-semibold transition-all ${
+                  isScrolled 
+                    ? "border-primary text-primary hover:bg-primary hover:text-white" 
+                    : "border-white text-white bg-transparent hover:bg-white hover:text-secondary"
+                }`}
+              >
+                Acessar
+              </Button>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -120,20 +136,26 @@ const Header = () => {
                 {link.name}
               </a>
             ))}
-            <Button
-              onClick={() => {
-                setIsLoginOpen(true);
-                setIsOpen(false);
-              }}
-              variant="outline"
-              className={`mt-3 w-full rounded-full border-2 font-semibold transition-all ${
-                isScrolled 
-                  ? "border-primary text-primary hover:bg-primary hover:text-white" 
-                  : "border-white text-white bg-transparent hover:bg-white hover:text-secondary"
-              }`}
-            >
-              Acessar
-            </Button>
+            {isLoggedIn ? (
+              <div className="mt-3">
+                <UserMenu user={mockUser} onLogout={handleLogout} isScrolled={isScrolled} />
+              </div>
+            ) : (
+              <Button
+                onClick={() => {
+                  setIsLoginOpen(true);
+                  setIsOpen(false);
+                }}
+                variant="outline"
+                className={`mt-3 w-full rounded-full border-2 font-semibold transition-all ${
+                  isScrolled 
+                    ? "border-primary text-primary hover:bg-primary hover:text-white" 
+                    : "border-white text-white bg-transparent hover:bg-white hover:text-secondary"
+                }`}
+              >
+                Acessar
+              </Button>
+            )}
           </nav>
         )}
       </div>
