@@ -21,6 +21,12 @@ const Header = () => {
   const handleLogout = () => {
     setIsLoggedIn(false);
   };
+
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    setIsLoginOpen(false);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -160,7 +166,7 @@ const Header = () => {
         )}
       </div>
 
-      <LoginModal open={isLoginOpen} onOpenChange={setIsLoginOpen} />
+      <LoginModal open={isLoginOpen} onOpenChange={setIsLoginOpen} onLoginSuccess={handleLoginSuccess} />
     </header>
   );
 };
