@@ -41,7 +41,7 @@ const worshipSchema = z.object({
       "Deve ser um link do YouTube"
     ),
   key: z.string().min(1, "Tonalidade é obrigatória"),
-  bpm: z.coerce.number().min(20).max(300).optional().or(z.literal("")),
+  singer: z.string().max(100, "Nome do cantor muito longo").optional(),
   notes: z.string().max(500, "Observações muito longas").optional(),
 });
 
@@ -64,7 +64,7 @@ const WorshipForm = () => {
       title: "",
       youtubeLink: "",
       key: "",
-      bpm: "",
+      singer: "",
       notes: "",
     },
   });
@@ -77,7 +77,7 @@ const WorshipForm = () => {
           title: worship.title,
           youtubeLink: worship.youtubeLink,
           key: worship.key,
-          bpm: worship.bpm || "",
+          singer: worship.singer || "",
           notes: worship.notes || "",
         });
         setMinisters(worship.ministers);
@@ -228,7 +228,7 @@ const WorshipForm = () => {
                   )}
                 />
 
-                {/* Key and BPM */}
+                {/* Key and Singer */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -260,20 +260,17 @@ const WorshipForm = () => {
 
                   <FormField
                     control={form.control}
-                    name="bpm"
+                    name="singer"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>BPM</FormLabel>
+                        <FormLabel>Cantor</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
-                            placeholder="Ex: 72"
-                            min={20}
-                            max={300}
+                            placeholder="Ex: Fernandinho"
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>Batidas por minuto</FormDescription>
+                        <FormDescription>Cantor de referência</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

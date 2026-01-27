@@ -136,7 +136,7 @@ const Repertoire = () => {
                   <TableRow>
                     <TableHead>Título</TableHead>
                     <TableHead>Tonalidade</TableHead>
-                    <TableHead>BPM</TableHead>
+                    <TableHead>Cantor</TableHead>
                     <TableHead>Ministro(s)</TableHead>
                     <TableHead>Arquivo</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -172,7 +172,7 @@ const Repertoire = () => {
                           <Badge variant="secondary">{worship.key}</Badge>
                         </TableCell>
                         <TableCell>
-                          {worship.bpm ? `${worship.bpm}` : "-"}
+                          {worship.singer || "-"}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
