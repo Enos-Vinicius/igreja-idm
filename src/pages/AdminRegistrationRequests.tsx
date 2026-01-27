@@ -11,6 +11,10 @@ import {
   ArrowLeft,
   User,
   Filter,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,6 +93,62 @@ const AdminRegistrationRequests = () => {
       return matchesStatus && matchesSearch;
     });
   }, [requests, statusFilter, searchTerm]);
+
+  const statusCounts = useMemo(() => {
+    return {
+      pending: requests.filter((r) => r.status === 'pending').length,
+      approved: requests.filter((r) => r.status === 'approved').length,
+      rejected: requests.filter((r) => r.status === 'rejected').length,
+      total: requests.length,
+    };
+  }, [requests]);
+
+  const summaryCards = [
+    {
+      key: 'pending',
+      label: 'Pendentes',
+      count: statusCounts.pending,
+      icon: Clock,
+      bgColor: 'bg-yellow-50 dark:bg-yellow-950/30',
+      iconColor: 'text-yellow-600 dark:text-yellow-400',
+      borderColor: 'border-yellow-200 dark:border-yellow-800',
+      hoverColor: 'hover:border-yellow-400 dark:hover:border-yellow-600',
+    },
+    {
+      key: 'approved',
+      label: 'Aprovados',
+      count: statusCounts.approved,
+      icon: CheckCircle,
+      bgColor: 'bg-green-50 dark:bg-green-950/30',
+      iconColor: 'text-green-600 dark:text-green-400',
+      borderColor: 'border-green-200 dark:border-green-800',
+      hoverColor: 'hover:border-green-400 dark:hover:border-green-600',
+    },
+    {
+      key: 'rejected',
+      label: 'Rejeitados',
+      count: statusCounts.rejected,
+      icon: XCircle,
+      bgColor: 'bg-red-50 dark:bg-red-950/30',
+      iconColor: 'text-red-600 dark:text-red-400',
+      borderColor: 'border-red-200 dark:border-red-800',
+      hoverColor: 'hover:border-red-400 dark:hover:border-red-600',
+    },
+    {
+      key: 'all',
+      label: 'Total',
+      count: statusCounts.total,
+      icon: Users,
+      bgColor: 'bg-primary/5',
+      iconColor: 'text-primary',
+      borderColor: 'border-primary/20',
+      hoverColor: 'hover:border-primary/50',
+    },
+  ];
+
+  const handleCardClick = (statusKey: string) => {
+    setStatusFilter(statusKey);
+  };
 
   const handleViewDetails = (request: RegistrationRequest) => {
     setSelectedRequest(request);
@@ -209,6 +269,36 @@ const AdminRegistrationRequests = () => {
               Gerencie as solicitações de novos membros
             </p>
           </div>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {summaryCards.map((card) => {
+            const IconComponent = card.icon;
+            const isSelected = statusFilter === card.key;
+            return (
+              <button
+                key={card.key}
+                onClick={() => handleCardClick(card.key)}
+                className={`
+                  p-4 rounded-lg border-2 transition-all duration-200 text-left
+                  ${card.bgColor} ${card.borderColor} ${card.hoverColor}
+                  ${isSelected ? 'ring-2 ring-offset-2 ring-primary scale-[1.02]' : ''}
+                  hover:shadow-md cursor-pointer
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full ${card.bgColor}`}>
+                    <IconComponent className={`h-5 w-5 ${card.iconColor}`} />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{card.count}</p>
+                    <p className="text-sm text-muted-foreground">{card.label}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         {/* Filters */}
