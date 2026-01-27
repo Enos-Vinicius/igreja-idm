@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroRoad from "@/assets/hero-road.jpg";
 import { Button } from "@/components/ui/button";
 import LoginModal from "@/components/LoginModal";
-import UserMenu from "@/components/UserMenu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // TODO: Replace with real authentication state
 const mockUser = {
@@ -17,6 +18,10 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  const initials = `${mockUser.firstName.charAt(0)}${mockUser.lastName.charAt(0)}`.toUpperCase();
+  const displayName = `${mockUser.firstName} ${mockUser.lastName}`;
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -25,6 +30,10 @@ const Header = () => {
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
     setIsLoginOpen(false);
+  };
+
+  const handleUserClick = () => {
+    navigate("/dashboard");
   };
 
   useEffect(() => {
@@ -96,7 +105,26 @@ const Header = () => {
               </a>
             ))}
             {isLoggedIn ? (
-              <UserMenu user={mockUser} onLogout={handleLogout} isScrolled={isScrolled} />
+              <button
+                onClick={handleUserClick}
+                className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 hover:bg-white/10 focus:outline-none ${
+                  isScrolled ? "hover:bg-secondary/10" : ""
+                }`}
+              >
+                <Avatar className="h-8 w-8 border-2 border-golden">
+                  <AvatarImage src={mockUser.avatarUrl} alt={displayName} />
+                  <AvatarFallback className="bg-gradient-to-br from-golden to-golden-light text-secondary font-semibold text-sm">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <span
+                  className={`hidden sm:block text-sm font-medium transition-colors duration-300 ${
+                    isScrolled ? "text-secondary" : "text-white"
+                  }`}
+                >
+                  {displayName}
+                </span>
+              </button>
             ) : (
               <Button
                 onClick={() => setIsLoginOpen(true)}
@@ -143,9 +171,29 @@ const Header = () => {
               </a>
             ))}
             {isLoggedIn ? (
-              <div className="mt-3">
-                <UserMenu user={mockUser} onLogout={handleLogout} isScrolled={isScrolled} />
-              </div>
+              <button
+                onClick={() => {
+                  handleUserClick();
+                  setIsOpen(false);
+                }}
+                className={`mt-3 w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isScrolled ? "bg-muted hover:bg-muted/80" : "bg-white/10 hover:bg-white/20"
+                }`}
+              >
+                <Avatar className="h-8 w-8 border-2 border-golden">
+                  <AvatarImage src={mockUser.avatarUrl} alt={displayName} />
+                  <AvatarFallback className="bg-gradient-to-br from-golden to-golden-light text-secondary font-semibold text-sm">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <span
+                  className={`text-sm font-medium ${
+                    isScrolled ? "text-secondary" : "text-white"
+                  }`}
+                >
+                  {displayName}
+                </span>
+              </button>
             ) : (
               <Button
                 onClick={() => {
