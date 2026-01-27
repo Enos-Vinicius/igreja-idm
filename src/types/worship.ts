@@ -3,7 +3,7 @@ export interface Worship {
   title: string;
   youtubeLink: string;
   key: string; // Tonalidade
-  bpm?: number;
+  singer?: string; // Cantor de referência
   ministers: string[]; // Pode ter múltiplos ministros
   fileUrl?: string;
   fileName?: string;
