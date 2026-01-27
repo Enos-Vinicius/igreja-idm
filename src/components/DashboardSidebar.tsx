@@ -30,60 +30,103 @@ interface DashboardSidebarProps {
   onLogout: () => void;
 }
 
-const menuItems = [
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  path: string;
+}
+
+interface MenuGroup {
+  id: string;
+  label: string;
+  items: MenuItem[];
+}
+
+const menuGroups: MenuGroup[] = [
   {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/dashboard",
+    id: "main",
+    label: "Principal",
+    items: [
+      {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        path: "/dashboard",
+      },
+    ],
   },
   {
-    id: "members",
-    label: "Membros",
-    icon: Users,
-    path: "/members",
+    id: "people",
+    label: "Pessoas",
+    items: [
+      {
+        id: "members",
+        label: "Membros",
+        icon: Users,
+        path: "/members",
+      },
+      {
+        id: "cadastro",
+        label: "Auto Cadastro",
+        icon: UserPlus,
+        path: "/cadastro",
+      },
+      {
+        id: "solicitacoes",
+        label: "Solicitações",
+        icon: ClipboardList,
+        path: "/admin/solicitacoes",
+      },
+    ],
   },
   {
-    id: "cadastro",
-    label: "Auto Cadastro",
-    icon: UserPlus,
-    path: "/cadastro",
+    id: "worship",
+    label: "Louvor",
+    items: [
+      {
+        id: "repertoire",
+        label: "Repertório",
+        icon: Music,
+        path: "/repertoire",
+      },
+      {
+        id: "schedules",
+        label: "Escalas",
+        icon: Calendar,
+        path: "/schedules",
+      },
+    ],
   },
   {
-    id: "solicitacoes",
-    label: "Solicitações",
-    icon: ClipboardList,
-    path: "/admin/solicitacoes",
+    id: "events",
+    label: "Eventos",
+    items: [
+      {
+        id: "attendance",
+        label: "Presença",
+        icon: CalendarCheck,
+        path: "/attendance",
+      },
+      {
+        id: "calendar",
+        label: "Calendário",
+        icon: CalendarCheck,
+        path: "/calendar",
+      },
+    ],
   },
   {
-    id: "attendance",
-    label: "Presença",
-    icon: CalendarCheck,
-    path: "/attendance",
-  },
-  {
-    id: "repertoire",
-    label: "Repertório",
-    icon: Music,
-    path: "/repertoire",
-  },
-  {
-    id: "schedules",
-    label: "Escalas",
-    icon: Calendar,
-    path: "/schedules",
-  },
-  {
-    id: "calendar",
-    label: "Calendário",
-    icon: CalendarCheck,
-    path: "/calendar",
-  },
-  {
-    id: "users",
-    label: "Usuários",
-    icon: Settings,
-    path: "/users",
+    id: "admin",
+    label: "Administração",
+    items: [
+      {
+        id: "users",
+        label: "Usuários",
+        icon: Settings,
+        path: "/users",
+      },
+    ],
   },
 ];
 
@@ -145,45 +188,67 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 overflow-y-auto">
-        <ul className="space-y-1 px-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
+        <div className="space-y-4 px-2">
+          {menuGroups.map((group, groupIndex) => (
+            <div key={group.id}>
+              {/* Group separator - not shown for first group */}
+              {groupIndex > 0 && (
+                <div className="my-3 border-t border-white/10" />
+              )}
+              
+              {/* Group label */}
+              <div
+                className={cn(
+                  "px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/40 transition-all duration-300",
+                  isExpanded ? "opacity-100" : "opacity-0 h-0 py-0 overflow-hidden"
+                )}
+              >
+                {group.label}
+              </div>
 
-            return (
-              <li key={item.id}>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => navigate(item.path)}
-                      className={cn(
-                        "w-full flex items-center px-3 py-3 rounded-lg transition-all duration-200",
-                        active
-                          ? "bg-primary text-white shadow-lg"
-                          : "text-white/70 hover:bg-white/10 hover:text-white"
-                      )}
-                    >
-                      <Icon className="h-5 w-5 flex-shrink-0" />
-                      <span
-                        className={cn(
-                          "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
-                          isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+              {/* Group items */}
+              <ul className="space-y-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
+
+                  return (
+                    <li key={item.id}>
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => navigate(item.path)}
+                            className={cn(
+                              "w-full flex items-center px-3 py-3 rounded-lg transition-all duration-200",
+                              active
+                                ? "bg-primary text-white shadow-lg"
+                                : "text-white/70 hover:bg-white/10 hover:text-white"
+                            )}
+                          >
+                            <Icon className="h-5 w-5 flex-shrink-0" />
+                            <span
+                              className={cn(
+                                "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
+                                isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+                              )}
+                            >
+                              {item.label}
+                            </span>
+                          </button>
+                        </TooltipTrigger>
+                        {!isExpanded && (
+                          <TooltipContent side="right" className="bg-secondary text-white border-white/20">
+                            {item.label}
+                          </TooltipContent>
                         )}
-                      >
-                        {item.label}
-                      </span>
-                    </button>
-                  </TooltipTrigger>
-                  {!isExpanded && (
-                    <TooltipContent side="right" className="bg-secondary text-white border-white/20">
-                      {item.label}
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </li>
-            );
-          })}
-        </ul>
+                      </Tooltip>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
       </nav>
 
       {/* Bottom Actions */}
