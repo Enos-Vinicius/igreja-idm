@@ -203,6 +203,10 @@
   height: 20px;
   cursor: pointer;
   margin-top: 2px;
+  accent-color: var(--color-primary);
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+  appearance: auto;
 }
 
 .consent-text {
