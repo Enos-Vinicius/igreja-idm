@@ -64,6 +64,7 @@ import {
   statusLabels,
   statusColors,
 } from '@/types/registrationRequest';
+import DashboardLayout from '@/components/DashboardLayout';
 
 const AdminRegistrationRequests = () => {
   const navigate = useNavigate();
@@ -256,20 +257,16 @@ const AdminRegistrationRequests = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
+    <DashboardLayout>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto py-8 px-4">
+          {/* Header */}
+          <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground">Solicitações de Cadastro</h1>
             <p className="text-muted-foreground">
               Gerencie as solicitações de novos membros
             </p>
           </div>
-        </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -716,8 +713,9 @@ const AdminRegistrationRequests = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

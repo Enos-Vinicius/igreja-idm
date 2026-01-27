@@ -38,6 +38,7 @@ import {
   ChurchRole,
   MembershipStatus,
 } from '@/types/member';
+import DashboardLayout from '@/components/DashboardLayout';
 
 const formSchema = z.object({
   photo: z.string().optional(),
@@ -214,27 +215,20 @@ const MemberForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/members')}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para lista
-          </Button>
-          <h1 className="text-3xl font-bold text-foreground">
-            {isEditing ? 'Editar Membro' : 'Novo Membro'}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {isEditing
-              ? 'Atualize as informações do membro'
-              : 'Preencha as informações para cadastrar um novo membro'}
-          </p>
-        </div>
+    <DashboardLayout>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">
+              {isEditing ? 'Editar Membro' : 'Novo Membro'}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              {isEditing
+                ? 'Atualize as informações do membro'
+                : 'Preencha as informações para cadastrar um novo membro'}
+            </p>
+          </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -775,8 +769,9 @@ const MemberForm = () => {
             </div>
           </form>
         </Form>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
