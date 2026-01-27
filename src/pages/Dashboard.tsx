@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Users,
   UserPlus,
@@ -26,6 +26,7 @@ import {
 } from "recharts";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockMembers } from "@/data/mockMembers";
 import { mockRegistrationRequests } from "@/data/mockRegistrationRequests";
 
@@ -53,15 +54,35 @@ const membersByRoleData = [
   { name: "Visitantes", value: 15, color: "#8b5cf6" },
 ];
 
-const weeklyAttendanceData = [
-  { dia: "Dom", presentes: 120, esperados: 150 },
-  { dia: "Seg", presentes: 45, esperados: 60 },
-  { dia: "Ter", presentes: 55, esperados: 70 },
-  { dia: "Qua", presentes: 85, esperados: 100 },
-  { dia: "Qui", presentes: 40, esperados: 50 },
-  { dia: "Sex", presentes: 65, esperados: 80 },
-  { dia: "Sáb", presentes: 90, esperados: 110 },
-];
+const weeklyAttendanceDataByUnit = {
+  todos: [
+    { dia: "Dom", presentes: 120, esperados: 150 },
+    { dia: "Seg", presentes: 45, esperados: 60 },
+    { dia: "Ter", presentes: 55, esperados: 70 },
+    { dia: "Qua", presentes: 85, esperados: 100 },
+    { dia: "Qui", presentes: 40, esperados: 50 },
+    { dia: "Sex", presentes: 65, esperados: 80 },
+    { dia: "Sáb", presentes: 90, esperados: 110 },
+  ],
+  uberaba: [
+    { dia: "Dom", presentes: 85, esperados: 100 },
+    { dia: "Seg", presentes: 30, esperados: 40 },
+    { dia: "Ter", presentes: 38, esperados: 45 },
+    { dia: "Qua", presentes: 60, esperados: 70 },
+    { dia: "Qui", presentes: 28, esperados: 35 },
+    { dia: "Sex", presentes: 45, esperados: 55 },
+    { dia: "Sáb", presentes: 62, esperados: 75 },
+  ],
+  conceicao: [
+    { dia: "Dom", presentes: 35, esperados: 50 },
+    { dia: "Seg", presentes: 15, esperados: 20 },
+    { dia: "Ter", presentes: 17, esperados: 25 },
+    { dia: "Qua", presentes: 25, esperados: 30 },
+    { dia: "Qui", presentes: 12, esperados: 15 },
+    { dia: "Sex", presentes: 20, esperados: 25 },
+    { dia: "Sáb", presentes: 28, esperados: 35 },
+  ],
+};
 
 const recentActivities = [
   {
@@ -95,6 +116,9 @@ const recentActivities = [
 ];
 
 const Dashboard = () => {
+  const [selectedUnit, setSelectedUnit] = useState<"todos" | "uberaba" | "conceicao">("todos");
+  
+  const weeklyAttendanceData = weeklyAttendanceDataByUnit[selectedUnit];
   const stats = useMemo(() => {
     const totalMembers = mockMembers.length;
     const activeMembers = mockMembers.filter((m) => m.membershipStatus === "active").length;
@@ -274,11 +298,25 @@ const Dashboard = () => {
           {/* Weekly Attendance Chart */}
           <Card className="lg:col-span-2 shadow-lg border-0">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                Presença Semanal
-              </CardTitle>
-              <CardDescription>Comparativo de presença esperada vs. realizada</CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    Presença Semanal
+                  </CardTitle>
+                  <CardDescription className="mt-1.5">Comparativo de presença esperada vs. realizada</CardDescription>
+                </div>
+                <Select value={selectedUnit} onValueChange={(value: "todos" | "uberaba" | "conceicao") => setSelectedUnit(value)}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Selecione a unidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todas as Unidades</SelectItem>
+                    <SelectItem value="uberaba">Uberaba</SelectItem>
+                    <SelectItem value="conceicao">Conceição das Alagoas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="h-80">
