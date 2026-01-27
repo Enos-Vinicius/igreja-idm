@@ -11,6 +11,7 @@ import {
   Home,
   CalendarCheck,
   Music,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -65,6 +66,12 @@ const menuItems = [
     label: "Repertório",
     icon: Music,
     path: "/repertoire",
+  },
+  {
+    id: "schedules",
+    label: "Escalas",
+    icon: Calendar,
+    path: "/schedules",
   },
   {
     id: "users",
