@@ -55,6 +55,8 @@ const WorshipForm = () => {
 
   const [ministers, setMinisters] = useState<string[]>([]);
   const [newMinister, setNewMinister] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [existingFileName, setExistingFileName] = useState<string | null>(null);
 
@@ -81,6 +83,7 @@ const WorshipForm = () => {
           notes: worship.notes || "",
         });
         setMinisters(worship.ministers);
+        setTags(worship.tags || []);
         if (worship.fileName) {
           setExistingFileName(worship.fileName);
         }
@@ -97,6 +100,17 @@ const WorshipForm = () => {
 
   const removeMinister = (minister: string) => {
     setMinisters(ministers.filter((m) => m !== minister));
+  };
+
+  const addTag = () => {
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      setTags([...tags, newTag.trim()]);
+      setNewTag("");
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,6 +161,7 @@ const WorshipForm = () => {
     console.log("Form data:", {
       ...data,
       ministers,
+      tags,
       file: selectedFile,
     });
 
@@ -320,6 +335,52 @@ const WorshipForm = () => {
                   )}
                   <p className="text-sm text-muted-foreground">
                     Adicione os ministros que cantam este louvor
+                  </p>
+                </div>
+
+                {/* Tags/Themes */}
+                <div className="space-y-3">
+                  <FormLabel>Temas / Palavras-chave</FormLabel>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Ex: adoração, fé, gratidão"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addTag();
+                        }
+                      }}
+                    />
+                    <Button type="button" onClick={addTag} size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="outline"
+                          className="gap-1 pr-1"
+                        >
+                          {tag}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 hover:bg-transparent"
+                            onClick={() => removeTag(tag)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    Adicione temas ou palavras-chave para facilitar buscas futuras
                   </p>
                 </div>
 
