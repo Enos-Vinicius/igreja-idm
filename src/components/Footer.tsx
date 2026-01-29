@@ -1,4 +1,5 @@
 import { Facebook, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
+import logoWhite from "@/assets/logo-white.png";
 
 const Footer = () => {
   const socialLinks = [
@@ -20,19 +21,13 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-golden to-golden-light flex items-center justify-center">
-                <span className="text-secondary font-bold text-xl">M</span>
-              </div>
-              <div>
-                <span className="text-sm font-semibold text-white/70">Igreja do Deus de</span>
-                <span className="block text-xl font-bold text-gradient-golden">Maravilhas</span>
-              </div>
+            <div className="mb-6">
+              <img
+                src={logoWhite}
+                alt="Igreja do Deus de Maravilhas"
+                className="h-20 w-auto object-contain"
+              />
             </div>
-            <p className="text-white/60 max-w-md leading-relaxed mb-6">
-              Uma igreja pentecostal comprometida com a transformação de vidas 
-              através do poder do Evangelho de Jesus Cristo.
-            </p>
 
             {/* Social Links */}
             <div className="flex gap-4">
@@ -70,7 +65,7 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-bold mb-6">Contato</h4>
             <ul className="space-y-4">
-              <li>
+              {/* <li>
                 <a
                   href="tel:+5534999999999"
                   className="flex items-center gap-3 text-white/60 hover:text-golden transition-colors"
@@ -78,14 +73,14 @@ const Footer = () => {
                   <Phone className="w-5 h-5 flex-shrink-0" />
                   <span>(34) 99999-9999</span>
                 </a>
-              </li>
+              </li> */}
               <li>
                 <a
-                  href="mailto:contato@igrejadm.com.br"
+                  href="mailto:idmigreja@gmail.com"
                   className="flex items-center gap-3 text-white/60 hover:text-golden transition-colors"
                 >
                   <Mail className="w-5 h-5 flex-shrink-0" />
-                  <span>contato@igrejadm.com.br</span>
+                  <span>idmigreja@gmail.com</span>
                 </a>
               </li>
               <li>

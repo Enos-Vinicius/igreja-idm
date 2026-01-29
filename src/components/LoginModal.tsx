@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import skyClouds from "@/assets/sky-clouds.jpg";
-import logoClean from "@/assets/logo-clean.png";
+import logoWhite from "@/assets/logo-white.png";
 
 interface LoginModalProps {
   open: boolean;
@@ -51,7 +51,7 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
         <div className="flex min-h-[480px]">
           {/* Left Side - Church Image */}
-          <div className="hidden sm:flex w-[45%] relative flex-col items-center justify-end p-8 text-center overflow-hidden">
+          <div className="hidden sm:flex w-[45%] relative flex-col items-center justify-center p-8 text-center overflow-hidden">
             {/* Background Image */}
             <img
               src={skyClouds}
@@ -61,9 +61,9 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-secondary/95 via-secondary/60 to-transparent" />
 
-            {/* Content at bottom */}
-            <div className="relative z-10 text-left w-full">
-              <img src={logoClean} alt="Igreja do Deus de Maravilhas" className="w-14 h-14 object-contain mb-4" />
+            {/* Content centered */}
+            <div className="relative z-10 flex flex-col items-center justify-center">
+              <img src={logoWhite} alt="Igreja do Deus de Maravilhas" className="w-32 h-32 object-contain mb-6" />
               <h2 className="text-white font-bold text-2xl mb-2">Graça e Paz!</h2>
               <p className="text-white/80 text-sm leading-relaxed">
                 Bem-vindo à área de membros da Igreja do Deus de Maravilhas.
@@ -75,7 +75,7 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
           <div className="flex-1 p-8 flex flex-col justify-center">
             <DialogHeader className="mb-6 sm:hidden">
               <div className="flex items-center gap-3 mb-4">
-                <img src={logoClean} alt="Igreja do Deus de Maravilhas" className="w-10 h-10 object-contain" />
+                <img src={logoWhite} alt="Igreja do Deus de Maravilhas" className="w-10 h-10 object-contain" />
                 <div>
                   <DialogTitle className="text-lg">Graça e Paz!</DialogTitle>
                   <p className="text-sm text-muted-foreground">

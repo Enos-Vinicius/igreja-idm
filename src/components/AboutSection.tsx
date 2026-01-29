@@ -1,5 +1,5 @@
 import { Heart, Users, BookOpen } from "lucide-react";
-import pastoralCouple from "@/assets/pastoral-couple.jpg";
+import pastoresImage from "@/assets/pastores.jpg";
 
 const AboutSection = () => {
   const values = [
@@ -39,8 +39,8 @@ const AboutSection = () => {
           <div className="relative">
             <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl">
               <img
-                src={pastoralCouple}
-                alt="Casal Pastoral"
+                src={pastoresImage}
+                alt="Pastor Alceu Silva e Pastora Maria Silva"
                 className="w-full h-auto object-cover"
               />
             </div>
@@ -51,33 +51,38 @@ const AboutSection = () => {
 
           {/* Text Side */}
           <div className="space-y-6">
+            <span className="text-golden font-semibold text-sm uppercase tracking-widest">
+              Sobre Nós
+            </span>
             <h3 className="text-3xl font-bold text-secondary">
-              Bem-vindos à Igreja do Deus de Maravilhas
+              Igreja do Deus de Maravilhas
             </h3>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Somos uma igreja pentecostal comprometida com a proclamação do Evangelho 
-              de Jesus Cristo. Nossa missão é alcançar vidas, transformar famílias e 
-              impactar nossa geração com o poder do Espírito Santo.
+              Somos uma comunidade de fé comprometida com a <strong>redenção</strong> e{" "}
+              <strong>transformação de vidas</strong> através do evangelho de Jesus Cristo.
             </p>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Fundada com a visão de ver milagres, sinais e maravilhas acontecerem, 
-              cremos que Deus ainda opera poderosamente nos dias de hoje. Venha fazer 
-              parte desta família e experimente o sobrenatural de Deus.
+              Sob a liderança do <strong>Pastor Alceu Silva</strong> e <strong>Pastora Maria Silva</strong>,
+              nossa missão é alcançar pessoas, edificar famílias e formar discípulos que impactem a sociedade
+              com os valores do Reino de Deus.
+            </p>
+            <p className="text-muted-foreground text-lg leading-relaxed">
+              Cremos que cada pessoa foi criada para um propósito divino, e nosso objetivo
+              é ajudá-la a descobrir e cumprir esse chamado através do <strong>alinhamento
+              com a Palavra de Deus</strong>.
             </p>
 
-            {/* Stats */}
-            <div className="flex flex-wrap gap-8 pt-6">
-              <div>
-                <span className="text-4xl font-bold text-gradient-golden">15+</span>
-                <p className="text-muted-foreground text-sm mt-1">Anos de Ministério</p>
-              </div>
-              <div>
-                <span className="text-4xl font-bold text-gradient-golden">2</span>
-                <p className="text-muted-foreground text-sm mt-1">Unidades</p>
-              </div>
-              <div>
-                <span className="text-4xl font-bold text-gradient-golden">500+</span>
-                <p className="text-muted-foreground text-sm mt-1">Membros</p>
+            {/* Assinatura do Pastor */}
+            <div className="pt-4 border-t border-border">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+                <div className="flex flex-col gap-1">
+                  <span className="text-lg font-bold text-secondary">Pr. Alceu Silva</span>
+                  <span className="text-sm text-muted-foreground">Presidente</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-lg font-bold text-secondary">Pra. Maria Silva</span>
+                  <span className="text-sm text-muted-foreground">Vice Presidente</span>
+                </div>
               </div>
             </div>
           </div>

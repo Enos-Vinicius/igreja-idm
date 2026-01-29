@@ -6,7 +6,7 @@ import ScheduleSection from "@/components/ScheduleSection";
 import ProjectsSection from "@/components/ProjectsSection";
 import VersesSection from "@/components/VersesSection";
 import PrayerSection from "@/components/PrayerSection";
-import HistorySection from "@/components/HistorySection";
+// import HistorySection from "@/components/HistorySection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -21,7 +21,7 @@ const Index = () => {
         <ProjectsSection />
         <VersesSection />
         <PrayerSection />
-        <HistorySection />
+        {/* <HistorySection /> */}
       </main>
       <Footer />
     </div>

@@ -51,13 +51,14 @@ const Header = () => {
       : userData.firstName
   );
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = () => {
+    logout(); // Fire and forget - não espera terminar
     navigate("/");
   };
 
   const handleLoginSuccess = () => {
     setIsLoginOpen(false);
+    navigate("/dashboard");
   };
 
   const handleUserClick = () => {
@@ -78,7 +79,7 @@ const Header = () => {
     { name: "Sobre", href: "#sobre" },
     { name: "Horários", href: "#horarios" },
     { name: "Projetos", href: "#projetos" },
-    { name: "Contato", href: "#contato" },
+    { name: "Pedido de Oração", href: "#pedido-oracao" },
   ];
 
   return (

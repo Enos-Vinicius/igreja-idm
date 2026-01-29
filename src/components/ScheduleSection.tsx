@@ -210,7 +210,7 @@ const ScheduleSection = () => {
         </div>
 
         {/* Carousel Container */}
-        <div className="relative max-w-6xl mx-auto">
+        <div className="relative w-full mx-auto">
           {/* Navigation Buttons */}
           <Button
             variant="outline"
@@ -231,14 +231,14 @@ const ScheduleSection = () => {
           </Button>
 
           {/* Fade Gradient Overlays */}
-          <div 
-            className="absolute left-0 top-0 bottom-0 w-32 md:w-48 z-[60] pointer-events-none"
+          <div
+            className="absolute left-0 top-0 bottom-0 w-64 md:w-96 z-[60] pointer-events-none"
             style={{
               background: 'linear-gradient(to right, hsl(var(--muted)) 0%, hsl(var(--muted)) 30%, transparent 100%)',
             }}
           />
-          <div 
-            className="absolute right-0 top-0 bottom-0 w-32 md:w-48 z-[60] pointer-events-none"
+          <div
+            className="absolute right-0 top-0 bottom-0 w-64 md:w-96 z-[60] pointer-events-none"
             style={{
               background: 'linear-gradient(to left, hsl(var(--muted)) 0%, hsl(var(--muted)) 30%, transparent 100%)',
             }}

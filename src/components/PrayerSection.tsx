@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 const PrayerSection = () => {
   return (
-    <section className="py-24 bg-muted">
+    <section id="pedido-oracao" className="py-24 bg-muted">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           {/* Section Header */}

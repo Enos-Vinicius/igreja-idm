@@ -33,8 +33,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     };
   }, [user]);
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = () => {
+    logout(); // Fire and forget - não espera terminar
     navigate("/");
   };
 

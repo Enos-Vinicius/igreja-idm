@@ -90,7 +90,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUser = useCallback(async () => {
     const hasToken = authService.hasToken();
-    console.log('[Auth] Checking token:', hasToken);
 
     if (!hasToken) {
       setIsLoading(false);
@@ -98,9 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      console.log('[Auth] Loading user from /auth/me...');
       const currentUser = await authService.getCurrentUser();
-      console.log('[Auth] User loaded:', currentUser);
       setUser(currentUser);
     } catch (error) {
       console.error('[Auth] Error loading user:', error);
