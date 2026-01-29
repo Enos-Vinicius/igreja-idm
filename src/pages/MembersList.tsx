@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Filter } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Filter, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -30,7 +30,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { mockMembers } from '@/data/mockMembers';
+import { toast } from 'sonner';
+import { membersService } from '@/services/members';
 import {
   Member,
   churchRoleLabels,
@@ -42,19 +43,38 @@ import DashboardLayout from '@/components/DashboardLayout';
 
 const MembersList = () => {
   const navigate = useNavigate();
-  const [members, setMembers] = useState<Member[]>(mockMembers);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    loadMembers();
+  }, []);
+
+  const loadMembers = async () => {
+    setIsLoading(true);
+    try {
+      const data = await membersService.getAll();
+      setMembers(data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao carregar membros';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredMembers = useMemo(() => {
     return members.filter((member) => {
       const matchesSearch =
         member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.primaryPhone.includes(searchTerm);
+        (member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+        (member.primaryPhone?.includes(searchTerm) ?? false);
 
       const matchesStatus =
         statusFilter === 'all' || member.membershipStatus === statusFilter;
@@ -71,12 +91,22 @@ const MembersList = () => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (memberToDelete) {
+  const confirmDelete = async () => {
+    if (!memberToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await membersService.delete(memberToDelete.id);
       setMembers(members.filter((m) => m.id !== memberToDelete.id));
+      toast.success('Membro excluído com sucesso!');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao excluir membro';
+      toast.error(message);
+    } finally {
+      setIsDeleting(false);
       setMemberToDelete(null);
+      setDeleteDialogOpen(false);
     }
-    setDeleteDialogOpen(false);
   };
 
   const getStatusBadgeVariant = (status?: MembershipStatus) => {
@@ -96,27 +126,24 @@ const MembersList = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">
-                  Cadastro de Membros
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Gerencie os membros da igreja
-                </p>
-              </div>
-              <Button onClick={() => navigate('/members/new')}>
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Membro
-              </Button>
-            </div>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Cadastro de Membros
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Gerencie os membros da igreja
+            </p>
           </div>
+          <Button onClick={() => navigate('/members/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Membro
+          </Button>
+        </div>
 
-          {/* Filters */}
+        {/* Filters */}
           <Card className="mb-6">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -186,7 +213,16 @@ const MembersList = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredMembers.length === 0 ? (
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8">
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <span>Carregando...</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredMembers.length === 0 ? (
                       <TableRow>
                         <TableCell
                           colSpan={6}
@@ -202,20 +238,20 @@ const MembersList = () => {
                             {member.name}
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            {member.email}
+                            {member.email || '-'}
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
-                            {member.primaryPhone}
+                            {member.primaryPhone || '-'}
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
                             {member.churchRole
-                              ? churchRoleLabels[member.churchRole]
+                              ? churchRoleLabels[member.churchRole as ChurchRole]
                               : '-'}
                           </TableCell>
                           <TableCell>
                             {member.membershipStatus ? (
-                              <Badge variant={getStatusBadgeVariant(member.membershipStatus)}>
-                                {membershipStatusLabels[member.membershipStatus]}
+                              <Badge variant={getStatusBadgeVariant(member.membershipStatus as MembershipStatus)}>
+                                {membershipStatusLabels[member.membershipStatus as MembershipStatus]}
                               </Badge>
                             ) : (
                               '-'
@@ -250,7 +286,6 @@ const MembersList = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -264,12 +299,20 @@ const MembersList = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
+                disabled={isDeleting}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                Excluir
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  'Excluir'
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

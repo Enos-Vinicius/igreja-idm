@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Upload, X, Save, Loader2 } from 'lucide-react';
+import { Upload, X, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,18 +25,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { mockMembers } from '@/data/mockMembers';
+import { toast } from 'sonner';
+import { membersService } from '@/services/members';
+import { viaCepService } from '@/services/viaCep';
 import {
   genderLabels,
   maritalStatusLabels,
   churchRoleLabels,
   membershipStatusLabels,
-  Gender,
-  MaritalStatus,
-  ChurchRole,
-  MembershipStatus,
+  churchLocationLabels,
 } from '@/types/member';
 import DashboardLayout from '@/components/DashboardLayout';
 
@@ -60,6 +57,7 @@ const formSchema = z.object({
   neighborhood: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
+  church: z.enum(['uberaba', 'conceicao_das_alagoas'], { required_error: 'Selecione a igreja' }),
   churchRole: z.enum(['member', 'worship_minister', 'leader', 'deacon', 'elder', 'pastor']).optional(),
   membershipStatus: z.enum(['active', 'inactive', 'visitor', 'congregant']).optional(),
   baptismDate: z.string().optional(),
@@ -81,11 +79,13 @@ const brazilianStates = [
 const MemberForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { toast } = useToast();
   const isEditing = !!id;
-  
+
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isLoadingCep, setIsLoadingCep] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMember, setIsLoadingMember] = useState(isEditing);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -107,6 +107,7 @@ const MemberForm = () => {
       neighborhood: '',
       city: '',
       state: '',
+      church: undefined,
       churchRole: undefined,
       membershipStatus: undefined,
       baptismDate: '',
@@ -121,53 +122,62 @@ const MemberForm = () => {
   // Load member data when editing
   useEffect(() => {
     if (isEditing && id) {
-      const member = mockMembers.find((m) => m.id === id);
-      if (member) {
-        form.reset({
-          photo: member.photo || '',
-          name: member.name,
-          email: member.email,
-          birthDate: member.birthDate,
-          gender: member.gender,
-          maritalStatus: member.maritalStatus,
-          occupation: member.occupation,
-          primaryPhone: member.primaryPhone,
-          secondaryPhone: member.secondaryPhone || '',
-          emergencyContact: member.emergencyContact || '',
-          zipCode: member.zipCode || '',
-          street: member.street || '',
-          number: member.number || '',
-          complement: member.complement || '',
-          neighborhood: member.neighborhood || '',
-          city: member.city || '',
-          state: member.state || '',
-          churchRole: member.churchRole,
-          membershipStatus: member.membershipStatus,
-          baptismDate: member.baptismDate || '',
-          joinDate: member.joinDate || '',
-          imageConsentGiven: member.imageConsentGiven || false,
-          emailConsentGiven: member.emailConsentGiven || false,
-          whatsappConsentGiven: member.whatsappConsentGiven || false,
-          notes: member.notes || '',
-        });
-        if (member.photo) {
-          setPhotoPreview(member.photo);
-        }
-      }
+      loadMember(id);
     }
-  }, [isEditing, id, form]);
+  }, [isEditing, id]);
+
+  const loadMember = async (memberId: string) => {
+    setIsLoadingMember(true);
+    try {
+      const member = await membersService.getById(memberId);
+      form.reset({
+        photo: member.photo || '',
+        name: member.name,
+        email: member.email || '',
+        birthDate: member.birthDate || '',
+        gender: member.gender as 'male' | 'female' | undefined,
+        maritalStatus: member.maritalStatus as 'single' | 'married' | 'divorced' | 'widowed' | 'other' | undefined,
+        occupation: member.occupation || '',
+        primaryPhone: member.primaryPhone || '',
+        secondaryPhone: member.secondaryPhone || '',
+        emergencyContact: member.emergencyContact || '',
+        zipCode: member.zipCode || '',
+        street: member.street || '',
+        number: member.number || '',
+        complement: member.complement || '',
+        neighborhood: member.neighborhood || '',
+        city: member.city || '',
+        state: member.state || '',
+        church: member.church as 'uberaba' | 'conceicao_das_alagoas' | undefined,
+        churchRole: member.churchRole as 'member' | 'worship_minister' | 'leader' | 'deacon' | 'elder' | 'pastor' | undefined,
+        membershipStatus: member.membershipStatus as 'active' | 'inactive' | 'visitor' | 'congregant' | undefined,
+        baptismDate: member.baptismDate || '',
+        joinDate: member.joinDate || '',
+        imageConsentGiven: member.imageConsentGiven || false,
+        emailConsentGiven: member.emailConsentGiven || false,
+        whatsappConsentGiven: member.whatsappConsentGiven || false,
+        notes: member.notes || '',
+      });
+      if (member.photo) {
+        setPhotoPreview(member.photo);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao carregar membro';
+      toast.error(message);
+      navigate('/members');
+    } finally {
+      setIsLoadingMember(false);
+    }
+  };
 
   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: 'Erro',
-          description: 'A foto deve ter no máximo 5MB',
-          variant: 'destructive',
-        });
+        toast.error('A foto deve ter no máximo 5MB');
         return;
       }
+      setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
@@ -180,6 +190,7 @@ const MemberForm = () => {
 
   const removePhoto = () => {
     setPhotoPreview(null);
+    setPhotoFile(null);
     form.setValue('photo', '');
   };
 
@@ -189,14 +200,12 @@ const MemberForm = () => {
 
     setIsLoadingCep(true);
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-      const data = await response.json();
-      
-      if (!data.erro) {
-        form.setValue('street', data.logradouro || '');
-        form.setValue('neighborhood', data.bairro || '');
-        form.setValue('city', data.localidade || '');
-        form.setValue('state', data.uf || '');
+      const address = await viaCepService.buscarCep(cep);
+      if (address) {
+        form.setValue('street', address.street);
+        form.setValue('neighborhood', address.neighborhood);
+        form.setValue('city', address.city);
+        form.setValue('state', address.state);
       }
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
@@ -205,30 +214,64 @@ const MemberForm = () => {
     }
   };
 
-  const onSubmit = (data: FormData) => {
-    console.log('Form data:', data);
-    toast({
-      title: isEditing ? 'Membro atualizado!' : 'Membro cadastrado!',
-      description: `${data.name} foi ${isEditing ? 'atualizado' : 'cadastrado'} com sucesso.`,
-    });
-    navigate('/members');
+  const onSubmit = async (data: FormData) => {
+    setIsLoading(true);
+    try {
+      if (isEditing && id) {
+        await membersService.update(id, data);
+
+        // Upload photo if changed
+        if (photoFile) {
+          await membersService.uploadPhoto(id, photoFile);
+        }
+
+        toast.success('Membro atualizado com sucesso!');
+      } else {
+        const newMember = await membersService.create(data as any);
+
+        // Upload photo if provided
+        if (photoFile && newMember.id) {
+          await membersService.uploadPhoto(newMember.id, photoFile);
+        }
+
+        toast.success('Membro cadastrado com sucesso!');
+      }
+      navigate('/members');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao salvar membro';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isLoadingMember) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Carregando...</span>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">
-              {isEditing ? 'Editar Membro' : 'Novo Membro'}
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              {isEditing
-                ? 'Atualize as informações do membro'
-                : 'Preencha as informações para cadastrar um novo membro'}
-            </p>
-          </div>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            {isEditing ? 'Editar Membro' : 'Novo Membro'}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {isEditing
+              ? 'Atualize as informações do membro'
+              : 'Preencha as informações para cadastrar um novo membro'}
+          </p>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -578,6 +621,31 @@ const MemberForm = () => {
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
+                  name="church"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Igreja *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a igreja" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(churchLocationLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="churchRole"
                   render={({ field }) => (
                     <FormItem>
@@ -759,17 +827,26 @@ const MemberForm = () => {
                 type="button"
                 variant="outline"
                 onClick={() => navigate('/members')}
+                disabled={isLoading}
               >
                 Cancelar
               </Button>
-              <Button type="submit">
-                <Save className="mr-2 h-4 w-4" />
-                {isEditing ? 'Salvar Alterações' : 'Cadastrar Membro'}
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    {isEditing ? 'Salvar Alterações' : 'Cadastrar Membro'}
+                  </>
+                )}
               </Button>
             </div>
           </form>
         </Form>
-        </div>
       </div>
     </DashboardLayout>
   );

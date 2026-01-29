@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, KeyRound, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Pencil, KeyRound, Trash2, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -32,25 +31,42 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 import { User } from "@/types/user";
-import { mockUsers } from "@/data/mockUsers";
+import { usersService } from "@/services/users";
 import DashboardLayout from "@/components/DashboardLayout";
 
 type ModalType = "create" | "edit" | "password" | null;
 
 const Users = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [modalType, setModalType] = useState<ModalType>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "member">("member");
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    setIsLoading(true);
+    try {
+      const data = await usersService.getAll();
+      setUsers(data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao carregar usuários";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const resetForm = () => {
     setEmail("");
@@ -82,76 +98,78 @@ const Users = () => {
     resetForm();
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!email || !password || password.length < 6) {
-      toast({
-        title: "Erro",
-        description: "Preencha todos os campos corretamente. A senha deve ter no mínimo 6 caracteres.",
-        variant: "destructive",
-      });
+      toast.error("Preencha todos os campos corretamente. A senha deve ter no mínimo 6 caracteres.");
       return;
     }
 
-    const newUser: User = {
-      id: Math.max(...users.map((u) => u.id)) + 1,
-      email,
-      role,
-      createdAt: new Date(),
-    };
-
-    setUsers([...users, newUser]);
-    toast({
-      title: "Sucesso",
-      description: "Usuário criado com sucesso!",
-    });
-    closeModal();
+    setIsSubmitting(true);
+    try {
+      const newUser = await usersService.create({ email, password, role });
+      setUsers([...users, newUser]);
+      toast.success("Usuário criado com sucesso!");
+      closeModal();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao criar usuário";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!email || !selectedUser) {
-      toast({
-        title: "Erro",
-        description: "Preencha todos os campos corretamente.",
-        variant: "destructive",
-      });
+      toast.error("Preencha todos os campos corretamente.");
       return;
     }
 
-    setUsers(
-      users.map((u) =>
-        u.id === selectedUser.id ? { ...u, email, role } : u
-      )
-    );
-    toast({
-      title: "Sucesso",
-      description: "Usuário atualizado com sucesso!",
-    });
-    closeModal();
+    setIsSubmitting(true);
+    try {
+      const updatedUser = await usersService.update(selectedUser.id, { email, role });
+      setUsers(users.map((u) => (u.id === selectedUser.id ? updatedUser : u)));
+      toast.success("Usuário atualizado com sucesso!");
+      closeModal();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao atualizar usuário";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handlePasswordChange = () => {
-    if (!password || password.length < 6) {
-      toast({
-        title: "Erro",
-        description: "A senha deve ter no mínimo 6 caracteres.",
-        variant: "destructive",
-      });
+  const handlePasswordChange = async () => {
+    if (!password || password.length < 6 || !selectedUser) {
+      toast.error("A senha deve ter no mínimo 6 caracteres.");
       return;
     }
 
-    toast({
-      title: "Sucesso",
-      description: "Senha alterada com sucesso!",
-    });
-    closeModal();
+    setIsSubmitting(true);
+    try {
+      await usersService.changePassword(selectedUser.id, { password });
+      toast.success("Senha alterada com sucesso!");
+      closeModal();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao alterar senha";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = (user: User) => {
-    setUsers(users.filter((u) => u.id !== user.id));
-    toast({
-      title: "Sucesso",
-      description: "Usuário excluído com sucesso!",
-    });
+  const handleDelete = async (user: User) => {
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${user.email}?`)) {
+      return;
+    }
+
+    try {
+      await usersService.delete(user.id);
+      setUsers(users.filter((u) => u.id !== user.id));
+      toast.success("Usuário excluído com sucesso!");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao excluir usuário";
+      toast.error(message);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -165,13 +183,12 @@ const Users = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-background p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-foreground">
-              Gestão de Usuários
-            </h1>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">
+            Gestão de Usuários
+          </h1>
             <Button onClick={openCreateModal}>
               <Plus className="h-4 w-4 mr-2" />
               Novo Usuário
@@ -196,73 +213,89 @@ const Users = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-mono text-muted-foreground">
-                        {user.id}
-                      </TableCell>
-                      <TableCell>
-                        {user.member ? (
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={user.member.photoUrl} />
-                              <AvatarFallback>
-                                {getInitials(user.member.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{user.member.name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={user.role === "admin" ? "default" : "secondary"}
-                        >
-                          {user.role === "admin" ? "Administrador" : "Membro"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {format(user.createdAt, "dd/MM/yyyy", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditModal(user)}
-                            title="Editar"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openPasswordModal(user)}
-                            title="Alterar senha"
-                          >
-                            <KeyRound className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(user)}
-                            title="Excluir"
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        <div className="flex items-center justify-center gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span>Carregando...</span>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : users.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        Nenhum usuário encontrado
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-mono text-muted-foreground">
+                          {user.id}
+                        </TableCell>
+                        <TableCell>
+                          {user.member ? (
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={user.member.photoUrl} />
+                                <AvatarFallback>
+                                  {getInitials(user.member.name)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">{user.member.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={user.role === "admin" ? "default" : "secondary"}
+                          >
+                            {user.role === "admin" ? "Administrador" : "Membro"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(user.createdAt), "dd/MM/yyyy", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditModal(user)}
+                              title="Editar"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openPasswordModal(user)}
+                              title="Alterar senha"
+                            >
+                              <KeyRound className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(user)}
+                              title="Excluir"
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
-        </div>
 
         {/* Create User Modal */}
         <Dialog open={modalType === "create"} onOpenChange={() => closeModal()}>
@@ -279,6 +312,7 @@ const Users = () => {
                   placeholder="usuario@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -289,11 +323,12 @@ const Users = () => {
                   placeholder="Mínimo 6 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="role">Função *</Label>
-                <Select value={role} onValueChange={(v: "admin" | "member") => setRole(v)}>
+                <Select value={role} onValueChange={(v: "admin" | "member") => setRole(v)} disabled={isSubmitting}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma função" />
                   </SelectTrigger>
@@ -305,10 +340,19 @@ const Users = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={closeModal}>
+              <Button variant="outline" onClick={closeModal} disabled={isSubmitting}>
                 Cancelar
               </Button>
-              <Button onClick={handleCreate}>Criar</Button>
+              <Button onClick={handleCreate} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  "Criar"
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -328,11 +372,12 @@ const Users = () => {
                   placeholder="usuario@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-role">Função *</Label>
-                <Select value={role} onValueChange={(v: "admin" | "member") => setRole(v)}>
+                <Select value={role} onValueChange={(v: "admin" | "member") => setRole(v)} disabled={isSubmitting}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma função" />
                   </SelectTrigger>
@@ -344,10 +389,19 @@ const Users = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={closeModal}>
+              <Button variant="outline" onClick={closeModal} disabled={isSubmitting}>
                 Cancelar
               </Button>
-              <Button onClick={handleEdit}>Salvar</Button>
+              <Button onClick={handleEdit} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar"
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -370,14 +424,24 @@ const Users = () => {
                   placeholder="Mínimo 6 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={closeModal}>
+              <Button variant="outline" onClick={closeModal} disabled={isSubmitting}>
                 Cancelar
               </Button>
-              <Button onClick={handlePasswordChange}>Alterar Senha</Button>
+              <Button onClick={handlePasswordChange} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Alterando...
+                  </>
+                ) : (
+                  "Alterar Senha"
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

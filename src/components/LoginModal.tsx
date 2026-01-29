@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import skyClouds from "@/assets/sky-clouds.jpg";
+import logoClean from "@/assets/logo-clean.png";
 
 interface LoginModalProps {
   open: boolean;
@@ -21,14 +24,26 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simula login bem-sucedido
-    console.log("Login attempt:", { email, password });
-    onLoginSuccess?.();
-    setEmail("");
-    setPassword("");
+    setIsLoading(true);
+
+    try {
+      await login({ email, password });
+      toast.success("Login realizado com sucesso!");
+      onLoginSuccess?.();
+      setEmail("");
+      setPassword("");
+      onOpenChange(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao fazer login";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,19 +53,17 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
           {/* Left Side - Church Image */}
           <div className="hidden sm:flex w-[45%] relative flex-col items-center justify-end p-8 text-center overflow-hidden">
             {/* Background Image */}
-            <img 
-              src={skyClouds} 
-              alt="Igreja do Deus de Maravilhas" 
+            <img
+              src={skyClouds}
+              alt="Igreja do Deus de Maravilhas"
               className="absolute inset-0 w-full h-full object-cover"
             />
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-secondary/95 via-secondary/60 to-transparent" />
-            
+
             {/* Content at bottom */}
             <div className="relative z-10 text-left w-full">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-golden to-golden-light flex items-center justify-center mb-4 shadow-lg">
-                <span className="text-secondary font-bold text-xl">M</span>
-              </div>
+              <img src={logoClean} alt="Igreja do Deus de Maravilhas" className="w-14 h-14 object-contain mb-4" />
               <h2 className="text-white font-bold text-2xl mb-2">Graça e Paz!</h2>
               <p className="text-white/80 text-sm leading-relaxed">
                 Bem-vindo à área de membros da Igreja do Deus de Maravilhas.
@@ -62,9 +75,7 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
           <div className="flex-1 p-8 flex flex-col justify-center">
             <DialogHeader className="mb-6 sm:hidden">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-golden to-golden-light flex items-center justify-center">
-                  <span className="text-secondary font-bold text-lg">M</span>
-                </div>
+                <img src={logoClean} alt="Igreja do Deus de Maravilhas" className="w-10 h-10 object-contain" />
                 <div>
                   <DialogTitle className="text-lg">Graça e Paz!</DialogTitle>
                   <p className="text-sm text-muted-foreground">
@@ -90,6 +101,7 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -103,6 +115,7 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
                     className="pr-10"
                   />
                   <button
@@ -126,9 +139,17 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
 
               <Button
                 type="submit"
+                disabled={isLoading}
                 className="w-full bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity"
               >
-                ENTRAR
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ENTRANDO...
+                  </>
+                ) : (
+                  "ENTRAR"
+                )}
               </Button>
             </form>
           </div>

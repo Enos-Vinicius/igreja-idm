@@ -1,34 +1,62 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import heroRoad from "@/assets/hero-road.jpg";
+import logoClean from "@/assets/logo-clean.png";
+import logoWhite from "@/assets/logo-white.png";
 import { Button } from "@/components/ui/button";
 import LoginModal from "@/components/LoginModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
-// TODO: Replace with real authentication state
-const mockUser = {
-  firstName: "João",
-  lastName: "Silva",
-  avatarUrl: "",
+// Converte nome para CamelCase (primeira letra de cada palavra maiúscula)
+const toCamelCase = (str: string): string => {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
-  const initials = `${mockUser.firstName.charAt(0)}${mockUser.lastName.charAt(0)}`.toUpperCase();
-  const displayName = `${mockUser.firstName} ${mockUser.lastName}`;
+  const userData = useMemo(() => {
+    if (!user?.member?.name) {
+      return {
+        firstName: user?.email?.split('@')[0] || 'Usuário',
+        lastName: '',
+        avatarUrl: '',
+      };
+    }
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+    const nameParts = user.member.name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+
+    return {
+      firstName,
+      lastName,
+      avatarUrl: user.member.photoUrl || '',
+    };
+  }, [user]);
+
+  const initials = `${userData.firstName.charAt(0)}${userData.lastName.charAt(0) || ''}`.toUpperCase();
+  const displayName = toCamelCase(
+    userData.lastName
+      ? `${userData.firstName} ${userData.lastName}`
+      : userData.firstName
+  );
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
   };
 
   const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
     setIsLoginOpen(false);
   };
 
@@ -54,39 +82,26 @@ const Header = () => {
   ];
 
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 overflow-hidden ${
-        isScrolled 
-          ? "bg-white shadow-lg" 
-          : ""
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? "bg-white shadow-lg"
+          : "bg-transparent"
       }`}
     >
-      {/* Background Image with Gradient Overlay */}
-      {!isScrolled && (
-        <div className="absolute inset-0 -z-10">
-          <img 
-            src={heroRoad} 
-            alt="" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-secondary/80 to-primary/60" />
-        </div>
-      )}
       <div className="container mx-auto px-4">
         <div className={`flex items-center justify-between transition-all duration-300 ${
           isScrolled ? "h-16" : "h-20"
         }`}>
           {/* Logo */}
-          <a href="#" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-golden to-golden-light flex items-center justify-center">
-              <span className="text-secondary font-bold text-lg">M</span>
-            </div>
-            <div className="hidden sm:block">
-              <span className={`text-sm font-semibold transition-colors duration-300 ${
-                isScrolled ? "text-secondary" : "text-white"
-              }`}>Igreja do Deus de</span>
-              <span className="block text-lg font-bold text-gradient-golden">Maravilhas</span>
-            </div>
+          <a href="#" className="flex items-center">
+            <img
+              src={isScrolled ? logoClean : logoWhite}
+              alt="Igreja do Deus de Maravilhas"
+              className={`object-contain transition-all duration-300 ${
+                isScrolled ? "h-10" : "h-24 -mb-14"
+              }`}
+            />
           </a>
 
           {/* Desktop Navigation */}
@@ -96,15 +111,17 @@ const Header = () => {
                 key={link.name}
                 href={link.href}
                 className={`font-medium transition-colors duration-300 text-sm tracking-wide ${
-                  isScrolled 
-                    ? "text-secondary/80 hover:text-secondary" 
+                  isScrolled
+                    ? "text-secondary/80 hover:text-secondary"
                     : "text-white/90 hover:text-white"
                 }`}
               >
                 {link.name}
               </a>
             ))}
-            {isLoggedIn ? (
+            {isLoading ? (
+              <div className="w-24 h-8" />
+            ) : isAuthenticated ? (
               <button
                 onClick={handleUserClick}
                 className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 hover:bg-white/10 focus:outline-none ${
@@ -112,7 +129,7 @@ const Header = () => {
                 }`}
               >
                 <Avatar className="h-8 w-8 border-2 border-golden">
-                  <AvatarImage src={mockUser.avatarUrl} alt={displayName} />
+                  <AvatarImage src={userData.avatarUrl} alt={displayName} />
                   <AvatarFallback className="bg-gradient-to-br from-golden to-golden-light text-secondary font-semibold text-sm">
                     {initials}
                   </AvatarFallback>
@@ -130,8 +147,8 @@ const Header = () => {
                 onClick={() => setIsLoginOpen(true)}
                 variant="outline"
                 className={`rounded-full border-2 font-semibold transition-all ${
-                  isScrolled 
-                    ? "border-primary text-primary hover:bg-primary hover:text-white" 
+                  isScrolled
+                    ? "border-primary text-primary hover:bg-primary hover:text-white"
                     : "border-white text-white bg-transparent hover:bg-white hover:text-secondary"
                 }`}
               >
@@ -161,8 +178,8 @@ const Header = () => {
                 key={link.name}
                 href={link.href}
                 className={`block py-3 font-medium transition-colors ${
-                  isScrolled 
-                    ? "text-secondary/80 hover:text-secondary" 
+                  isScrolled
+                    ? "text-secondary/80 hover:text-secondary"
                     : "text-white/90 hover:text-white"
                 }`}
                 onClick={() => setIsOpen(false)}
@@ -170,7 +187,9 @@ const Header = () => {
                 {link.name}
               </a>
             ))}
-            {isLoggedIn ? (
+            {isLoading ? (
+              <div className="mt-3 w-full h-12" />
+            ) : isAuthenticated ? (
               <button
                 onClick={() => {
                   handleUserClick();
@@ -181,7 +200,7 @@ const Header = () => {
                 }`}
               >
                 <Avatar className="h-8 w-8 border-2 border-golden">
-                  <AvatarImage src={mockUser.avatarUrl} alt={displayName} />
+                  <AvatarImage src={userData.avatarUrl} alt={displayName} />
                   <AvatarFallback className="bg-gradient-to-br from-golden to-golden-light text-secondary font-semibold text-sm">
                     {initials}
                   </AvatarFallback>
@@ -202,8 +221,8 @@ const Header = () => {
                 }}
                 variant="outline"
                 className={`mt-3 w-full rounded-full border-2 font-semibold transition-all ${
-                  isScrolled 
-                    ? "border-primary text-primary hover:bg-primary hover:text-white" 
+                  isScrolled
+                    ? "border-primary text-primary hover:bg-primary hover:text-white"
                     : "border-white text-white bg-transparent hover:bg-white hover:text-secondary"
                 }`}
               >

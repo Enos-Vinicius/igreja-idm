@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Edit, Trash2, ExternalLink, FileText, Music } from "lucide-react";
+import { Plus, Search, Edit, Trash2, ExternalLink, FileText, Music, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,35 +26,112 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { mockWorships } from "@/data/mockWorships";
-import { Worship } from "@/types/worship";
+import { songsService } from "@/services/songs";
+import { Song, SongStats } from "@/types/worship";
 
 const Repertoire = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [worships, setWorships] = useState<Worship[]>(mockWorships);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [stats, setStats] = useState<SongStats | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
-  const filteredWorships = worships.filter(
-    (worship) =>
-      worship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      worship.ministers.some((m) =>
-        m.toLowerCase().includes(searchTerm.toLowerCase())
-      ) ||
-      worship.key.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const handleDelete = (id: string) => {
-    setWorships((prev) => prev.filter((w) => w.id !== id));
-    toast({
-      title: "Louvor excluído",
-      description: "O louvor foi removido do repertório.",
-    });
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      // Carregar músicas
+      const songsData = await songsService.getAll();
+      setSongs(songsData);
+
+      // Tentar carregar stats da API, se falhar calcular localmente
+      try {
+        const statsData = await songsService.getStats();
+        setStats(statsData);
+      } catch {
+        // Calcular stats a partir dos dados das músicas
+        const uniqueMinisterIds = new Set<string>();
+        songsData.forEach((song) => {
+          song.ministers.forEach((m) => uniqueMinisterIds.add(m.id));
+        });
+
+        setStats({
+          totalSongs: songsData.length,
+          songsWithSheet: songsData.filter((s) => s.sheetMusicUrl).length,
+          activeMinistersCount: uniqueMinisterIds.size,
+        });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao carregar repertório";
+      toast({
+        title: "Erro",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = async (term: string) => {
+    setSearchTerm(term);
+    if (term.length >= 2) {
+      try {
+        const results = await songsService.getAll(term);
+        setSongs(results);
+      } catch (error) {
+        console.error("Search error:", error);
+      }
+    } else if (term.length === 0) {
+      loadData();
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    setIsDeleting(id);
+    try {
+      await songsService.delete(id);
+      setSongs((prev) => prev.filter((s) => s.id !== id));
+      if (stats) {
+        setStats({ ...stats, totalSongs: stats.totalSongs - 1 });
+      }
+      toast({
+        title: "Louvor excluído",
+        description: "O louvor foi removido do repertório.",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao excluir louvor";
+      toast({
+        title: "Erro",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   const openYoutubeLink = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-6 flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Carregando repertório...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -85,7 +162,7 @@ const Repertoire = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{worships.length}</div>
+              <div className="text-2xl font-bold">{stats?.totalSongs ?? 0}</div>
             </CardContent>
           </Card>
           <Card>
@@ -95,9 +172,7 @@ const Repertoire = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {worships.filter((w) => w.fileName).length}
-              </div>
+              <div className="text-2xl font-bold">{stats?.songsWithSheet ?? 0}</div>
             </CardContent>
           </Card>
           <Card>
@@ -107,9 +182,7 @@ const Repertoire = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {new Set(worships.flatMap((w) => w.ministers)).size}
-              </div>
+              <div className="text-2xl font-bold">{stats?.activeMinistersCount ?? 0}</div>
             </CardContent>
           </Card>
         </div>
@@ -123,7 +196,7 @@ const Repertoire = () => {
                 <Input
                   placeholder="Buscar por título, ministro ou tonalidade..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -143,7 +216,7 @@ const Repertoire = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredWorships.length === 0 ? (
+                  {songs.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={6}
@@ -153,44 +226,49 @@ const Repertoire = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredWorships.map((worship) => (
-                      <TableRow key={worship.id}>
+                    songs.map((song) => (
+                      <TableRow key={song.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{worship.title}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => openYoutubeLink(worship.youtubeLink)}
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
+                            <span className="font-medium">{song.title}</span>
+                            {song.youtubeUrl && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => openYoutubeLink(song.youtubeUrl)}
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{worship.key}</Badge>
+                          <Badge variant="secondary">{song.key}</Badge>
                         </TableCell>
                         <TableCell>
-                          {worship.singer || "-"}
+                          {song.singer || "-"}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
-                            {worship.ministers.map((minister, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs">
-                                {minister}
+                            {song.ministers.map((minister) => (
+                              <Badge key={minister.id} variant="outline" className="text-xs">
+                                {minister.name}
                               </Badge>
                             ))}
                           </div>
                         </TableCell>
                         <TableCell>
-                          {worship.fileName ? (
-                            <div className="flex items-center gap-1 text-sm text-primary">
+                          {song.sheetMusicUrl ? (
+                            <a
+                              href={song.sheetMusicUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-sm text-primary hover:underline"
+                            >
                               <FileText className="h-4 w-4" />
-                              <span className="truncate max-w-[100px]">
-                                {worship.fileName}
-                              </span>
-                            </div>
+                              <span>Ver cifra</span>
+                            </a>
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
@@ -201,15 +279,19 @@ const Repertoire = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() =>
-                                navigate(`/repertoire/edit/${worship.id}`)
+                                navigate(`/repertoire/edit/${song.id}`)
                               }
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                <Button variant="ghost" size="icon" disabled={isDeleting === song.id}>
+                                  {isDeleting === song.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  )}
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
@@ -218,14 +300,14 @@ const Repertoire = () => {
                                     Excluir louvor?
                                   </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Tem certeza que deseja excluir "{worship.title}"?
+                                    Tem certeza que deseja excluir "{song.title}"?
                                     Esta ação não pode ser desfeita.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => handleDelete(worship.id)}
+                                    onClick={() => handleDelete(song.id)}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
                                     Excluir

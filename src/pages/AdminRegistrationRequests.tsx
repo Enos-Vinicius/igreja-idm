@@ -1,5 +1,4 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -8,13 +7,13 @@ import {
   Check,
   X,
   Trash2,
-  ArrowLeft,
   User,
   Filter,
   Clock,
   CheckCircle,
   XCircle,
   Users,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,8 +55,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
-import { mockRegistrationRequests } from '@/data/mockRegistrationRequests';
+import { toast } from 'sonner';
+import { memberRequestsService } from '@/services/memberRequests';
 import {
   RegistrationRequest,
   RegistrationStatus,
@@ -67,10 +66,8 @@ import {
 import DashboardLayout from '@/components/DashboardLayout';
 
 const AdminRegistrationRequests = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const [requests, setRequests] = useState<RegistrationRequest[]>(mockRegistrationRequests);
+  const [requests, setRequests] = useState<RegistrationRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -80,6 +77,24 @@ const AdminRegistrationRequests = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isApproveOpen, setIsApproveOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    loadRequests();
+  }, []);
+
+  const loadRequests = async () => {
+    setIsLoading(true);
+    try {
+      const data = await memberRequestsService.getAll();
+      setRequests(data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao carregar solicitações';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredRequests = useMemo(() => {
     return requests.filter((request) => {
@@ -161,24 +176,28 @@ const AdminRegistrationRequests = () => {
     setIsApproveOpen(true);
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!selectedRequest) return;
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === selectedRequest.id
-          ? { ...r, status: 'approved' as RegistrationStatus, updatedAt: new Date().toISOString() }
-          : r
-      )
-    );
-
-    toast({
-      title: 'Solicitação aprovada',
-      description: `O membro ${selectedRequest.name} foi criado com sucesso.`,
-    });
-
-    setIsApproveOpen(false);
-    setSelectedRequest(null);
+    setIsSubmitting(true);
+    try {
+      await memberRequestsService.approve(selectedRequest.id);
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === selectedRequest.id
+            ? { ...r, status: 'approved' as RegistrationStatus, updatedAt: new Date().toISOString() }
+            : r
+        )
+      );
+      toast.success(`O membro ${selectedRequest.name} foi criado com sucesso.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao aprovar solicitação';
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+      setIsApproveOpen(false);
+      setSelectedRequest(null);
+    }
   };
 
   const handleRejectClick = (request: RegistrationRequest) => {
@@ -187,37 +206,37 @@ const AdminRegistrationRequests = () => {
     setIsRejectOpen(true);
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!selectedRequest || !rejectionReason.trim()) {
-      toast({
-        title: 'Erro',
-        description: 'O motivo da rejeição é obrigatório.',
-        variant: 'destructive',
-      });
+      toast.error('O motivo da rejeição é obrigatório.');
       return;
     }
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === selectedRequest.id
-          ? {
-              ...r,
-              status: 'rejected' as RegistrationStatus,
-              rejectionReason: rejectionReason.trim(),
-              updatedAt: new Date().toISOString(),
-            }
-          : r
-      )
-    );
-
-    toast({
-      title: 'Solicitação rejeitada',
-      description: `A solicitação de ${selectedRequest.name} foi rejeitada.`,
-    });
-
-    setIsRejectOpen(false);
-    setSelectedRequest(null);
-    setRejectionReason('');
+    setIsSubmitting(true);
+    try {
+      await memberRequestsService.reject(selectedRequest.id, rejectionReason.trim());
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === selectedRequest.id
+            ? {
+                ...r,
+                status: 'rejected' as RegistrationStatus,
+                rejectionReason: rejectionReason.trim(),
+                updatedAt: new Date().toISOString(),
+              }
+            : r
+        )
+      );
+      toast.success(`A solicitação de ${selectedRequest.name} foi rejeitada.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao rejeitar solicitação';
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+      setIsRejectOpen(false);
+      setSelectedRequest(null);
+      setRejectionReason('');
+    }
   };
 
   const handleDeleteClick = (request: RegistrationRequest) => {
@@ -225,18 +244,22 @@ const AdminRegistrationRequests = () => {
     setIsDeleteOpen(true);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedRequest) return;
 
-    setRequests((prev) => prev.filter((r) => r.id !== selectedRequest.id));
-
-    toast({
-      title: 'Solicitação excluída',
-      description: `A solicitação de ${selectedRequest.name} foi excluída permanentemente.`,
-    });
-
-    setIsDeleteOpen(false);
-    setSelectedRequest(null);
+    setIsSubmitting(true);
+    try {
+      await memberRequestsService.delete(selectedRequest.id);
+      setRequests((prev) => prev.filter((r) => r.id !== selectedRequest.id));
+      toast.success(`A solicitação de ${selectedRequest.name} foi excluída permanentemente.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao excluir solicitação';
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+      setIsDeleteOpen(false);
+      setSelectedRequest(null);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -258,15 +281,14 @@ const AdminRegistrationRequests = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto py-8 px-4">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Solicitações de Cadastro</h1>
-            <p className="text-muted-foreground">
-              Gerencie as solicitações de novos membros
-            </p>
-          </div>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Solicitações de Cadastro</h1>
+          <p className="text-muted-foreground">
+            Gerencie as solicitações de novos membros
+          </p>
+        </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -360,7 +382,16 @@ const AdminRegistrationRequests = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredRequests.length === 0 ? (
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="flex items-center justify-center gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span>Carregando...</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredRequests.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8">
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -651,20 +682,28 @@ const AdminRegistrationRequests = () => {
                   onChange={(e) => setRejectionReason(e.target.value)}
                   className="mt-2"
                   rows={4}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsRejectOpen(false)}>
+              <Button variant="outline" onClick={() => setIsRejectOpen(false)} disabled={isSubmitting}>
                 Cancelar
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleReject}
-                disabled={!rejectionReason.trim()}
+                disabled={!rejectionReason.trim() || isSubmitting}
               >
-                Confirmar Rejeição
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Rejeitando...
+                  </>
+                ) : (
+                  'Confirmar Rejeição'
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -681,12 +720,20 @@ const AdminRegistrationRequests = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel disabled={isSubmitting}>Cancelar</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleApprove}
+                disabled={isSubmitting}
                 className="bg-green-600 hover:bg-green-700"
               >
-                Aprovar e Criar Membro
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Aprovando...
+                  </>
+                ) : (
+                  'Aprovar e Criar Membro'
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -703,17 +750,24 @@ const AdminRegistrationRequests = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel disabled={isSubmitting}>Cancelar</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDelete}
+                disabled={isSubmitting}
                 className="bg-destructive hover:bg-destructive/90"
               >
-                Excluir Permanentemente
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  'Excluir Permanentemente'
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        </div>
       </div>
     </DashboardLayout>
   );

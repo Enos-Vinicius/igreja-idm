@@ -36,12 +36,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
+import { churchLocationLabels } from "@/types/member";
 
 const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const cepRegex = /^\d{5}-\d{3}$/;
 
 const cadastroSchema = z.object({
   photo: z.any().optional(),
+  church: z.enum(['uberaba', 'conceicao_das_alagoas'], { required_error: "Selecione a igreja" }),
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
   birthDate: z.date({ required_error: "Data de nascimento é obrigatória" }),
@@ -92,6 +94,7 @@ const Cadastro = () => {
   const form = useForm<CadastroFormData>({
     resolver: zodResolver(cadastroSchema),
     defaultValues: {
+      church: undefined,
       name: "",
       email: "",
       gender: "",
@@ -152,9 +155,8 @@ const Cadastro = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-background py-8 px-4">
-        <div className="max-w-3xl mx-auto">
-          <Card>
+      <div className="p-6 space-y-6">
+        <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl md:text-3xl font-bold text-primary">
               Solicitação de Cadastro
@@ -201,12 +203,44 @@ const Cadastro = () => {
                   <p className="text-xs text-muted-foreground">Opcional - Máximo 5MB</p>
                 </div>
 
+                {/* Church Selection */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                    Igreja
+                  </h3>
+
+                  <FormField
+                    control={form.control}
+                    name="church"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Selecione a igreja *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a igreja" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(churchLocationLabels).map(([value, label]) => (
+                              <SelectItem key={value} value={value}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 {/* Personal Information */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-foreground border-b pb-2">
                     Informações Pessoais
                   </h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -240,7 +274,7 @@ const Cadastro = () => {
                       control={form.control}
                       name="birthDate"
                       render={({ field }) => (
-                        <FormItem className="flex flex-col">
+                        <FormItem>
                           <FormLabel>Data de nascimento *</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
@@ -270,6 +304,7 @@ const Cadastro = () => {
                                   date > new Date() || date < new Date("1900-01-01")
                                 }
                                 initialFocus
+                                locale={ptBR}
                                 className="pointer-events-auto"
                                 captionLayout="dropdown-buttons"
                                 fromYear={1900}
@@ -600,9 +635,8 @@ const Cadastro = () => {
             </Form>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </DashboardLayout>
+      </div>
+    </DashboardLayout>
     );
 };
 

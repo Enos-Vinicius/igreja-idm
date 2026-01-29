@@ -23,8 +23,7 @@ const HeroSection = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8 animate-fade-up"
             style={{ animationDelay: "0.1s" }}
           >
-            <span className="w-2 h-2 rounded-full bg-golden animate-glow-pulse" />
-            <span className="text-white/90 text-sm font-medium">2025 • Ano Profético</span>
+            <span className="text-white/90 text-sm font-medium">2026</span>
           </div>
 
           {/* Main Title */}
@@ -52,12 +51,12 @@ const HeroSection = () => {
           </p>
 
         </div>
+      </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-float">
-          <div className="w-6 h-10 border-2 border-white/40 rounded-full flex justify-center pt-2">
-            <div className="w-1.5 h-3 bg-white/60 rounded-full animate-bounce" />
-          </div>
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-float" style={{ marginLeft: '-20px' }}>
+        <div className="w-6 h-10 border-2 border-white/40 rounded-full flex justify-center pt-2">
+          <div className="w-1.5 h-3 bg-white/60 rounded-full animate-bounce" />
         </div>
       </div>
     </section>

@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -97,6 +97,39 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
   }
+
+  /* Custom Scrollbar - Modern & Subtle */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Hide scrollbar when not hovering (optional - shows on scroll) */
+  *::-webkit-scrollbar-thumb:vertical {
+    min-height: 30px;
+  }
+
+  *::-webkit-scrollbar-thumb:horizontal {
+    min-width: 30px;
+  }
 }
 
 @layer components {
@@ -141,4 +174,40 @@
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* React Day Picker Dropdown Styles */
+
+/* Hide the caption label when dropdowns are present */
+.rdp-caption:has(.rdp-caption_dropdowns) .rdp-caption_label {
+  @apply hidden;
+}
+
+/* Dropdown container */
+.rdp-caption_dropdowns {
+  @apply flex gap-2 items-center justify-center;
+}
+
+/* Individual dropdown wrapper */
+.rdp-dropdown {
+  @apply relative inline-flex items-center;
+}
+
+/* The select element inside dropdowns */
+.rdp-dropdown select {
+  @apply appearance-none bg-background border border-input rounded-md px-3 py-1.5 text-sm font-medium cursor-pointer pr-8;
+  @apply hover:bg-primary/10;
+  @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+}
+
+.rdp-dropdown_month select {
+  @apply min-w-[110px];
+}
+
+.rdp-dropdown_year select {
+  @apply min-w-[80px];
 }

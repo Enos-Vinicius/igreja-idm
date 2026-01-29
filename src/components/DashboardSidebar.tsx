@@ -15,17 +15,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import logoWhite from "@/assets/logo-white.png";
 
 interface DashboardSidebarProps {
   user: {
     firstName: string;
     lastName: string;
     avatarUrl?: string;
+    role?: string;
   };
   onLogout: () => void;
 }
@@ -151,9 +148,7 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
     >
       {/* Logo Area */}
       <div className="flex items-center h-16 px-3 border-b border-white/10">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-golden to-golden-light flex items-center justify-center flex-shrink-0">
-          <span className="text-secondary font-bold text-lg">M</span>
-        </div>
+        <img src={logoWhite} alt="Igreja do Deus de Maravilhas" className="w-10 h-10 object-contain flex-shrink-0" />
         <div
           className={cn(
             "ml-3 overflow-hidden transition-all duration-300",
@@ -182,7 +177,9 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
           )}
         >
           <p className="text-sm font-medium text-white whitespace-nowrap">{displayName}</p>
-          <p className="text-xs text-white/60 whitespace-nowrap">Administrador</p>
+          <p className="text-xs text-white/60 whitespace-nowrap">
+            {user.role === 'admin' ? 'Administrador' : 'Membro'}
+          </p>
         </div>
       </div>
 
@@ -214,34 +211,25 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
 
                   return (
                     <li key={item.id}>
-                      <Tooltip delayDuration={0}>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => navigate(item.path)}
-                            className={cn(
-                              "w-full flex items-center px-3 py-3 rounded-lg transition-all duration-200",
-                              active
-                                ? "bg-primary text-white shadow-lg"
-                                : "text-white/70 hover:bg-white/10 hover:text-white"
-                            )}
-                          >
-                            <Icon className="h-5 w-5 flex-shrink-0" />
-                            <span
-                              className={cn(
-                                "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
-                                isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
-                              )}
-                            >
-                              {item.label}
-                            </span>
-                          </button>
-                        </TooltipTrigger>
-                        {!isExpanded && (
-                          <TooltipContent side="right" className="bg-secondary text-white border-white/20">
-                            {item.label}
-                          </TooltipContent>
+                      <button
+                        onClick={() => navigate(item.path)}
+                        className={cn(
+                          "w-full flex items-center px-3 py-3 rounded-lg transition-all duration-200",
+                          active
+                            ? "bg-primary text-white shadow-lg"
+                            : "text-white/70 hover:bg-white/10 hover:text-white"
                         )}
-                      </Tooltip>
+                      >
+                        <Icon className="h-5 w-5 flex-shrink-0" />
+                        <span
+                          className={cn(
+                            "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
+                            isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+                          )}
+                        >
+                          {item.label}
+                        </span>
+                      </button>
                     </li>
                   );
                 })}
@@ -253,53 +241,35 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
 
       {/* Bottom Actions */}
       <div className="border-t border-white/10 p-2 space-y-1">
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => navigate("/")}
-              className="w-full flex items-center px-3 py-3 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200"
-            >
-              <Home className="h-5 w-5 flex-shrink-0" />
-              <span
-                className={cn(
-                  "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
-                  isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
-                )}
-              >
-                Página Inicial
-              </span>
-            </button>
-          </TooltipTrigger>
-          {!isExpanded && (
-            <TooltipContent side="right" className="bg-secondary text-white border-white/20">
-              Página Inicial
-            </TooltipContent>
-          )}
-        </Tooltip>
+        <button
+          onClick={() => navigate("/")}
+          className="w-full flex items-center px-3 py-3 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200"
+        >
+          <Home className="h-5 w-5 flex-shrink-0" />
+          <span
+            className={cn(
+              "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
+              isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+            )}
+          >
+            Página Inicial
+          </span>
+        </button>
 
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <button
-              onClick={onLogout}
-              className="w-full flex items-center px-3 py-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"
-            >
-              <LogOut className="h-5 w-5 flex-shrink-0" />
-              <span
-                className={cn(
-                  "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
-                  isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
-                )}
-              >
-                Sair
-              </span>
-            </button>
-          </TooltipTrigger>
-          {!isExpanded && (
-            <TooltipContent side="right" className="bg-secondary text-white border-white/20">
-              Sair
-            </TooltipContent>
-          )}
-        </Tooltip>
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center px-3 py-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"
+        >
+          <LogOut className="h-5 w-5 flex-shrink-0" />
+          <span
+            className={cn(
+              "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
+              isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+            )}
+          >
+            Sair
+          </span>
+        </button>
       </div>
     </aside>
   );

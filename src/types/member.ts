@@ -6,6 +6,8 @@ export type ChurchRole = 'member' | 'worship_minister' | 'leader' | 'deacon' | '
 
 export type MembershipStatus = 'active' | 'inactive' | 'visitor' | 'congregant';
 
+export type ChurchLocation = 'uberaba' | 'conceicao_das_alagoas';
+
 export interface Member {
   id: string;
   photo?: string;
@@ -33,6 +35,7 @@ export interface Member {
   state?: string;
   
   // Informações Eclesiásticas
+  church?: ChurchLocation;
   churchRole?: ChurchRole;
   membershipStatus?: MembershipStatus;
   baptismDate?: string;
@@ -78,4 +81,9 @@ export const membershipStatusLabels: Record<MembershipStatus, string> = {
   inactive: 'Inativo',
   visitor: 'Visitante',
   congregant: 'Congregado',
+};
+
+export const churchLocationLabels: Record<ChurchLocation, string> = {
+  uberaba: 'Uberaba',
+  conceicao_das_alagoas: 'Conceição das Alagoas',
 };
