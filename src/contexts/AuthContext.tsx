@@ -41,9 +41,9 @@ function SessionExpiredModal({ open, onOpenLogin, onClose }: SessionExpiredModal
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
             <AlertTriangle className="h-7 w-7 text-amber-600" />
           </div>
-          <DialogTitle className="text-xl">Sessão Expirada</DialogTitle>
+          <DialogTitle className="text-xl text-center">Sessão Expirada</DialogTitle>
           <DialogDescription className="text-center pt-2">
-            Sua sessão expirou por inatividade. Por favor, faça login novamente para continuar.
+            Por favor, faça login novamente para continuar.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 pt-4">
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isSessionExpired, setIsSessionExpired] = useState(false);
   const [showLoginAfterExpiry, setShowLoginAfterExpiry] = useState(false);
 
-  const loadUser = useCallback(async () => {
+  const loadUser = useCallback(async (forceRefresh = false) => {
     const hasToken = authService.hasToken();
 
     if (!hasToken) {
@@ -96,8 +96,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Tenta carregar do cache primeiro (sem fazer requisição)
+    const cachedUser = authService.getCachedUser();
+
+    if (cachedUser && !forceRefresh) {
+      // Usa dados do cache - não faz requisição
+      setUser(cachedUser);
+      setIsLoading(false);
+      return;
+    }
+
+    // Se não tem cache ou forceRefresh, busca do servidor
     try {
-      const currentUser = await authService.getCurrentUser();
+      const currentUser = await authService.fetchAndCacheUser();
       setUser(currentUser);
     } catch (error) {
       console.error('[Auth] Error loading user:', error);
@@ -112,6 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleSessionExpired = () => {
       console.log('[Auth] Session expired event received');
+      // Limpa dados do usuário do cache quando a sessão expira
+      authService.logoutLocal();
       setUser(null);
       setIsSessionExpired(true);
     };
@@ -130,7 +143,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await authService.login(credentials);
     setIsSessionExpired(false);
     setShowLoginAfterExpiry(false);
-    await loadUser();
+    // O login já busca e cacheia o usuário, então só carrega do cache
+    const cachedUser = authService.getCachedUser();
+    setUser(cachedUser);
   };
 
   const logout = async () => {
@@ -139,7 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshUser = async () => {
-    await loadUser();
+    // Força buscar do servidor e atualizar cache
+    await loadUser(true);
   };
 
   const openLoginFromSessionExpired = () => {

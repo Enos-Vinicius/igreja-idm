@@ -20,10 +20,50 @@ export interface CurrentUser {
   };
 }
 
+const USER_STORAGE_KEY = 'genesis_current_user';
+
+// Funções para cachear dados do usuário no localStorage
+function saveUserToStorage(user: CurrentUser): void {
+  try {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  } catch (error) {
+    console.error('[Auth] Error saving user to storage:', error);
+  }
+}
+
+function getUserFromStorage(): CurrentUser | null {
+  try {
+    const data = localStorage.getItem(USER_STORAGE_KEY);
+    if (data) {
+      return JSON.parse(data) as CurrentUser;
+    }
+  } catch (error) {
+    console.error('[Auth] Error reading user from storage:', error);
+  }
+  return null;
+}
+
+function removeUserFromStorage(): void {
+  try {
+    localStorage.removeItem(USER_STORAGE_KEY);
+  } catch (error) {
+    console.error('[Auth] Error removing user from storage:', error);
+  }
+}
+
 export const authService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>('/auth/login', credentials, { skipAuth: true });
     setToken(response.token);
+
+    // Busca e cacheia os dados do usuário após login
+    try {
+      const user = await api.get<CurrentUser>('/auth/me');
+      saveUserToStorage(user);
+    } catch (error) {
+      console.error('[Auth] Error fetching user after login:', error);
+    }
+
     return response;
   },
 
@@ -37,15 +77,25 @@ export const authService = {
       }
     }
     removeToken();
+    removeUserFromStorage();
   },
 
   // Logout local only (when session already expired)
   logoutLocal(): void {
     removeToken();
+    removeUserFromStorage();
   },
 
-  async getCurrentUser(): Promise<CurrentUser> {
-    return api.get<CurrentUser>('/auth/me');
+  // Busca usuário do cache (storage) - não faz requisição
+  getCachedUser(): CurrentUser | null {
+    return getUserFromStorage();
+  },
+
+  // Força busca do servidor e atualiza o cache
+  async fetchAndCacheUser(): Promise<CurrentUser> {
+    const user = await api.get<CurrentUser>('/auth/me');
+    saveUserToStorage(user);
+    return user;
   },
 
   getToken,

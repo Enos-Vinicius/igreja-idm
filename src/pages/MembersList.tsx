@@ -34,8 +34,8 @@ import { toast } from 'sonner';
 import { membersService } from '@/services/members';
 import {
   Member,
-  churchRoleLabels,
-  membershipStatusLabels,
+  CHURCH_ROLES,
+  MEMBERSHIP_STATUSES,
   MembershipStatus,
   ChurchRole,
 } from '@/types/member';
@@ -131,13 +131,15 @@ const MembersList = () => {
 
   const getStatusBadgeVariant = (status?: MembershipStatus) => {
     switch (status) {
-      case 'active':
+      case 'Ativo':
         return 'default';
-      case 'inactive':
+      case 'Inativo':
         return 'secondary';
-      case 'visitor':
+      case 'Visitante':
         return 'outline';
-      case 'congregant':
+      case 'Congregado':
+        return 'secondary';
+      case 'Transferido':
         return 'secondary';
       default:
         return 'outline';
@@ -188,9 +190,9 @@ const MembersList = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os Status</SelectItem>
-                    {Object.entries(membershipStatusLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
+                    {MEMBERSHIP_STATUSES.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -201,9 +203,9 @@ const MembersList = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas as Funções</SelectItem>
-                    {Object.entries(churchRoleLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
+                    {CHURCH_ROLES.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {role}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -264,14 +266,12 @@ const MembersList = () => {
                             {member.primaryPhone || '-'}
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
-                            {member.churchRole
-                              ? churchRoleLabels[member.churchRole as ChurchRole]
-                              : '-'}
+                            {member.churchRole || '-'}
                           </TableCell>
                           <TableCell>
                             {member.membershipStatus ? (
-                              <Badge variant={getStatusBadgeVariant(member.membershipStatus as MembershipStatus)}>
-                                {membershipStatusLabels[member.membershipStatus as MembershipStatus]}
+                              <Badge variant={getStatusBadgeVariant(member.membershipStatus)}>
+                                {member.membershipStatus}
                               </Badge>
                             ) : (
                               '-'

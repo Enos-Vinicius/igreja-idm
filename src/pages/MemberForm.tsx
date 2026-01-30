@@ -3,11 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Upload, X, Save, Loader2, ArrowLeft } from 'lucide-react';
+import { Upload, X, Save, Loader2, ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -29,21 +28,20 @@ import { toast } from 'sonner';
 import { membersService } from '@/services/members';
 import { viaCepService } from '@/services/viaCep';
 import {
-  genderLabels,
-  maritalStatusLabels,
-  churchRoleLabels,
-  membershipStatusLabels,
-  churchLocationLabels,
+  GENDERS,
+  MARITAL_STATUSES,
+  CHURCH_ROLES,
+  MEMBERSHIP_STATUSES,
+  CHURCH_LOCATIONS,
 } from '@/types/member';
 import DashboardLayout from '@/components/DashboardLayout';
 
 const formSchema = z.object({
-  photo: z.string().optional(),
   name: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome deve ter no máximo 100 caracteres'),
   email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
   birthDate: z.string().min(1, 'Data de nascimento é obrigatória'),
-  gender: z.enum(['male', 'female'], { required_error: 'Gênero é obrigatório' }),
-  maritalStatus: z.enum(['single', 'married', 'divorced', 'widowed', 'other'], {
+  gender: z.enum(['Masculino', 'Feminino'], { required_error: 'Gênero é obrigatório' }),
+  maritalStatus: z.enum(['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)', 'Outro'], {
     required_error: 'Estado civil é obrigatório',
   }),
   occupation: z.string().min(1, 'Profissão é obrigatória').max(100, 'Profissão deve ter no máximo 100 caracteres'),
@@ -57,9 +55,9 @@ const formSchema = z.object({
   neighborhood: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
-  church: z.enum(['uberaba', 'conceicao_das_alagoas'], { required_error: 'Selecione a igreja' }),
-  churchRole: z.enum(['member', 'worship_minister', 'leader', 'deacon', 'elder', 'pastor']).optional(),
-  membershipStatus: z.enum(['active', 'inactive', 'visitor', 'congregant']).optional(),
+  church: z.enum(['Uberaba', 'Conceição das Alagoas']).optional().nullable(),
+  churchRole: z.enum(['Membro', 'Ministro de Louvor', 'Líder', 'Diácono', 'Presbítero', 'Pastor(a)', 'Secretária', 'Tesoureiro', 'Recepcionista']).optional(),
+  membershipStatus: z.enum(['Ativo', 'Inativo', 'Visitante', 'Congregado', 'Transferido']).optional(),
   baptismDate: z.string().optional(),
   joinDate: z.string().optional(),
   imageConsentGiven: z.boolean().optional(),
@@ -76,6 +74,33 @@ const brazilianStates = [
   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
 ];
 
+// Converter data ISO para formato de input date (YYYY-MM-DD)
+function formatDateForInput(dateString: string | null | undefined): string {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
+}
+
+// Máscara de telefone: (99) 99999-9999 ou (99) 9999-9999
+function formatPhone(value: string): string {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 2) return numbers.length ? `(${numbers}` : '';
+  if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+  if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+  return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+}
+
+// Máscara de CEP: 99999-999
+function formatCEP(value: string): string {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 5) return numbers;
+  return `${numbers.slice(0, 5)}-${numbers.slice(5, 8)}`;
+}
+
 const MemberForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -89,8 +114,8 @@ const MemberForm = () => {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    mode: 'onBlur',
     defaultValues: {
-      photo: '',
       name: '',
       email: '',
       birthDate: '',
@@ -131,12 +156,11 @@ const MemberForm = () => {
     try {
       const member = await membersService.getById(memberId);
       form.reset({
-        photo: member.photo || '',
-        name: member.name,
+        name: member.name || '',
         email: member.email || '',
-        birthDate: member.birthDate || '',
-        gender: member.gender as 'male' | 'female' | undefined,
-        maritalStatus: member.maritalStatus as 'single' | 'married' | 'divorced' | 'widowed' | 'other' | undefined,
+        birthDate: formatDateForInput(member.birthDate),
+        gender: member.gender,
+        maritalStatus: member.maritalStatus,
         occupation: member.occupation || '',
         primaryPhone: member.primaryPhone || '',
         secondaryPhone: member.secondaryPhone || '',
@@ -148,18 +172,18 @@ const MemberForm = () => {
         neighborhood: member.neighborhood || '',
         city: member.city || '',
         state: member.state || '',
-        church: member.church as 'uberaba' | 'conceicao_das_alagoas' | undefined,
-        churchRole: member.churchRole as 'member' | 'worship_minister' | 'leader' | 'deacon' | 'elder' | 'pastor' | undefined,
-        membershipStatus: member.membershipStatus as 'active' | 'inactive' | 'visitor' | 'congregant' | undefined,
-        baptismDate: member.baptismDate || '',
-        joinDate: member.joinDate || '',
+        church: member.church || undefined,
+        churchRole: member.churchRole,
+        membershipStatus: member.membershipStatus,
+        baptismDate: formatDateForInput(member.baptismDate),
+        joinDate: formatDateForInput(member.joinDate),
         imageConsentGiven: member.imageConsentGiven || false,
         emailConsentGiven: member.emailConsentGiven || false,
         whatsappConsentGiven: member.whatsappConsentGiven || false,
         notes: member.notes || '',
       });
-      if (member.photo) {
-        setPhotoPreview(member.photo);
+      if (member.photoUrl) {
+        setPhotoPreview(member.photoUrl);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao carregar membro';
@@ -182,7 +206,6 @@ const MemberForm = () => {
       reader.onloadend = () => {
         const result = reader.result as string;
         setPhotoPreview(result);
-        form.setValue('photo', result);
       };
       reader.readAsDataURL(file);
     }
@@ -191,7 +214,6 @@ const MemberForm = () => {
   const removePhoto = () => {
     setPhotoPreview(null);
     setPhotoFile(null);
-    form.setValue('photo', '');
   };
 
   const fetchAddressByCep = async (cep: string) => {
@@ -231,7 +253,7 @@ const MemberForm = () => {
 
         // Upload photo if provided
         if (photoFile && newMember.id) {
-          await membersService.uploadPhoto(newMember.id, photoFile);
+          await membersService.uploadPhoto(String(newMember.id), photoFile);
         }
 
         toast.success('Membro cadastrado com sucesso!');
@@ -334,12 +356,12 @@ const MemberForm = () => {
               <CardHeader>
                 <CardTitle>Informações Pessoais</CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardContent className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                    <FormItem className="md:col-span-6">
                       <FormLabel>Nome Completo *</FormLabel>
                       <FormControl>
                         <Input placeholder="Digite o nome completo" {...field} />
@@ -353,7 +375,7 @@ const MemberForm = () => {
                   control={form.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-4">
                       <FormLabel>Email *</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="email@exemplo.com" {...field} />
@@ -367,10 +389,10 @@ const MemberForm = () => {
                   control={form.control}
                   name="birthDate"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-2">
                       <FormLabel>Data de Nascimento *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" className="w-[160px]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -381,18 +403,18 @@ const MemberForm = () => {
                   control={form.control}
                   name="gender"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-2">
                       <FormLabel>Gênero *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione o gênero" />
+                            <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(genderLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
+                          {GENDERS.map((gender) => (
+                            <SelectItem key={gender} value={gender}>
+                              {gender}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -406,18 +428,18 @@ const MemberForm = () => {
                   control={form.control}
                   name="maritalStatus"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-2">
                       <FormLabel>Estado Civil *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione o estado civil" />
+                            <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(maritalStatusLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
+                          {MARITAL_STATUSES.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -431,7 +453,7 @@ const MemberForm = () => {
                   control={form.control}
                   name="occupation"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-8">
                       <FormLabel>Profissão *</FormLabel>
                       <FormControl>
                         <Input placeholder="Digite a profissão" {...field} />
@@ -456,7 +478,12 @@ const MemberForm = () => {
                     <FormItem>
                       <FormLabel>Telefone Principal *</FormLabel>
                       <FormControl>
-                        <Input placeholder="(11) 99999-9999" {...field} />
+                        <Input
+                          placeholder="(11) 99999-9999"
+                          {...field}
+                          onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                          maxLength={15}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -470,7 +497,12 @@ const MemberForm = () => {
                     <FormItem>
                       <FormLabel>Telefone Secundário</FormLabel>
                       <FormControl>
-                        <Input placeholder="(11) 99999-9999" {...field} />
+                        <Input
+                          placeholder="(11) 99999-9999"
+                          {...field}
+                          onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                          maxLength={15}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -484,7 +516,12 @@ const MemberForm = () => {
                     <FormItem>
                       <FormLabel>Contato de Emergência</FormLabel>
                       <FormControl>
-                        <Input placeholder="(11) 99999-9999" {...field} />
+                        <Input
+                          placeholder="(11) 99999-9999"
+                          {...field}
+                          onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                          maxLength={15}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -510,10 +547,12 @@ const MemberForm = () => {
                           <Input
                             placeholder="00000-000"
                             {...field}
+                            onChange={(e) => field.onChange(formatCEP(e.target.value))}
                             onBlur={(e) => {
                               field.onBlur();
                               fetchAddressByCep(e.target.value);
                             }}
+                            maxLength={9}
                           />
                           {isLoadingCep && (
                             <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />
@@ -628,23 +667,23 @@ const MemberForm = () => {
               <CardHeader>
                 <CardTitle>Informações Eclesiásticas</CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardContent className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <FormField
                   control={form.control}
                   name="church"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>Igreja *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                    <FormItem className="md:col-span-4">
+                      <FormLabel>Igreja</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione a igreja" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(churchLocationLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
+                          {CHURCH_LOCATIONS.map((church) => (
+                            <SelectItem key={church} value={church}>
+                              {church}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -658,7 +697,7 @@ const MemberForm = () => {
                   control={form.control}
                   name="churchRole"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-4">
                       <FormLabel>Função na Igreja</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
@@ -667,9 +706,9 @@ const MemberForm = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(churchRoleLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
+                          {CHURCH_ROLES.map((role) => (
+                            <SelectItem key={role} value={role}>
+                              {role}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -683,7 +722,7 @@ const MemberForm = () => {
                   control={form.control}
                   name="membershipStatus"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-4">
                       <FormLabel>Status de Membro</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
@@ -692,9 +731,9 @@ const MemberForm = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(membershipStatusLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
+                          {MEMBERSHIP_STATUSES.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -708,10 +747,10 @@ const MemberForm = () => {
                   control={form.control}
                   name="baptismDate"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-2">
                       <FormLabel>Data de Batismo</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" className="w-[160px]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -722,10 +761,10 @@ const MemberForm = () => {
                   control={form.control}
                   name="joinDate"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de Adesão</FormLabel>
+                    <FormItem className="md:col-span-3">
+                      <FormLabel>Data que Aceitou Jesus</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" className="w-[160px]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -744,17 +783,26 @@ const MemberForm = () => {
                   control={form.control}
                   name="imageConsentGiven"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormItem
+                      className="flex flex-row items-center space-x-4 space-y-0 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => field.onChange(!field.value)}
+                    >
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                            field.value
+                              ? 'bg-primary border-primary text-primary-foreground'
+                              : 'border-muted-foreground/50'
+                          }`}
+                        >
+                          {field.value && <Check className="h-4 w-4" />}
+                        </div>
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Autorizo o uso da minha imagem</FormLabel>
+                        <FormLabel className="cursor-pointer">Autorizo o uso da minha imagem</FormLabel>
                         <FormDescription>
-                          Permite o uso de fotos e vídeos em materiais da igreja
+                          Sua imagem poderá ser utilizada em transmissões de cultos, redes sociais da igreja,
+                          materiais de divulgação, testemunhos e registros de eventos e celebrações
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -765,17 +813,26 @@ const MemberForm = () => {
                   control={form.control}
                   name="emailConsentGiven"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormItem
+                      className="flex flex-row items-center space-x-4 space-y-0 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => field.onChange(!field.value)}
+                    >
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                            field.value
+                              ? 'bg-primary border-primary text-primary-foreground'
+                              : 'border-muted-foreground/50'
+                          }`}
+                        >
+                          {field.value && <Check className="h-4 w-4" />}
+                        </div>
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Autorizo comunicação por e-mail</FormLabel>
+                        <FormLabel className="cursor-pointer">Autorizo comunicação por e-mail</FormLabel>
                         <FormDescription>
-                          Receba avisos e novidades por e-mail
+                          Receba informações sobre cultos, eventos especiais, estudos bíblicos,
+                          avisos importantes e novidades da nossa comunidade
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -786,17 +843,26 @@ const MemberForm = () => {
                   control={form.control}
                   name="whatsappConsentGiven"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormItem
+                      className="flex flex-row items-center space-x-4 space-y-0 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => field.onChange(!field.value)}
+                    >
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                            field.value
+                              ? 'bg-primary border-primary text-primary-foreground'
+                              : 'border-muted-foreground/50'
+                          }`}
+                        >
+                          {field.value && <Check className="h-4 w-4" />}
+                        </div>
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Autorizo comunicação por WhatsApp</FormLabel>
+                        <FormLabel className="cursor-pointer">Autorizo comunicação por WhatsApp</FormLabel>
                         <FormDescription>
-                          Receba avisos e novidades por WhatsApp
+                          Receba informações sobre horários de cultos, mensagens dos Pastores,
+                          avisos importantes, convites para eventos e novidades da igreja
                         </FormDescription>
                       </div>
                     </FormItem>

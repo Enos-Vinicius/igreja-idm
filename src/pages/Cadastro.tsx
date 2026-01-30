@@ -4,14 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Upload, User, ArrowLeft } from "lucide-react";
+import { CalendarIcon, Upload, User, ArrowLeft, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
@@ -36,14 +35,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
-import { churchLocationLabels } from "@/types/member";
+import { CHURCH_LOCATIONS } from "@/types/member";
 
 const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const cepRegex = /^\d{5}-\d{3}$/;
 
 const cadastroSchema = z.object({
   photo: z.any().optional(),
-  church: z.enum(['uberaba', 'conceicao_das_alagoas'], { required_error: "Selecione a igreja" }),
+  church: z.enum(['Uberaba', 'Conceição das Alagoas'], { required_error: "Selecione a igreja" }),
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
   birthDate: z.date({ required_error: "Data de nascimento é obrigatória" }),
@@ -93,6 +92,7 @@ const Cadastro = () => {
 
   const form = useForm<CadastroFormData>({
     resolver: zodResolver(cadastroSchema),
+    mode: 'onBlur',
     defaultValues: {
       church: undefined,
       name: "",
@@ -222,9 +222,9 @@ const Cadastro = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {Object.entries(churchLocationLabels).map(([value, label]) => (
-                              <SelectItem key={value} value={value}>
-                                {label}
+                            {CHURCH_LOCATIONS.map((church) => (
+                              <SelectItem key={church} value={church}>
+                                {church}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -564,24 +564,30 @@ const Cadastro = () => {
                   <h3 className="text-lg font-semibold text-foreground border-b pb-2">
                     Autorizações
                   </h3>
-                  
-                  <div className="space-y-4">
+
+                  <div className="space-y-3">
                     <FormField
                       control={form.control}
                       name="imageConsentGiven"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem
+                          className="flex flex-row items-center space-x-4 space-y-0 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => field.onChange(!field.value)}
+                        >
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <div
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                                field.value
+                                  ? 'bg-primary border-primary text-primary-foreground'
+                                  : 'border-muted-foreground/50'
+                              }`}
+                            >
+                              {field.value && <Check className="h-4 w-4" />}
+                            </div>
                           </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="font-normal cursor-pointer">
-                              Autorizo o uso da minha imagem para divulgação em materiais da igreja
-                            </FormLabel>
-                          </div>
+                          <FormLabel className="font-normal cursor-pointer flex-1">
+                            Autorizo o uso da minha imagem para divulgação em materiais da igreja
+                          </FormLabel>
                         </FormItem>
                       )}
                     />
@@ -590,18 +596,24 @@ const Cadastro = () => {
                       control={form.control}
                       name="emailConsentGiven"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem
+                          className="flex flex-row items-center space-x-4 space-y-0 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => field.onChange(!field.value)}
+                        >
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <div
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                                field.value
+                                  ? 'bg-primary border-primary text-primary-foreground'
+                                  : 'border-muted-foreground/50'
+                              }`}
+                            >
+                              {field.value && <Check className="h-4 w-4" />}
+                            </div>
                           </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="font-normal cursor-pointer">
-                              Autorizo o recebimento de comunicações por email
-                            </FormLabel>
-                          </div>
+                          <FormLabel className="font-normal cursor-pointer flex-1">
+                            Autorizo o recebimento de comunicações por email
+                          </FormLabel>
                         </FormItem>
                       )}
                     />
@@ -610,18 +622,24 @@ const Cadastro = () => {
                       control={form.control}
                       name="whatsappConsentGiven"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem
+                          className="flex flex-row items-center space-x-4 space-y-0 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => field.onChange(!field.value)}
+                        >
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <div
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                                field.value
+                                  ? 'bg-primary border-primary text-primary-foreground'
+                                  : 'border-muted-foreground/50'
+                              }`}
+                            >
+                              {field.value && <Check className="h-4 w-4" />}
+                            </div>
                           </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="font-normal cursor-pointer">
-                              Autorizo o recebimento de mensagens via WhatsApp
-                            </FormLabel>
-                          </div>
+                          <FormLabel className="font-normal cursor-pointer flex-1">
+                            Autorizo o recebimento de mensagens via WhatsApp
+                          </FormLabel>
                         </FormItem>
                       )}
                     />

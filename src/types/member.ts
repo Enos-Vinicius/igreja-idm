@@ -1,30 +1,40 @@
-export type Gender = 'male' | 'female';
+export type Gender = 'Masculino' | 'Feminino';
 
-export type MaritalStatus = 'single' | 'married' | 'divorced' | 'widowed' | 'other';
+export type MaritalStatus = 'Solteiro(a)' | 'Casado(a)' | 'Divorciado(a)' | 'Viúvo(a)' | 'Outro';
 
-export type ChurchRole = 'member' | 'worship_minister' | 'leader' | 'deacon' | 'elder' | 'pastor';
+export type ChurchRole =
+  | 'Membro'
+  | 'Ministro de Louvor'
+  | 'Líder'
+  | 'Diácono'
+  | 'Presbítero'
+  | 'Pastor(a)'
+  | 'Secretária'
+  | 'Tesoureiro'
+  | 'Recepcionista';
 
-export type MembershipStatus = 'active' | 'inactive' | 'visitor' | 'congregant';
+export type MembershipStatus = 'Ativo' | 'Inativo' | 'Visitante' | 'Congregado' | 'Transferido';
 
-export type ChurchLocation = 'uberaba' | 'conceicao_das_alagoas';
+export type ChurchLocation = 'Uberaba' | 'Conceição das Alagoas';
 
 export interface Member {
-  id: string;
-  photo?: string;
-  
+  id: number;
+  userId?: number;
+  photoUrl?: string;
+
   // Informações Pessoais
   name: string;
   email: string;
-  birthDate: string;
+  birthDate: string | null;
   gender: Gender;
   maritalStatus: MaritalStatus;
   occupation: string;
-  
+
   // Contato
   primaryPhone: string;
   secondaryPhone?: string;
   emergencyContact?: string;
-  
+
   // Endereço
   zipCode?: string;
   street?: string;
@@ -33,57 +43,62 @@ export interface Member {
   neighborhood?: string;
   city?: string;
   state?: string;
-  
+  address?: string; // Campo legado
+
   // Informações Eclesiásticas
-  church?: ChurchLocation;
+  church?: ChurchLocation | null;
   churchRole?: ChurchRole;
   membershipStatus?: MembershipStatus;
-  baptismDate?: string;
-  joinDate?: string;
-  
+  baptismDate?: string | null;
+  joinDate?: string | null;
+  ministry?: string; // Campo usado em algumas telas
+  isLeader?: boolean;
+  isAdmin?: boolean;
+
   // Consentimentos
   imageConsentGiven?: boolean;
   emailConsentGiven?: boolean;
   whatsappConsentGiven?: boolean;
-  
+
   // Observações
   notes?: string;
-  
+
   // Metadados
   createdAt: string;
   updatedAt: string;
 }
 
-export const genderLabels: Record<Gender, string> = {
-  male: 'Masculino',
-  female: 'Feminino',
-};
+export const GENDERS: Gender[] = ['Masculino', 'Feminino'];
 
-export const maritalStatusLabels: Record<MaritalStatus, string> = {
-  single: 'Solteiro(a)',
-  married: 'Casado(a)',
-  divorced: 'Divorciado(a)',
-  widowed: 'Viúvo(a)',
-  other: 'Outro',
-};
+export const MARITAL_STATUSES: MaritalStatus[] = [
+  'Solteiro(a)',
+  'Casado(a)',
+  'Divorciado(a)',
+  'Viúvo(a)',
+  'Outro',
+];
 
-export const churchRoleLabels: Record<ChurchRole, string> = {
-  member: 'Membro',
-  worship_minister: 'Ministro de Louvor',
-  leader: 'Líder',
-  deacon: 'Diácono',
-  elder: 'Presbítero',
-  pastor: 'Pastor(a)',
-};
+export const CHURCH_ROLES: ChurchRole[] = [
+  'Membro',
+  'Ministro de Louvor',
+  'Líder',
+  'Diácono',
+  'Presbítero',
+  'Pastor(a)',
+  'Secretária',
+  'Tesoureiro',
+  'Recepcionista',
+];
 
-export const membershipStatusLabels: Record<MembershipStatus, string> = {
-  active: 'Ativo',
-  inactive: 'Inativo',
-  visitor: 'Visitante',
-  congregant: 'Congregado',
-};
+export const MEMBERSHIP_STATUSES: MembershipStatus[] = [
+  'Ativo',
+  'Inativo',
+  'Visitante',
+  'Congregado',
+  'Transferido',
+];
 
-export const churchLocationLabels: Record<ChurchLocation, string> = {
-  uberaba: 'Uberaba',
-  conceicao_das_alagoas: 'Conceição das Alagoas',
-};
+export const CHURCH_LOCATIONS: ChurchLocation[] = [
+  'Uberaba',
+  'Conceição das Alagoas',
+];
