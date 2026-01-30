@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Upload, X, Save, Loader2 } from 'lucide-react';
+import { Upload, X, Save, Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -236,7 +236,8 @@ const MemberForm = () => {
 
         toast.success('Membro cadastrado com sucesso!');
       }
-      navigate('/members');
+      // Navega de volta com flag de refresh para recarregar os dados
+      navigate('/members', { state: { refresh: true } });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao salvar membro';
       toast.error(message);
@@ -260,17 +261,26 @@ const MemberForm = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 max-w-6xl mx-auto">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {isEditing ? 'Editar Membro' : 'Novo Membro'}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {isEditing
-              ? 'Atualize as informações do membro'
-              : 'Preencha as informações para cadastrar um novo membro'}
-          </p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/members')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              {isEditing ? 'Editar Membro' : 'Novo Membro'}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {isEditing
+                ? 'Atualize as informações do membro'
+                : 'Adicione um novo membro à igreja'}
+            </p>
+          </div>
         </div>
 
         <Form {...form}>

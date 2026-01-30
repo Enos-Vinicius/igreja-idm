@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, Search, Edit, Trash2, ExternalLink, FileText, Music, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -31,23 +31,48 @@ import { Song, SongStats } from "@/types/worship";
 
 const Repertoire = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [songs, setSongs] = useState<Song[]>([]);
   const [stats, setStats] = useState<SongStats | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingSongs, setIsLoadingSongs] = useState(true);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    // Só recarrega se for a primeira vez OU se vier com flag de refresh
+    const shouldRefresh = location.state?.refresh === true;
+    const hasData = songs.length > 0;
+
+    // Recarrega apenas se:
+    // 1. Vem com flag de refresh (salvou no form)
+    // 2. OU não tem dados ainda E nunca carregou antes
+    if (shouldRefresh || (!hasData && !hasLoadedRef.current)) {
+      loadData();
+      hasLoadedRef.current = true;
+
+      // Limpa o state após usar para evitar reloads indesejados
+      if (shouldRefresh) {
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    } else {
+      // Se já tem dados, não mostra loading
+      setIsLoadingSongs(false);
+      setIsLoadingStats(false);
+    }
+  }, [location.state, songs.length]);
 
   const loadData = async () => {
-    setIsLoading(true);
+    setIsLoadingSongs(true);
+    setIsLoadingStats(true);
+
     try {
       // Carregar músicas
       const songsData = await songsService.getAll();
       setSongs(songsData);
+      setIsLoadingSongs(false);
 
       // Tentar carregar stats da API, se falhar calcular localmente
       try {
@@ -66,6 +91,7 @@ const Repertoire = () => {
           activeMinistersCount: uniqueMinisterIds.size,
         });
       }
+      setIsLoadingStats(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao carregar repertório";
       toast({
@@ -73,8 +99,8 @@ const Repertoire = () => {
         description: message,
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+      setIsLoadingSongs(false);
+      setIsLoadingStats(false);
     }
   };
 
@@ -120,22 +146,9 @@ const Repertoire = () => {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="p-6 flex items-center justify-center min-h-[400px]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Carregando repertório...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -162,7 +175,14 @@ const Repertoire = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.totalSongs ?? 0}</div>
+              {isLoadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                </div>
+              ) : (
+                <div className="text-2xl font-bold">{stats?.totalSongs ?? 0}</div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -172,7 +192,14 @@ const Repertoire = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.songsWithSheet ?? 0}</div>
+              {isLoadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                </div>
+              ) : (
+                <div className="text-2xl font-bold">{stats?.songsWithSheet ?? 0}</div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -182,7 +209,14 @@ const Repertoire = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.activeMinistersCount ?? 0}</div>
+              {isLoadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                </div>
+              ) : (
+                <div className="text-2xl font-bold">{stats?.activeMinistersCount ?? 0}</div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -216,7 +250,19 @@ const Repertoire = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {songs.length === 0 ? (
+                  {isLoadingSongs ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8"
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                          <p className="text-muted-foreground">Carregando louvores...</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : songs.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={6}

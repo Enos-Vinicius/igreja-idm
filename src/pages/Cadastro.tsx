@@ -155,7 +155,7 @@ const Cadastro = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 max-w-6xl mx-auto">
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl md:text-3xl font-bold text-primary">

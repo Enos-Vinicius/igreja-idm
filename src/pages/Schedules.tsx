@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Search, Edit, Trash2, Calendar, Music, BookOpen } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Plus, Search, Edit, Trash2, Calendar, Music, BookOpen, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -29,47 +29,118 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { mockSchedules } from "@/data/mockSchedules";
-import { mockWorships } from "@/data/mockWorships";
-import { Schedule } from "@/types/schedule";
+import { schedulesService } from "@/services/schedules";
+import { Schedule, ScheduleStats } from "@/types/schedule";
 
 const Schedules = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [schedules, setSchedules] = useState<Schedule[]>(mockSchedules);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [stats, setStats] = useState<ScheduleStats | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "worship" | "preaching">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "Louvor" | "Pregação">("all");
+  const [isLoadingSchedules, setIsLoadingSchedules] = useState(true);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const hasLoadedRef = useRef(false);
+
+  useEffect(() => {
+    const shouldRefresh = location.state?.refresh === true;
+    const hasData = schedules.length > 0;
+
+    if (shouldRefresh || (!hasData && !hasLoadedRef.current)) {
+      loadData();
+      hasLoadedRef.current = true;
+
+      if (shouldRefresh) {
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    } else {
+      setIsLoadingSchedules(false);
+      setIsLoadingStats(false);
+    }
+  }, [location.state, schedules.length]);
+
+  const loadData = async () => {
+    setIsLoadingSchedules(true);
+    setIsLoadingStats(true);
+
+    try {
+      const schedulesData = await schedulesService.getAll();
+      setSchedules(schedulesData);
+      setIsLoadingSchedules(false);
+
+      try {
+        const statsData = await schedulesService.getStats();
+        setStats(statsData);
+      } catch {
+        // Calcular stats localmente se a API falhar
+        setStats({
+          totalEscalas: schedulesData.length,
+          escalasLouvor: schedulesData.filter((s) => s.type === "Louvor").length,
+          escalasPregacao: schedulesData.filter((s) => s.type === "Pregação").length,
+        });
+      }
+      setIsLoadingStats(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao carregar escalas";
+      toast({
+        title: "Erro",
+        description: message,
+        variant: "destructive",
+      });
+      setIsLoadingSchedules(false);
+      setIsLoadingStats(false);
+    }
+  };
+
+  const handleSearch = async (term: string) => {
+    setSearchTerm(term);
+    if (term.length >= 2) {
+      try {
+        const results = await schedulesService.getAll(undefined, undefined, term);
+        setSchedules(results);
+      } catch (error) {
+        console.error("Search error:", error);
+      }
+    } else if (term.length === 0) {
+      loadData();
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    setIsDeleting(id);
+    try {
+      await schedulesService.delete(id);
+      setSchedules((prev) => prev.filter((s) => s.id !== id));
+      if (stats) {
+        setStats({ ...stats, totalEscalas: stats.totalEscalas - 1 });
+      }
+      toast({
+        title: "Escala excluída",
+        description: "A escala foi removida com sucesso.",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao excluir escala";
+      toast({
+        title: "Erro",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   const filteredSchedules = schedules.filter((schedule) => {
-    const matchesSearch =
-      format(schedule.date, "dd/MM/yyyy").includes(searchTerm) ||
-      (schedule.type === "worship" && schedule.minister.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (schedule.type === "preaching" && schedule.preacher.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (schedule.type === "preaching" && schedule.theme.toLowerCase().includes(searchTerm.toLowerCase()));
-
     const matchesTab = activeTab === "all" || schedule.type === activeTab;
-
-    return matchesSearch && matchesTab;
+    return matchesTab;
   });
-
-  const handleDelete = (id: string) => {
-    setSchedules((prev) => prev.filter((s) => s.id !== id));
-    toast({
-      title: "Escala excluída",
-      description: "A escala foi removida com sucesso.",
-    });
-  };
-
-  const getWorshipTitles = (worshipIds: string[]) => {
-    return worshipIds
-      .map((id) => mockWorships.find((w) => w.id === id)?.title)
-      .filter(Boolean)
-      .join(", ");
-  };
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -96,7 +167,14 @@ const Schedules = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{schedules.length}</div>
+              {isLoadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                </div>
+              ) : (
+                <div className="text-2xl font-bold">{stats?.totalEscalas ?? 0}</div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -107,9 +185,14 @@ const Schedules = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {schedules.filter((s) => s.type === "worship").length}
-              </div>
+              {isLoadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                </div>
+              ) : (
+                <div className="text-2xl font-bold">{stats?.escalasLouvor ?? 0}</div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -120,9 +203,14 @@ const Schedules = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {schedules.filter((s) => s.type === "preaching").length}
-              </div>
+              {isLoadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                </div>
+              ) : (
+                <div className="text-2xl font-bold">{stats?.escalasPregacao ?? 0}</div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -134,11 +222,11 @@ const Schedules = () => {
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
                 <TabsList>
                   <TabsTrigger value="all">Todas</TabsTrigger>
-                  <TabsTrigger value="worship" className="gap-2">
+                  <TabsTrigger value="Louvor" className="gap-2">
                     <Music className="h-4 w-4" />
                     Louvor
                   </TabsTrigger>
-                  <TabsTrigger value="preaching" className="gap-2">
+                  <TabsTrigger value="Pregação" className="gap-2">
                     <BookOpen className="h-4 w-4" />
                     Pregação
                   </TabsTrigger>
@@ -147,9 +235,9 @@ const Schedules = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por data, ministro, pregador ou tema..."
+                  placeholder="Buscar por ministro, pregador ou categoria..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -170,7 +258,16 @@ const Schedules = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSchedules.length === 0 ? (
+                  {isLoadingSchedules ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-3">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                          <p className="text-muted-foreground">Carregando escalas...</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredSchedules.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={7}
@@ -184,10 +281,10 @@ const Schedules = () => {
                       <TableRow key={schedule.id}>
                         <TableCell>
                           <Badge
-                            variant={schedule.type === "worship" ? "default" : "secondary"}
+                            variant={schedule.type === "Louvor" ? "default" : "secondary"}
                             className="gap-1"
                           >
-                            {schedule.type === "worship" ? (
+                            {schedule.type === "Louvor" ? (
                               <>
                                 <Music className="h-3 w-3" />
                                 Louvor
@@ -202,10 +299,10 @@ const Schedules = () => {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            {format(schedule.date, "dd 'de' MMMM", { locale: ptBR })}
+                            {format(new Date(schedule.date), "dd 'de' MMMM", { locale: ptBR })}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {format(schedule.date, "EEEE", { locale: ptBR })}
+                            {format(new Date(schedule.date), "EEEE", { locale: ptBR })}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -215,16 +312,18 @@ const Schedules = () => {
                           <span className="text-sm">{schedule.category}</span>
                         </TableCell>
                         <TableCell>
-                          {schedule.type === "worship" ? schedule.minister : schedule.preacher}
+                          {schedule.type === "Louvor"
+                            ? schedule.minister.name
+                            : schedule.preacher.name}
                         </TableCell>
                         <TableCell>
-                          {schedule.type === "worship" ? (
+                          {schedule.type === "Louvor" ? (
                             <div className="text-sm text-muted-foreground max-w-[200px] truncate">
-                              {getWorshipTitles(schedule.selectedWorships) || "Nenhum louvor selecionado"}
+                              {schedule.songs.map(s => s.title).join(", ") || "Nenhum louvor selecionado"}
                             </div>
                           ) : (
-                            <div className="text-sm">
-                              <span className="font-medium">{schedule.theme}</span>
+                            <div className="text-sm text-muted-foreground">
+                              {schedule.notes || "-"}
                             </div>
                           )}
                         </TableCell>
@@ -241,8 +340,12 @@ const Schedules = () => {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                <Button variant="ghost" size="icon" disabled={isDeleting === schedule.id}>
+                                  {isDeleting === schedule.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  )}
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
@@ -252,7 +355,7 @@ const Schedules = () => {
                                   </AlertDialogTitle>
                                   <AlertDialogDescription>
                                     Tem certeza que deseja excluir esta escala de{" "}
-                                    {format(schedule.date, "dd/MM/yyyy")}? Esta ação não
+                                    {format(new Date(schedule.date), "dd/MM/yyyy")}? Esta ação não
                                     pode ser desfeita.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>

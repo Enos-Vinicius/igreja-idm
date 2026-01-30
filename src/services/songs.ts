@@ -1,14 +1,57 @@
 import { api } from './api';
 import { Song, SongInput, SongStats, SongMinister } from '../types/worship';
 
+const CACHE_KEY = 'songs_cache';
+const STATS_CACHE_KEY = 'songs_stats_cache';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+interface CachedData<T> {
+  data: T;
+  timestamp: number;
+}
+
 export const songsService = {
   /**
    * Listar todas as músicas
    * @param search - Termo de busca opcional
+   * @param useCache - Se deve usar cache (padrão: true, false quando há busca)
    */
-  async getAll(search?: string): Promise<Song[]> {
-    const endpoint = search ? `/songs?search=${encodeURIComponent(search)}` : '/songs';
-    return api.get<Song[]>(endpoint);
+  async getAll(search?: string, useCache = true): Promise<Song[]> {
+    // Não usa cache para buscas
+    if (search) {
+      const endpoint = `/songs?search=${encodeURIComponent(search)}`;
+      return api.get<Song[]>(endpoint);
+    }
+
+    // Tenta usar cache se habilitado
+    if (useCache) {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { data, timestamp }: CachedData<Song[]> = JSON.parse(cached);
+        const age = Date.now() - timestamp;
+
+        if (age < CACHE_DURATION) {
+          console.log('[Cache] Usando dados em cache (louvores)');
+          return data;
+        }
+      }
+    }
+
+    // Busca dados da API
+    const data = await api.get<Song[]>('/songs');
+
+    // Salva no cache
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+
+    return data;
+  },
+
+  clearCache() {
+    sessionStorage.removeItem(CACHE_KEY);
+    sessionStorage.removeItem(STATS_CACHE_KEY);
   },
 
   /**
@@ -49,7 +92,9 @@ export const songsService = {
       formData.append('sheetMusic', sheetMusic);
     }
 
-    return api.post<Song>('/songs', formData);
+    const result = await api.post<Song>('/songs', formData);
+    this.clearCache(); // Limpa cache após criar
+    return result;
   },
 
   /**
@@ -93,14 +138,17 @@ export const songsService = {
       formData.append('sheetMusic', sheetMusic);
     }
 
-    return api.put<Song>(`/songs/${id}`, formData);
+    const result = await api.put<Song>(`/songs/${id}`, formData);
+    this.clearCache(); // Limpa cache após atualizar
+    return result;
   },
 
   /**
    * Deletar música
    */
   async delete(id: number | string): Promise<void> {
-    return api.delete(`/songs/${id}`);
+    await api.delete(`/songs/${id}`);
+    this.clearCache(); // Limpa cache após deletar
   },
 
   /**

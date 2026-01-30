@@ -281,7 +281,7 @@ const AdminRegistrationRequests = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 max-w-6xl mx-auto">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-foreground">Solicitações de Cadastro</h1>

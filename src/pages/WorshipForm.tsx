@@ -508,7 +508,8 @@ const WorshipForm = () => {
         });
       }
 
-      navigate("/repertoire");
+      // Navega de volta com flag de refresh para recarregar os dados
+      navigate("/repertoire", { state: { refresh: true } });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao salvar louvor";
       toast({
@@ -520,19 +521,6 @@ const WorshipForm = () => {
       setIsSubmitting(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="p-6 flex items-center justify-center min-h-[400px]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Carregando...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout>
@@ -824,7 +812,12 @@ const WorshipForm = () => {
                   {/* Ministers Selection */}
                   <div className="space-y-3">
                     <FormLabel>Ministro(s) Principal(s)*</FormLabel>
-                    {availableMinisters.length === 0 ? (
+                    {isLoading ? (
+                      <div className="flex items-center gap-2 py-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Carregando ministros...</span>
+                      </div>
+                    ) : availableMinisters.length === 0 ? (
                       <p className="text-sm text-muted-foreground">
                         Nenhum ministro de louvor cadastrado.
                       </p>

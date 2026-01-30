@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Filter, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +43,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 
 const MembersList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,10 +52,29 @@ const MembersList = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
-    loadMembers();
-  }, []);
+    // Só recarrega se for a primeira vez OU se vier com flag de refresh
+    const shouldRefresh = location.state?.refresh === true;
+    const hasData = members.length > 0;
+
+    // Recarrega apenas se:
+    // 1. Vem com flag de refresh (salvou no form)
+    // 2. OU não tem dados ainda E nunca carregou antes
+    if (shouldRefresh || (!hasData && !hasLoadedRef.current)) {
+      loadMembers();
+      hasLoadedRef.current = true;
+
+      // Limpa o state após usar para evitar reloads indesejados
+      if (shouldRefresh) {
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    } else {
+      // Se já tem dados, não mostra loading
+      setIsLoading(false);
+    }
+  }, [location.state, members.length]);
 
   const loadMembers = async () => {
     setIsLoading(true);
@@ -126,7 +146,7 @@ const MembersList = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
