@@ -85,7 +85,7 @@ const FoundationSection = () => {
                     Desde <strong className="text-golden">2004</strong>, a <strong className="text-secondary">Igreja do Deus de Maravilhas</strong> escreve
                     uma história de fé sob a liderança do <strong className="text-secondary">Pastor Alceu da Silva</strong>. Somos
                     uma comunidade evangélica presente em duas cidades: em <strong>Uberaba</strong> (nossa sede na Av. Coronel
-                    Joaquim de Oliveira Prata) e em nossa <strong className="text-secondary">sede própria no centro de Conceição das Alagoas</strong>.
+                    Joaquim de Oliveira Prata, 1817) e em nossa <strong>sede própria no centro de Conceição das Alagoas</strong> (na Rua Santa Rita, 149).
                     Venha fazer parte desta história que não para de crescer!
                   </p>
                   

@@ -478,11 +478,26 @@ END:VCALENDAR`;
                         {/* Create Reminder Button */}
                         <Button
                           onClick={() => handleCreateReminder(event)}
-                          className={`w-full bg-golden hover:bg-golden-light text-secondary font-semibold shadow-md hover:shadow-lg transition-all duration-300 group ${
-                            style.isCenter ? 'text-sm py-5 animate-pulse' : 'text-xs py-3'
+                          className={`w-full bg-golden hover:bg-golden-light text-secondary font-semibold shadow-md hover:shadow-lg transition-all duration-300 ${
+                            style.isCenter ? 'text-sm py-5' : 'text-xs py-3'
                           }`}
                         >
-                          <Bell className={`group-hover:animate-bounce ${style.isCenter ? 'w-4 h-4 mr-2' : 'w-3.5 h-3.5 mr-1.5'}`} />
+                          <Bell
+                            className={style.isCenter ? 'w-4 h-4 mr-2' : 'w-3.5 h-3.5 mr-1.5'}
+                            style={{
+                              animation: style.isCenter ? 'bell-ring 2s ease-in-out infinite' : 'none',
+                            }}
+                          />
+                          <style>{`
+                            @keyframes bell-ring {
+                              0%, 100% { transform: rotate(0deg); }
+                              10% { transform: rotate(15deg); }
+                              20% { transform: rotate(-15deg); }
+                              30% { transform: rotate(10deg); }
+                              40% { transform: rotate(-10deg); }
+                              50% { transform: rotate(0deg); }
+                            }
+                          `}</style>
                           Criar Lembrete
                         </Button>
                       </div>

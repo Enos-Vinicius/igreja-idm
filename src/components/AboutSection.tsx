@@ -80,7 +80,7 @@ const AboutSection = () => {
             {/* Call to Action */}
             <div className="pt-4 pb-2">
               <p className="text-xl font-bold text-secondary bg-gradient-to-r from-golden to-golden-light bg-clip-text text-transparent">
-                Venha nos fazer uma visita e ser impactado com a presença de Deus.
+                Venha como você está e seja alcançado pelo amor e pela presença de Deus.
               </p>
             </div>
 
