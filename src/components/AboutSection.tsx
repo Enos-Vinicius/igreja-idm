@@ -1,22 +1,27 @@
-import { Heart, Users, BookOpen } from "lucide-react";
+import { Users, Crown, Music, Hand } from "lucide-react";
 import pastoresImage from "@/assets/pastores.jpg";
 
 const AboutSection = () => {
   const values = [
     {
-      icon: Heart,
-      title: "Amor",
-      description: "Amar a Deus sobre todas as coisas e ao próximo como a si mesmo.",
-    },
-    {
       icon: Users,
-      title: "Comunidade",
-      description: "Juntos somos mais fortes, edificando uns aos outros na fé.",
+      title: "Comunhão",
+      description: "Unidos em amor, compartilhando a vida em Cristo.",
     },
     {
-      icon: BookOpen,
-      title: "Palavra",
-      description: "Fundamentados na Palavra de Deus como nossa única regra de fé.",
+      icon: Crown,
+      title: "Reverência",
+      description: "Honrando a Deus com temor e adoração.",
+    },
+    {
+      icon: Music,
+      title: "Adoração",
+      description: "Exaltando ao Senhor com cânticos de louvor.",
+    },
+    {
+      icon: Hand,
+      title: "Oração",
+      description: "Buscando a presença de Deus através da oração.",
     },
   ];
 
@@ -26,7 +31,7 @@ const AboutSection = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <span className="text-golden font-semibold text-sm uppercase tracking-widest">
-            Nossa História
+            Conheça-nos
           </span>
           <h2 className="mt-3 text-4xl md:text-5xl font-bold text-secondary">
             Sobre a Igreja
@@ -72,6 +77,13 @@ const AboutSection = () => {
               com a Palavra de Deus</strong>.
             </p>
 
+            {/* Call to Action */}
+            <div className="pt-4 pb-2">
+              <p className="text-xl font-bold text-secondary bg-gradient-to-r from-golden to-golden-light bg-clip-text text-transparent">
+                Venha nos fazer uma visita e ser impactado com a presença de Deus.
+              </p>
+            </div>
+
             {/* Assinatura do Pastor */}
             <div className="pt-4 border-t border-border">
               <div className="flex flex-row justify-evenly sm:justify-start gap-4 sm:gap-8">
@@ -89,7 +101,7 @@ const AboutSection = () => {
         </div>
 
         {/* Values Grid */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {values.map((value, index) => (
             <div
               key={value.title}
