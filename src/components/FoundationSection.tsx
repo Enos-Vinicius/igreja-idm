@@ -82,12 +82,11 @@ const FoundationSection = () => {
                 
                 <div className="bg-background border border-border/50 rounded-2xl p-8 shadow-lg">
                   <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-                    A <strong className="text-secondary">Igreja do Deus de Maravilhas</strong>, fundada pelo
-                    Pastor Alceu da Silva em <strong className="text-golden">4 de junho de 2004</strong>,
-                    com sede na Avenida Coronel Joaquim de Oliveira Prata, número 1817, em Uberaba-MG,
-                    e também com <strong className="text-secondary">sede própria em Conceição das Alagoas-MG</strong>,
-                    na Rua Santa Rita, número 149, Centro, é constituída por tempo indeterminado,
-                    uma associação religiosa de caráter evangélico.
+                    Desde <strong className="text-golden">2004</strong>, a <strong className="text-secondary">Igreja do Deus de Maravilhas</strong> escreve
+                    uma história de fé sob a liderança do <strong className="text-secondary">Pastor Alceu da Silva</strong>. Somos
+                    uma comunidade evangélica presente em duas cidades: em <strong>Uberaba</strong> (nossa sede na Av. Coronel
+                    Joaquim de Oliveira Prata) e em nossa <strong className="text-secondary">sede própria no centro de Conceição das Alagoas</strong>.
+                    Venha fazer parte desta história que não para de crescer!
                   </p>
                   
                   {/* Foundation Details */}
