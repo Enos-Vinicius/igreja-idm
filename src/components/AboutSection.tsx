@@ -101,18 +101,18 @@ const AboutSection = () => {
         </div>
 
         {/* Values Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
           {values.map((value, index) => (
             <div
               key={value.title}
-              className="group p-8 bg-muted rounded-2xl hover-lift cursor-default"
+              className="group p-4 lg:p-8 bg-muted rounded-2xl hover-lift cursor-default flex flex-col items-center text-center"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-royal-700 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-royal-700 flex items-center justify-center mb-4 lg:mb-6 group-hover:scale-110 transition-transform">
                 <value.icon className="w-7 h-7 text-white" />
               </div>
-              <h4 className="text-xl font-bold text-secondary mb-3">{value.title}</h4>
-              <p className="text-muted-foreground">{value.description}</p>
+              <h4 className="text-lg lg:text-xl font-bold text-secondary mb-2 lg:mb-3">{value.title}</h4>
+              <p className="text-sm lg:text-base text-muted-foreground">{value.description}</p>
             </div>
           ))}
         </div>
