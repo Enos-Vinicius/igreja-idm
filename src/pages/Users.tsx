@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { User } from "@/types/user";
 import { usersService } from "@/services/users";
 import DashboardLayout from "@/components/DashboardLayout";
+import MobileBackButton from "@/components/MobileBackButton";
 
 type ModalType = "create" | "edit" | "password" | null;
 
@@ -184,6 +185,7 @@ const Users = () => {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6 max-w-6xl mx-auto">
+        <MobileBackButton />
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">

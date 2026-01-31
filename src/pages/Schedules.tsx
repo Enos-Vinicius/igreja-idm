@@ -4,6 +4,7 @@ import { Plus, Search, Edit, Trash2, Calendar, Music, BookOpen, Loader2 } from "
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DashboardLayout from "@/components/DashboardLayout";
+import MobileBackButton from "@/components/MobileBackButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,6 +142,7 @@ const Schedules = () => {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6 max-w-6xl mx-auto">
+        <MobileBackButton />
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

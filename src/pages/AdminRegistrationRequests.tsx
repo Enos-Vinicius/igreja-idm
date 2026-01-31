@@ -64,6 +64,7 @@ import {
   statusColors,
 } from '@/types/registrationRequest';
 import DashboardLayout from '@/components/DashboardLayout';
+import MobileBackButton from '@/components/MobileBackButton';
 
 const AdminRegistrationRequests = () => {
   const [requests, setRequests] = useState<RegistrationRequest[]>([]);
@@ -282,6 +283,7 @@ const AdminRegistrationRequests = () => {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6 max-w-6xl mx-auto">
+        <MobileBackButton />
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-foreground">Solicitações de Cadastro</h1>

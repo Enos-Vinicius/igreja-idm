@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Users,
   UserPlus,
@@ -25,6 +25,7 @@ import {
   Legend,
 } from "recharts";
 import DashboardLayout from "@/components/DashboardLayout";
+import DashboardMobileHome from "@/components/DashboardMobileHome";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockMembers } from "@/data/mockMembers";
@@ -117,7 +118,19 @@ const recentActivities = [
 
 const Dashboard = () => {
   const [selectedUnit, setSelectedUnit] = useState<"todos" | "uberaba" | "conceicao">("todos");
-  
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const weeklyAttendanceData = weeklyAttendanceDataByUnit[selectedUnit];
   const stats = useMemo(() => {
     const totalMembers = mockMembers.length;
@@ -167,6 +180,11 @@ const Dashboard = () => {
       bgGradient: "from-purple-500 to-purple-600",
     },
   ];
+
+  // Show mobile home on small screens
+  if (isMobile) {
+    return <DashboardMobileHome />;
+  }
 
   return (
     <DashboardLayout>

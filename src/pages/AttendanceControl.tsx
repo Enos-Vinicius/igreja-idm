@@ -20,6 +20,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import MobileBackButton from "@/components/MobileBackButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -564,6 +565,7 @@ const AttendanceControl = () => {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6 max-w-6xl mx-auto">
+        <MobileBackButton />
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>

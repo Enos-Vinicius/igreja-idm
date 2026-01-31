@@ -142,7 +142,7 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
       className={cn(
-        "fixed left-0 top-0 h-screen z-50 flex flex-col bg-secondary text-white transition-all duration-300 ease-in-out",
+        "hidden md:flex fixed left-0 top-0 h-screen z-50 flex-col bg-secondary text-white transition-all duration-300 ease-in-out",
         isExpanded ? "w-64" : "w-16"
       )}
     >

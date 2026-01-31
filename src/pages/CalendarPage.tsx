@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import DashboardLayout from "@/components/DashboardLayout";
+import MobileBackButton from "@/components/MobileBackButton";
 import { mockSchedules } from "@/data/mockSchedules";
 import { Schedule } from "@/types/schedule";
 import { useNavigate } from "react-router-dom";
@@ -366,6 +367,7 @@ export default function CalendarPage() {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6 max-w-6xl mx-auto">
+        <MobileBackButton />
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
