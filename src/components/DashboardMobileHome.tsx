@@ -11,6 +11,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import logoWhite from "@/assets/logo-white.png";
 
 interface DashboardCard {
   id: string;
@@ -101,13 +102,16 @@ const DashboardMobileHome = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:hidden">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-secondary mb-2">Painel Administrativo</h1>
-        <p className="text-muted-foreground">Selecione uma seção para acessar</p>
-      </div>
+    <div className="min-h-screen bg-background md:hidden">
+      {/* Header */}
+      <header className="bg-secondary text-white px-4 py-4 flex items-center gap-3 shadow-md">
+        <img src={logoWhite} alt="Igreja do Deus de Maravilhas" className="w-10 h-10 object-contain" />
+        <h1 className="text-xl font-bold">Painel Administrativo</h1>
+      </header>
 
-      <div className="grid grid-cols-2 gap-4">
+      {/* Cards Grid */}
+      <div className="p-4">
+        <div className="grid grid-cols-2 gap-4">
         {dashboardCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -132,6 +136,7 @@ const DashboardMobileHome = () => {
             </Card>
           );
         })}
+        </div>
       </div>
     </div>
   );
