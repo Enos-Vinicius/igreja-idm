@@ -74,7 +74,7 @@ const AboutSection = () => {
 
             {/* Assinatura do Pastor */}
             <div className="pt-4 border-t border-border">
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+              <div className="flex flex-row gap-4 sm:gap-8">
                 <div className="flex flex-col gap-1">
                   <span className="text-lg font-bold text-secondary">Pr. Alceu Silva</span>
                   <span className="text-sm text-muted-foreground">Presidente</span>
