@@ -37,7 +37,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { CHURCH_LOCATIONS } from "@/types/member";
 import { memberRequestsService } from "@/services/memberRequests";
+import { environment } from "@/config/environment";
 import logoWhite from "@/assets/logo-white.png";
+
+// Declare grecaptcha type for TypeScript
+declare global {
+  interface Window {
+    grecaptcha: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+    };
+  }
+}
 
 const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const cepRegex = /^\d{5}-\d{3}$/;
@@ -190,8 +201,44 @@ const Cadastro = () => {
     setIsSubmitting(true);
 
     try {
-      // Generate recaptcha token (placeholder - would integrate with actual reCAPTCHA)
-      const recaptchaToken = "generated_token_" + Date.now();
+      // Generate reCAPTCHA token
+      let recaptchaToken = '';
+
+      try {
+        console.log('🔍 Verificando reCAPTCHA...');
+        console.log('📍 window.grecaptcha existe?', typeof window !== 'undefined' && !!window.grecaptcha);
+        console.log('🔑 Site Key:', environment.recaptchaSiteKey);
+
+        if (typeof window !== 'undefined' && window.grecaptcha) {
+          recaptchaToken = await new Promise<string>((resolve, reject) => {
+            window.grecaptcha.ready(async () => {
+              try {
+                console.log('⏳ Executando grecaptcha.execute...');
+                const token = await window.grecaptcha.execute(environment.recaptchaSiteKey, {
+                  action: 'submit_registration'
+                });
+                console.log('✅ reCAPTCHA token gerado com sucesso');
+                console.log('📝 Token (primeiros 50 caracteres):', token.substring(0, 50) + '...');
+                resolve(token);
+              } catch (err) {
+                console.error('❌ Erro no grecaptcha.execute:', err);
+                reject(err);
+              }
+            });
+          });
+        } else {
+          console.error('❌ window.grecaptcha não está disponível');
+          throw new Error('reCAPTCHA não carregado');
+        }
+      } catch (recaptchaError) {
+        console.error('❌ Erro ao gerar token reCAPTCHA:', recaptchaError);
+        toast({
+          title: "Erro de verificação reCAPTCHA",
+          description: "A chave do reCAPTCHA pode estar inválida ou o domínio não está autorizado. Verifique a configuração no Google reCAPTCHA Console.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Format birthDate to ISO format (YYYY-MM-DD)
       const formattedBirthDate = data.birthDate
@@ -223,13 +270,18 @@ const Cadastro = () => {
         recaptchaToken,
       };
 
+      console.log('📤 Enviando solicitação para o backend...');
+      console.log('🔑 reCAPTCHA token será enviado com a requisição');
+
       await memberRequestsService.create(submissionData);
+
+      console.log('✅ Solicitação enviada com sucesso!');
 
       // Show success feedback
       setIsSubmitSuccess(true);
 
     } catch (error) {
-      console.error('Erro ao enviar solicitação:', error);
+      console.error('❌ Erro ao enviar solicitação:', error);
 
       // Get error message
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro ao enviar sua solicitação. Por favor, tente novamente.";
@@ -237,8 +289,19 @@ const Cadastro = () => {
       // Check if it's a duplicate email error
       const isDuplicateEmail = errorMessage.includes("Já existe uma solicitação pendente com este email");
 
+      // Check if it's a reCAPTCHA validation error
+      const isRecaptchaError = errorMessage.toLowerCase().includes("recaptcha") ||
+                              errorMessage.toLowerCase().includes("robot") ||
+                              errorMessage.toLowerCase().includes("robo");
+
+      if (isRecaptchaError) {
+        console.error('⚠️ Erro de validação reCAPTCHA no backend');
+        console.error('💡 Verifique a configuração do reCAPTCHA no backend');
+      }
+
       toast({
-        title: isDuplicateEmail ? "Solicitação já existe" : "Erro ao enviar solicitação",
+        title: isDuplicateEmail ? "Solicitação já existe" :
+               isRecaptchaError ? "Erro de validação reCAPTCHA" : "Erro ao enviar solicitação",
         description: errorMessage,
         variant: "destructive",
       });
