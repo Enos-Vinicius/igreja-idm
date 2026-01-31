@@ -195,7 +195,7 @@ const Cadastro = () => {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl md:text-3xl font-bold text-primary">
-              Solicitação de Cadastro
+              Graça e Paz
             </CardTitle>
             <p className="text-muted-foreground mt-2">
               Preencha o formulário abaixo para solicitar seu cadastro na igreja
@@ -310,7 +310,7 @@ const Cadastro = () => {
                       control={form.control}
                       name="birthDate"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="md:col-span-2">
                           <FormLabel>Data de nascimento *</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
@@ -353,59 +353,62 @@ const Cadastro = () => {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="gender"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Gênero *</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="masculino">Masculino</SelectItem>
-                              <SelectItem value="feminino">Feminino</SelectItem>
-                              <SelectItem value="outro">Outro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Gender and Marital Status - Same row on mobile */}
+                    <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="gender"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gênero *</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="masculino">Masculino</SelectItem>
+                                <SelectItem value="feminino">Feminino</SelectItem>
+                                <SelectItem value="outro">Outro</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="maritalStatus"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Estado civil *</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="solteiro">Solteiro(a)</SelectItem>
-                              <SelectItem value="casado">Casado(a)</SelectItem>
-                              <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                              <SelectItem value="viuvo">Viúvo(a)</SelectItem>
-                              <SelectItem value="outro">Outro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="maritalStatus"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Estado civil *</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="solteiro">Solteiro(a)</SelectItem>
+                                <SelectItem value="casado">Casado(a)</SelectItem>
+                                <SelectItem value="divorciado">Divorciado(a)</SelectItem>
+                                <SelectItem value="viuvo">Viúvo(a)</SelectItem>
+                                <SelectItem value="outro">Outro</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     <FormField
                       control={form.control}
                       name="occupation"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="md:col-span-2">
                           <FormLabel>Profissão *</FormLabel>
                           <FormControl>
                             <Input placeholder="Sua profissão" {...field} />
