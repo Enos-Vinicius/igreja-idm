@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Upload, User, ArrowLeft, Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { CalendarIcon, Upload, User, Check, Home } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -34,8 +34,8 @@ import {
 } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import DashboardLayout from "@/components/DashboardLayout";
 import { CHURCH_LOCATIONS } from "@/types/member";
+import logoWhite from "@/assets/logo-white.png";
 
 const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const cepRegex = /^\d{5}-\d{3}$/;
@@ -87,6 +87,7 @@ const formatCEP = (value: string): string => {
 };
 
 const Cadastro = () => {
+  const navigate = useNavigate();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -154,15 +155,50 @@ const Cadastro = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-muted/30">
+      {/* Header */}
+      <header className="bg-secondary text-white shadow-md sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo and Title */}
+            <div className="flex items-center gap-3">
+              <img
+                src={logoWhite}
+                alt="Igreja do Deus de Maravilhas"
+                className="w-10 h-10 object-contain cursor-pointer"
+                onClick={() => navigate("/")}
+              />
+              <div className="hidden sm:block">
+                <h1 className="text-lg font-bold">Solicitação de Cadastro</h1>
+                <p className="text-xs text-white/70">Igreja do Deus de Maravilhas</p>
+              </div>
+              <h1 className="sm:hidden text-base font-bold">Cadastro</h1>
+            </div>
+
+            {/* Back to Home Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="text-white hover:bg-white/10"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Página Inicial</span>
+              <span className="sm:hidden">Início</span>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Form Content */}
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl md:text-3xl font-bold text-primary">
               Solicitação de Cadastro
             </CardTitle>
             <p className="text-muted-foreground mt-2">
-              Preencha o formulário abaixo para solicitar seu cadastro
+              Preencha o formulário abaixo para solicitar seu cadastro na igreja
             </p>
           </CardHeader>
           <CardContent>
@@ -651,11 +687,11 @@ const Cadastro = () => {
                 </Button>
               </form>
             </Form>
-              </CardContent>
-            </Card>
+          </CardContent>
+        </Card>
       </div>
-    </DashboardLayout>
-    );
+    </div>
+  );
 };
 
 export default Cadastro;

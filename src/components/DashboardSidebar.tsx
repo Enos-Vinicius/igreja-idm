@@ -64,12 +64,6 @@ const menuGroups: MenuGroup[] = [
         path: "/members",
       },
       {
-        id: "cadastro",
-        label: "Auto Cadastro",
-        icon: UserPlus,
-        path: "/cadastro",
-      },
-      {
         id: "solicitacoes",
         label: "Solicitações",
         icon: ClipboardList,
