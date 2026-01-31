@@ -19,6 +19,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -675,9 +676,13 @@ const Cadastro = () => {
                               {field.value && <Check className="h-4 w-4" />}
                             </div>
                           </FormControl>
-                          <FormLabel className="font-normal cursor-pointer flex-1">
-                            Autorizo o uso da minha imagem para divulgação em materiais da igreja
-                          </FormLabel>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="cursor-pointer">Autorizo o uso da minha imagem</FormLabel>
+                            <FormDescription>
+                              Sua imagem poderá ser utilizada em transmissões de cultos, redes sociais da igreja,
+                              materiais de divulgação, testemunhos e registros de eventos e celebrações
+                            </FormDescription>
+                          </div>
                         </FormItem>
                       )}
                     />
@@ -701,9 +706,13 @@ const Cadastro = () => {
                               {field.value && <Check className="h-4 w-4" />}
                             </div>
                           </FormControl>
-                          <FormLabel className="font-normal cursor-pointer flex-1">
-                            Autorizo o recebimento de comunicações por email
-                          </FormLabel>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="cursor-pointer">Autorizo comunicação por e-mail</FormLabel>
+                            <FormDescription>
+                              Receba informações sobre cultos, eventos especiais, estudos bíblicos,
+                              avisos importantes e novidades da nossa comunidade
+                            </FormDescription>
+                          </div>
                         </FormItem>
                       )}
                     />
@@ -727,9 +736,13 @@ const Cadastro = () => {
                               {field.value && <Check className="h-4 w-4" />}
                             </div>
                           </FormControl>
-                          <FormLabel className="font-normal cursor-pointer flex-1">
-                            Autorizo o recebimento de mensagens via WhatsApp
-                          </FormLabel>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="cursor-pointer">Autorizo comunicação por WhatsApp</FormLabel>
+                            <FormDescription>
+                              Receba informações sobre horários de cultos, mensagens dos Pastores,
+                              avisos importantes, convites para eventos e novidades da igreja
+                            </FormDescription>
+                          </div>
                         </FormItem>
                       )}
                     />
