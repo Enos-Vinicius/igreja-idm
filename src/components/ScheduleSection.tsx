@@ -167,17 +167,36 @@ const ScheduleSection = () => {
     const location = encodeURIComponent(event.address + ', ' + event.city + ' - ' + event.state);
 
     if (isMobile) {
-      // Mobile: Open native calendar
-      const calendarUrl = `data:text/calendar;charset=utf8,BEGIN:VCALENDAR
+      // Mobile: Create and download .ics file for better compatibility
+      const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
+PRODID:-//Igreja do Deus de Maravilhas//Eventos//PT
 BEGIN:VEVENT
+UID:${event.id}@igrejadodeusdemaravilhas.com
 DTSTART:${dateStr}T${timeStart}00
 DTEND:${dateStr}T${timeEnd}00
 SUMMARY:${event.title} - ${event.city}
 LOCATION:${event.address}, ${event.city} - ${event.state}
+DESCRIPTION:${event.title} na ${event.city}
+STATUS:CONFIRMED
+SEQUENCE:0
+BEGIN:VALARM
+TRIGGER:-PT1H
+DESCRIPTION:Lembrete: ${event.title} em 1 hora
+ACTION:DISPLAY
+END:VALARM
 END:VEVENT
 END:VCALENDAR`;
-      window.open(calendarUrl);
+
+      // Create blob and download
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${event.title.replace(/\s+/g, '_')}_${event.date}.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
     } else {
       // Desktop: Open Google Calendar
       const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}T${timeStart}00/${dateStr}T${timeEnd}00&location=${location}&sf=true&output=xml`;
@@ -459,11 +478,11 @@ END:VCALENDAR`;
                         {/* Create Reminder Button */}
                         <Button
                           onClick={() => handleCreateReminder(event)}
-                          className={`w-full bg-golden hover:bg-golden-light text-secondary font-semibold shadow-md hover:shadow-lg transition-all duration-300 ${
-                            style.isCenter ? 'text-sm py-5' : 'text-xs py-3'
+                          className={`w-full bg-golden hover:bg-golden-light text-secondary font-semibold shadow-md hover:shadow-lg transition-all duration-300 group ${
+                            style.isCenter ? 'text-sm py-5 animate-pulse' : 'text-xs py-3'
                           }`}
                         >
-                          <Bell className={style.isCenter ? 'w-4 h-4 mr-2' : 'w-3.5 h-3.5 mr-1.5'} />
+                          <Bell className={`group-hover:animate-bounce ${style.isCenter ? 'w-4 h-4 mr-2' : 'w-3.5 h-3.5 mr-1.5'}`} />
                           Criar Lembrete
                         </Button>
                       </div>
