@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Users,
   UserPlus,
@@ -26,6 +27,7 @@ import {
 } from "recharts";
 import DashboardLayout from "@/components/DashboardLayout";
 import DashboardMobileHome from "@/components/DashboardMobileHome";
+import MobileBackButton from "@/components/MobileBackButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockMembers } from "@/data/mockMembers";
@@ -117,8 +119,12 @@ const recentActivities = [
 ];
 
 const Dashboard = () => {
+  const location = useLocation();
   const [selectedUnit, setSelectedUnit] = useState<"todos" | "uberaba" | "conceicao">("todos");
   const [isMobile, setIsMobile] = useState(false);
+
+  // Verifica se deve forçar a exibição do dashboard completo (via location state)
+  const showFullDashboard = location.state?.showFullDashboard === true;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -181,14 +187,17 @@ const Dashboard = () => {
     },
   ];
 
-  // Show mobile home on small screens
-  if (isMobile) {
+  // Show mobile home on small screens (unless showFullDashboard is true)
+  if (isMobile && !showFullDashboard) {
     return <DashboardMobileHome />;
   }
 
   return (
     <DashboardLayout>
       <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        {/* Show back button on mobile when viewing full dashboard */}
+        {isMobile && showFullDashboard && <MobileBackButton />}
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>

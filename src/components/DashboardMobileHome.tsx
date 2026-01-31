@@ -26,6 +26,14 @@ const DashboardMobileHome = () => {
 
   const dashboardCards: DashboardCard[] = [
     {
+      id: "dashboard",
+      title: "Visão Geral",
+      description: "Estatísticas e gráficos",
+      icon: LayoutDashboard,
+      path: "/dashboard",
+      color: "from-blue-500 to-blue-600",
+    },
+    {
       id: "members",
       title: "Membros",
       description: "Gerenciar membros da igreja",
@@ -83,8 +91,13 @@ const DashboardMobileHome = () => {
     },
   ];
 
-  const handleCardClick = (path: string) => {
-    navigate(path);
+  const handleCardClick = (path: string, cardId: string) => {
+    if (cardId === "dashboard") {
+      // Para o card de Visão Geral, passa um state para forçar a exibição completa
+      navigate(path, { state: { showFullDashboard: true } });
+    } else {
+      navigate(path);
+    }
   };
 
   return (
@@ -101,7 +114,7 @@ const DashboardMobileHome = () => {
             <Card
               key={card.id}
               className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95"
-              onClick={() => handleCardClick(card.path)}
+              onClick={() => handleCardClick(card.path, card.id)}
             >
               <CardContent className="p-6 flex flex-col items-center justify-center text-center min-h-[140px]">
                 <div
