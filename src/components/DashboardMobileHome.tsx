@@ -114,7 +114,12 @@ const DashboardMobileHome = () => {
     <div className="min-h-screen bg-background md:hidden">
       {/* Header */}
       <header className="bg-secondary text-white px-4 py-4 flex items-center shadow-md">
-        <img src={logoWhite} alt="Igreja do Deus de Maravilhas" className="w-10 h-10 object-contain" />
+        <img
+          src={logoWhite}
+          alt="Igreja do Deus de Maravilhas"
+          className="w-10 h-10 object-contain cursor-pointer"
+          onClick={() => navigate("/")}
+        />
         <h1 className="flex-1 text-xl font-bold text-center">Painel Administrativo</h1>
         <Button
           variant="ghost"

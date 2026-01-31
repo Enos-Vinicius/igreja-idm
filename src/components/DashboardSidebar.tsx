@@ -148,7 +148,12 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
     >
       {/* Logo Area */}
       <div className="flex items-center h-16 px-3 border-b border-white/10">
-        <img src={logoWhite} alt="Igreja do Deus de Maravilhas" className="w-10 h-10 object-contain flex-shrink-0" />
+        <img
+          src={logoWhite}
+          alt="Igreja do Deus de Maravilhas"
+          className="w-10 h-10 object-contain flex-shrink-0 cursor-pointer"
+          onClick={() => navigate("/")}
+        />
         <div
           className={cn(
             "ml-3 overflow-hidden transition-all duration-300",
