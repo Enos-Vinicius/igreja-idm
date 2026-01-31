@@ -9,8 +9,11 @@ import {
   ClipboardCheck,
   CalendarDays,
   Settings,
+  LogOut,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import logoWhite from "@/assets/logo-white.png";
 
 interface DashboardCard {
@@ -24,6 +27,12 @@ interface DashboardCard {
 
 const DashboardMobileHome = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const dashboardCards: DashboardCard[] = [
     {
@@ -104,9 +113,17 @@ const DashboardMobileHome = () => {
   return (
     <div className="min-h-screen bg-background md:hidden">
       {/* Header */}
-      <header className="bg-secondary text-white px-4 py-4 flex items-center gap-3 shadow-md">
+      <header className="bg-secondary text-white px-4 py-4 flex items-center shadow-md">
         <img src={logoWhite} alt="Igreja do Deus de Maravilhas" className="w-10 h-10 object-contain" />
-        <h1 className="text-xl font-bold">Painel Administrativo</h1>
+        <h1 className="flex-1 text-xl font-bold text-center">Painel Administrativo</h1>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleLogout}
+          className="text-white hover:bg-white/10"
+        >
+          <LogOut className="w-5 h-5" />
+        </Button>
       </header>
 
       {/* Cards Grid */}
