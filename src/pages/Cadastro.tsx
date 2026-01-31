@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Upload, User, Check, Home } from "lucide-react";
+import { CalendarIcon, Upload, User, Check, Home, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
@@ -89,6 +89,7 @@ const formatCEP = (value: string): string => {
 const Cadastro = () => {
   const navigate = useNavigate();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<CadastroFormData>({
@@ -134,6 +135,50 @@ const Cadastro = () => {
       };
       reader.readAsDataURL(file);
       form.setValue("photo", file);
+    }
+  };
+
+  const handleCepChange = async (cep: string) => {
+    const formattedCep = formatCEP(cep);
+    form.setValue("zipCode", formattedCep);
+
+    // Remove non-numeric characters to check length
+    const numericCep = formattedCep.replace(/\D/g, "");
+
+    // Only fetch if we have a complete CEP (8 digits)
+    if (numericCep.length === 8) {
+      setIsLoadingCep(true);
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${numericCep}/json/`);
+        const data = await response.json();
+
+        if (data.erro) {
+          toast({
+            title: "CEP não encontrado",
+            description: "Verifique o CEP digitado e tente novamente.",
+            variant: "destructive",
+          });
+        } else {
+          // Fill address fields with ViaCEP data
+          form.setValue("street", data.logradouro || "");
+          form.setValue("neighborhood", data.bairro || "");
+          form.setValue("city", data.localidade || "");
+          form.setValue("state", data.uf || "");
+
+          toast({
+            title: "CEP encontrado!",
+            description: "Endereço preenchido automaticamente.",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Erro ao buscar CEP",
+          description: "Não foi possível buscar o endereço. Tente novamente.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingCep(false);
+      }
     }
   };
 
@@ -500,12 +545,18 @@ const Cadastro = () => {
                         <FormItem>
                           <FormLabel>CEP</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="99999-999" 
-                              {...field}
-                              onChange={(e) => field.onChange(formatCEP(e.target.value))}
-                              maxLength={9}
-                            />
+                            <div className="relative">
+                              <Input
+                                placeholder="99999-999"
+                                {...field}
+                                onChange={(e) => handleCepChange(e.target.value)}
+                                maxLength={9}
+                                disabled={isLoadingCep}
+                              />
+                              {isLoadingCep && (
+                                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                              )}
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
