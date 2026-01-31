@@ -48,10 +48,12 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
-        <div className="flex min-h-[480px]">
-          {/* Left Side - Church Image */}
-          <div className="hidden sm:flex w-[45%] relative flex-col items-center justify-center p-8 text-center overflow-hidden">
+      <DialogContent
+        className="sm:max-w-[800px] max-w-full w-full p-0 overflow-hidden max-h-[90vh] sm:max-h-[90vh] rounded-t-2xl sm:rounded-2xl border-0 sm:border data-[state=open]:!bottom-0 data-[state=open]:!top-auto data-[state=open]:sm:!top-[50%] data-[state=open]:sm:!bottom-auto data-[state=open]:!translate-x-[-50%] data-[state=open]:!translate-y-0 data-[state=open]:sm:!translate-y-[-50%]"
+      >
+        <div className="flex flex-col sm:flex-row sm:min-h-[480px]">
+          {/* Top Section (Mobile) / Left Side (Desktop) - Church Image */}
+          <div className="relative flex flex-col items-center justify-center p-6 sm:p-8 text-center overflow-hidden sm:w-[45%] min-h-[200px] sm:min-h-0">
             {/* Background Image */}
             <img
               src={skyClouds}
@@ -63,35 +65,27 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
 
             {/* Content centered */}
             <div className="relative z-10 flex flex-col items-center justify-center">
-              <img src={logoWhite} alt="Igreja do Deus de Maravilhas" className="w-32 h-32 object-contain mb-6" />
-              <h2 className="text-white font-bold text-2xl mb-2">Graça e Paz!</h2>
-              <p className="text-white/80 text-sm leading-relaxed">
+              <img
+                src={logoWhite}
+                alt="Igreja do Deus de Maravilhas"
+                className="w-20 h-20 sm:w-32 sm:h-32 object-contain mb-3 sm:mb-6"
+              />
+              <h2 className="text-white font-bold text-xl sm:text-2xl mb-1 sm:mb-2">Graça e Paz!</h2>
+              <p className="text-white/80 text-xs sm:text-sm leading-relaxed px-4">
                 Bem-vindo à área de membros da Igreja do Deus de Maravilhas.
               </p>
             </div>
           </div>
 
-          {/* Right Side - Form */}
-          <div className="flex-1 p-8 flex flex-col justify-center">
-            <DialogHeader className="mb-6 sm:hidden">
-              <div className="flex items-center gap-3 mb-4">
-                <img src={logoWhite} alt="Igreja do Deus de Maravilhas" className="w-10 h-10 object-contain" />
-                <div>
-                  <DialogTitle className="text-lg">Graça e Paz!</DialogTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Acesse sua conta para continuar.
-                  </p>
-                </div>
-              </div>
-            </DialogHeader>
-
-            <DialogHeader className="hidden sm:block mb-6">
-              <DialogTitle className="text-2xl font-bold text-secondary">
+          {/* Bottom Section (Mobile) / Right Side (Desktop) - Form */}
+          <div className="flex-1 p-6 sm:p-8 flex flex-col justify-center overflow-y-auto">
+            <DialogHeader className="mb-4 sm:mb-6">
+              <DialogTitle className="text-xl sm:text-2xl font-bold text-secondary text-center sm:text-left">
                 Entrar
               </DialogTitle>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Upload, User, Check, Home, Loader2 } from "lucide-react";
+import { CalendarIcon, Upload, User, Check, Home, Loader2, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
@@ -36,6 +36,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { CHURCH_LOCATIONS } from "@/types/member";
+import { memberRequestsService } from "@/services/memberRequests";
 import logoWhite from "@/assets/logo-white.png";
 
 const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
@@ -91,6 +92,8 @@ const Cadastro = () => {
   const navigate = useNavigate();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isLoadingCep, setIsLoadingCep] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitSuccess, setIsSubmitSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<CadastroFormData>({
@@ -183,21 +186,65 @@ const Cadastro = () => {
     }
   };
 
-  const onSubmit = (data: CadastroFormData) => {
-    // Generate recaptcha token (placeholder - would integrate with actual reCAPTCHA)
-    const recaptchaToken = "generated_token_" + Date.now();
-    
-    const submissionData = {
-      ...data,
-      recaptchaToken,
-    };
+  const onSubmit = async (data: CadastroFormData) => {
+    setIsSubmitting(true);
 
-    console.log("Cadastro submitted:", submissionData);
-    
-    toast({
-      title: "Solicitação enviada!",
-      description: "Sua solicitação de cadastro foi enviada com sucesso.",
-    });
+    try {
+      // Generate recaptcha token (placeholder - would integrate with actual reCAPTCHA)
+      const recaptchaToken = "generated_token_" + Date.now();
+
+      // Format birthDate to ISO format (YYYY-MM-DD)
+      const formattedBirthDate = data.birthDate
+        ? format(new Date(data.birthDate), 'yyyy-MM-dd')
+        : '';
+
+      const submissionData = {
+        name: data.name,
+        email: data.email,
+        birthDate: formattedBirthDate,
+        gender: data.gender,
+        maritalStatus: data.maritalStatus,
+        occupation: data.occupation,
+        primaryPhone: data.primaryPhone,
+        church: data.church,
+        secondaryPhone: data.secondaryPhone,
+        emergencyContact: data.emergencyContact,
+        zipCode: data.zipCode,
+        street: data.street,
+        number: data.number,
+        complement: data.complement,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state,
+        photo: data.photo,
+        imageConsentGiven: data.imageConsentGiven,
+        emailConsentGiven: data.emailConsentGiven,
+        whatsappConsentGiven: data.whatsappConsentGiven,
+        recaptchaToken,
+      };
+
+      await memberRequestsService.create(submissionData);
+
+      // Show success feedback
+      setIsSubmitSuccess(true);
+
+    } catch (error) {
+      console.error('Erro ao enviar solicitação:', error);
+
+      // Get error message
+      const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro ao enviar sua solicitação. Por favor, tente novamente.";
+
+      // Check if it's a duplicate email error
+      const isDuplicateEmail = errorMessage.includes("Já existe uma solicitação pendente com este email");
+
+      toast({
+        title: isDuplicateEmail ? "Solicitação já existe" : "Erro ao enviar solicitação",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -237,15 +284,17 @@ const Cadastro = () => {
       {/* Form Content */}
       <div className="mx-auto max-w-4xl">
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl md:text-3xl font-bold text-primary">
-              Graça e Paz
-            </CardTitle>
-            <p className="text-muted-foreground mt-2">
-              Preencha o formulário abaixo para solicitar seu cadastro na igreja
-            </p>
-          </CardHeader>
-          <CardContent>
+          {!isSubmitSuccess ? (
+            <>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl md:text-3xl font-bold text-primary">
+                  Graça e Paz
+                </CardTitle>
+                <p className="text-muted-foreground mt-2">
+                  Preencha o formulário abaixo para solicitar seu cadastro na igreja
+                </p>
+              </CardHeader>
+              <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {/* Photo Upload */}
@@ -753,12 +802,90 @@ const Cadastro = () => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" size="lg">
-                  Enviar Solicitação
+                <Button
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    'Enviar Solicitação'
+                  )}
                 </Button>
               </form>
             </Form>
           </CardContent>
+            </>
+          ) : (
+            // Success Feedback
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center text-center space-y-6">
+                {/* Success Icon */}
+                <div className="relative">
+                  <div className="absolute inset-0 bg-green-500/20 blur-2xl rounded-full" />
+                  <div className="relative bg-gradient-to-br from-green-500 to-green-600 rounded-full p-6">
+                    <CheckCircle2 className="w-16 h-16 text-white" />
+                  </div>
+                </div>
+
+                {/* Success Message */}
+                <div className="space-y-3">
+                  <h2 className="text-3xl font-bold text-green-600">
+                    Solicitação Enviada!
+                  </h2>
+                  <p className="text-lg text-muted-foreground max-w-md">
+                    Sua solicitação de cadastro foi recebida com sucesso e será analisada em breve.
+                  </p>
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-muted/50 border border-border rounded-lg p-6 max-w-md w-full">
+                  <h3 className="font-semibold text-foreground mb-2">O que acontece agora?</h3>
+                  <ul className="text-sm text-muted-foreground space-y-2 text-left">
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Nossa equipe irá analisar sua solicitação</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Você receberá um e-mail com o resultado da análise</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Após aprovação, você terá acesso à área de membros</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                  <Button
+                    onClick={() => navigate('/')}
+                    className="flex-1 bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    <Home className="w-4 h-4 mr-2" />
+                    Voltar para Início
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsSubmitSuccess(false);
+                      form.reset();
+                      setPhotoPreview(null);
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Fazer Outro Cadastro
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          )}
         </Card>
       </div>
     </div>

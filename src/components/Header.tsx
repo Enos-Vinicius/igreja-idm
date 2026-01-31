@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home, Info, Clock, Briefcase, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logoClean from "@/assets/logo-clean.png";
 import logoWhite from "@/assets/logo-white.png";
@@ -75,11 +75,11 @@ const Header = () => {
   }, []);
 
   const navLinks = [
-    { name: "Início", href: "#inicio" },
-    { name: "Sobre", href: "#sobre" },
-    { name: "Horários", href: "#horarios" },
-    { name: "Projetos", href: "#projetos" },
-    { name: "Pedido de Oração", href: "#pedido-oracao" },
+    { name: "Início", href: "#inicio", icon: Home },
+    { name: "Sobre", href: "#sobre", icon: Info },
+    { name: "Horários", href: "#horarios", icon: Clock },
+    { name: "Projetos", href: "#projetos", icon: Briefcase },
+    { name: "Pedido de Oração", href: "#pedido-oracao", icon: Heart },
   ];
 
   return (
@@ -178,54 +178,95 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Overlay */}
         {isOpen && (
-          <nav className="md:hidden py-4 px-4 border-t border-border animate-fade-up flex flex-col items-end bg-white absolute right-0 top-full shadow-lg">
-            <div className="w-full">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className="block py-3 font-medium transition-colors text-right text-secondary/80 hover:text-secondary"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.name}
-                </a>
-              ))}
-            {isLoading ? (
-              <div className="mt-3 w-full h-12" />
-            ) : isAuthenticated ? (
-              <button
-                onClick={() => {
-                  handleUserClick();
-                  setIsOpen(false);
-                }}
-                className="mt-3 w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 bg-muted hover:bg-muted/80"
-              >
-                <Avatar className="h-8 w-8 border-2 border-golden">
-                  <AvatarImage src={userData.avatarUrl} alt={displayName} />
-                  <AvatarFallback className="bg-gradient-to-br from-golden to-golden-light text-secondary font-semibold text-sm">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium text-secondary">
-                  {displayName}
-                </span>
-              </button>
-            ) : (
-              <Button
-                onClick={() => {
-                  setIsLoginOpen(true);
-                  setIsOpen(false);
-                }}
-                variant="outline"
-                className="mt-3 w-full rounded-full border-2 font-semibold transition-all border-primary text-primary hover:bg-primary hover:text-white"
-              >
-                Acessar
-              </Button>
-            )}
-            </div>
-          </nav>
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in md:hidden"
+              onClick={() => setIsOpen(false)}
+            />
+
+            {/* Drawer */}
+            <nav className="fixed right-0 top-0 bottom-0 w-[280px] bg-white z-50 shadow-2xl flex flex-col animate-slide-in-right md:hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-br from-secondary to-secondary/90 p-6 flex flex-col items-center">
+                <img
+                  src={logoWhite}
+                  alt="Igreja do Deus de Maravilhas"
+                  className="w-20 h-20 object-contain mb-3"
+                />
+                <h2 className="text-white font-bold text-center text-sm leading-tight">
+                  Igreja do Deus de<br />Maravilhas
+                </h2>
+              </div>
+
+              {/* User Section */}
+              <div className="px-4 py-4 border-b border-border">
+                {isLoading ? (
+                  <div className="h-16 bg-muted/50 rounded-lg animate-pulse" />
+                ) : isAuthenticated ? (
+                  <button
+                    onClick={() => {
+                      handleUserClick();
+                      setIsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 bg-gradient-to-r from-golden/10 to-golden-light/10 hover:from-golden/20 hover:to-golden-light/20 border border-golden/20"
+                  >
+                    <Avatar className="h-10 w-10 border-2 border-golden">
+                      <AvatarImage src={userData.avatarUrl} alt={displayName} />
+                      <AvatarFallback className="bg-gradient-to-br from-golden to-golden-light text-secondary font-semibold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-semibold text-secondary">{displayName}</p>
+                      <p className="text-xs text-muted-foreground">Ver dashboard</p>
+                    </div>
+                  </button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      setIsLoginOpen(true);
+                      setIsOpen(false);
+                    }}
+                    className="w-full bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity shadow-md"
+                  >
+                    Acessar
+                  </Button>
+                )}
+              </div>
+
+              {/* Navigation Links */}
+              <div className="flex-1 overflow-y-auto py-4">
+                {navLinks.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      className="flex items-center gap-4 px-6 py-4 transition-all duration-200 hover:bg-muted/50 group"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-royal-700/10 flex items-center justify-center group-hover:from-primary/20 group-hover:to-royal-700/20 transition-colors">
+                        <Icon className="w-5 h-5 text-primary" />
+                      </div>
+                      <span className="font-medium text-secondary/80 group-hover:text-secondary transition-colors">
+                        {link.name}
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-border">
+                <p className="text-xs text-center text-muted-foreground">
+                  © 2026 Igreja do Deus de Maravilhas
+                </p>
+              </div>
+            </nav>
+          </>
         )}
       </div>
 

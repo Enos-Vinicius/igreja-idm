@@ -9,6 +9,7 @@ export interface MemberRequestCreate {
   maritalStatus: string;
   occupation: string;
   primaryPhone: string;
+  church: string;
   secondaryPhone?: string;
   emergencyContact?: string;
   zipCode?: string;
@@ -43,6 +44,7 @@ export const memberRequestsService = {
     formData.append('maritalStatus', data.maritalStatus);
     formData.append('occupation', data.occupation);
     formData.append('primaryPhone', data.primaryPhone);
+    formData.append('church', data.church);
     formData.append('recaptchaToken', data.recaptchaToken);
 
     // Campos opcionais
