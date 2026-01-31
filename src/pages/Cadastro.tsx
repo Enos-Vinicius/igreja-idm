@@ -105,6 +105,7 @@ const Cadastro = () => {
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitSuccess, setIsSubmitSuccess] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<CadastroFormData>({
@@ -468,13 +469,13 @@ const Cadastro = () => {
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
                           <FormLabel>Data de nascimento *</FormLabel>
-                          <Popover>
+                          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    "w-full pl-3 text-left font-normal",
+                                    "w-full pl-3 text-left font-normal text-base",
                                     !field.value && "text-muted-foreground"
                                   )}
                                 >
@@ -491,7 +492,10 @@ const Cadastro = () => {
                               <Calendar
                                 mode="single"
                                 selected={field.value}
-                                onSelect={field.onChange}
+                                onSelect={(date) => {
+                                  field.onChange(date);
+                                  setIsCalendarOpen(false);
+                                }}
                                 disabled={(date) =>
                                   date > new Date() || date < new Date("1900-01-01")
                                 }
