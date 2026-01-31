@@ -105,6 +105,15 @@ const Header = () => {
             />
           </a>
 
+          {/* Church Name - Only visible on mobile when scrolled */}
+          {isScrolled && (
+            <div className="absolute left-1/2 -translate-x-1/2 md:hidden">
+              <h1 className="text-secondary font-semibold text-sm whitespace-nowrap">
+                Igreja do Deus de Maravilhas
+              </h1>
+            </div>
+          )}
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
@@ -171,23 +180,18 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <nav className={`md:hidden py-4 border-t animate-fade-up ${
-            isScrolled ? "border-border" : "border-white/20"
-          }`}>
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className={`block py-3 font-medium transition-colors ${
-                  isScrolled
-                    ? "text-secondary/80 hover:text-secondary"
-                    : "text-white/90 hover:text-white"
-                }`}
-                onClick={() => setIsOpen(false)}
-              >
-                {link.name}
-              </a>
-            ))}
+          <nav className="md:hidden py-4 px-4 border-t border-border animate-fade-up flex flex-col items-end bg-white absolute right-0 top-full shadow-lg">
+            <div className="w-full">
+              {navLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="block py-3 font-medium transition-colors text-right text-secondary/80 hover:text-secondary"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {link.name}
+                </a>
+              ))}
             {isLoading ? (
               <div className="mt-3 w-full h-12" />
             ) : isAuthenticated ? (
@@ -196,9 +200,7 @@ const Header = () => {
                   handleUserClick();
                   setIsOpen(false);
                 }}
-                className={`mt-3 w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isScrolled ? "bg-muted hover:bg-muted/80" : "bg-white/10 hover:bg-white/20"
-                }`}
+                className="mt-3 w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 bg-muted hover:bg-muted/80"
               >
                 <Avatar className="h-8 w-8 border-2 border-golden">
                   <AvatarImage src={userData.avatarUrl} alt={displayName} />
@@ -206,11 +208,7 @@ const Header = () => {
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <span
-                  className={`text-sm font-medium ${
-                    isScrolled ? "text-secondary" : "text-white"
-                  }`}
-                >
+                <span className="text-sm font-medium text-secondary">
                   {displayName}
                 </span>
               </button>
@@ -221,15 +219,12 @@ const Header = () => {
                   setIsOpen(false);
                 }}
                 variant="outline"
-                className={`mt-3 w-full rounded-full border-2 font-semibold transition-all ${
-                  isScrolled
-                    ? "border-primary text-primary hover:bg-primary hover:text-white"
-                    : "border-white text-white bg-transparent hover:bg-white hover:text-secondary"
-                }`}
+                className="mt-3 w-full rounded-full border-2 font-semibold transition-all border-primary text-primary hover:bg-primary hover:text-white"
               >
                 Acessar
               </Button>
             )}
+            </div>
           </nav>
         )}
       </div>
