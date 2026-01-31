@@ -237,7 +237,7 @@ const Cadastro = () => {
       </header>
 
       {/* Form Content */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto max-w-4xl">
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl md:text-3xl font-bold text-primary">
