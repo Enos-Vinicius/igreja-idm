@@ -477,11 +477,11 @@ const Cadastro = () => {
                       control={form.control}
                       name="primaryPhone"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="md:col-span-2">
                           <FormLabel>Telefone principal *</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="(99) 99999-9999" 
+                            <Input
+                              placeholder="(99) 99999-9999"
                               {...field}
                               onChange={(e) => field.onChange(formatPhone(e.target.value))}
                               maxLength={15}
@@ -492,43 +492,46 @@ const Cadastro = () => {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="secondaryPhone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telefone secundário</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="(99) 99999-9999" 
-                              {...field}
-                              onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                              maxLength={15}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Secondary Phone and Emergency Contact - Same row on mobile */}
+                    <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="secondaryPhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefone secundário</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="(99) 99999-9999"
+                                {...field}
+                                onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                                maxLength={15}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="emergencyContact"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contato de emergência</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="(99) 99999-9999" 
-                              {...field}
-                              onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                              maxLength={15}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="emergencyContact"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contato de emergência</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="(99) 99999-9999"
+                                {...field}
+                                onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                                maxLength={15}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
 
