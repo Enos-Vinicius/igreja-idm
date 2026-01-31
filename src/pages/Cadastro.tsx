@@ -206,20 +206,18 @@ const Cadastro = () => {
       <header className="bg-secondary text-white shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo and Title */}
-            <div className="flex items-center gap-3">
-              <img
-                src={logoWhite}
-                alt="Igreja do Deus de Maravilhas"
-                className="w-10 h-10 object-contain cursor-pointer"
-                onClick={() => navigate("/")}
-              />
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold">Solicitação de Cadastro</h1>
-                <p className="text-xs text-white/70">Igreja do Deus de Maravilhas</p>
-              </div>
-              <h1 className="sm:hidden text-base font-bold">Cadastro</h1>
-            </div>
+            {/* Logo */}
+            <img
+              src={logoWhite}
+              alt="Igreja do Deus de Maravilhas"
+              className="w-10 h-10 object-contain cursor-pointer"
+              onClick={() => navigate("/")}
+            />
+
+            {/* Title - Centered */}
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold">
+              Solicitação de Cadastro
+            </h1>
 
             {/* Back to Home Button */}
             <Button
@@ -237,7 +235,7 @@ const Cadastro = () => {
       </header>
 
       {/* Form Content */}
-      <div className="container mx-auto max-w-4xl">
+      <div className="mx-auto max-w-4xl">
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl md:text-3xl font-bold text-primary">
@@ -581,33 +579,36 @@ const Cadastro = () => {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="number"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Número</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Nº" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Number and Complement - Same row on mobile */}
+                    <div className="md:col-span-3 grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="number"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Número</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Nº" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="complement"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Complemento</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Apto, bloco..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="complement"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Complemento</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Apto, bloco..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     <FormField
                       control={form.control}
