@@ -983,6 +983,19 @@ const Cadastro = () => {
                   </div>
                 </div>
 
+                {/* reCAPTCHA Attribution */}
+                <p className="text-xs text-muted-foreground text-center">
+                  Este site é protegido pelo reCAPTCHA e se aplicam a{' '}
+                  <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+                    Política de Privacidade
+                  </a>{' '}
+                  e os{' '}
+                  <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+                    Termos de Serviço
+                  </a>{' '}
+                  do Google.
+                </p>
+
                 <Button
                   type="submit"
                   className="w-full"

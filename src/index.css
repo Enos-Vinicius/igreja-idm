@@ -211,3 +211,8 @@
 .rdp-dropdown_year select {
   @apply min-w-[80px];
 }
+
+/* Hide reCAPTCHA badge */
+.grecaptcha-badge {
+  visibility: hidden !important;
+}
