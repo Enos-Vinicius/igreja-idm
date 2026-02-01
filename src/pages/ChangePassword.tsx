@@ -1,0 +1,264 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Loader2, KeyRound, ShieldCheck, PartyPopper } from "lucide-react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { authService } from "@/services/auth";
+import { useAuth } from "@/contexts/AuthContext";
+import logoWhite from "@/assets/logo-white.png";
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Senha atual é obrigatória"),
+  newPassword: z
+    .string()
+    .min(6, "A nova senha deve ter no mínimo 6 caracteres")
+    .max(100, "A nova senha deve ter no máximo 100 caracteres"),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "As senhas não coincidem",
+  path: ["confirmPassword"],
+}).refine((data) => data.currentPassword !== data.newPassword, {
+  message: "A nova senha deve ser diferente da senha atual",
+  path: ["newPassword"],
+});
+
+type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+
+const ChangePassword = () => {
+  const navigate = useNavigate();
+  const { completePasswordChange, logout } = useAuth();
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<ChangePasswordFormData>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const onSubmit = async (data: ChangePasswordFormData) => {
+    setIsLoading(true);
+
+    try {
+      await authService.changePassword(data.currentPassword, data.newPassword);
+      toast.success("Senha alterada com sucesso!");
+
+      // Completa o fluxo de troca de senha e carrega dados do usuário
+      await completePasswordChange();
+
+      // Redireciona para o dashboard
+      navigate("/dashboard");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao alterar senha";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
+
+  return (
+    <div className="min-h-screen bg-muted/30">
+      {/* Header */}
+      <header className="bg-secondary text-white shadow-md sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <img
+              src={logoWhite}
+              alt="Igreja do Deus de Maravilhas"
+              className="w-10 h-10 object-contain"
+            />
+
+            {/* Title - Centered */}
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold">
+              Primeiro Acesso
+            </h1>
+
+            {/* Logout Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="text-white hover:bg-white/10"
+            >
+              Sair
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Content */}
+      <div className="container mx-auto px-4 py-8 max-w-md">
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-primary/10 to-golden/10 border border-primary/20 rounded-lg p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="bg-golden/20 rounded-full p-2 flex-shrink-0">
+              <PartyPopper className="w-5 h-5 text-golden" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-primary">Bem-vindo(a) à Igreja do Deus de Maravilhas!</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Este é o seu primeiro acesso ao sistema. Para sua segurança, é necessário criar uma senha pessoal.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 bg-amber-100 rounded-full p-4">
+              <ShieldCheck className="w-8 h-8 text-amber-600" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-primary">
+              Criar Nova Senha
+            </CardTitle>
+            <p className="text-muted-foreground mt-2">
+              A senha temporária que você recebeu por email será substituída pela sua nova senha pessoal.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="currentPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha atual (temporária)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type={showCurrentPassword ? "text" : "password"}
+                            placeholder="Digite a senha recebida"
+                            {...field}
+                            disabled={isLoading}
+                            className="pl-10 pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Esta é a senha que você recebeu por email
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nova senha</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showNewPassword ? "text" : "password"}
+                            placeholder="Crie uma senha segura"
+                            {...field}
+                            disabled={isLoading}
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Mínimo de 6 caracteres
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirmar nova senha</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Confirme a nova senha"
+                            {...field}
+                            disabled={isLoading}
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Alterando...
+                    </>
+                  ) : (
+                    "Alterar senha e continuar"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default ChangePassword;

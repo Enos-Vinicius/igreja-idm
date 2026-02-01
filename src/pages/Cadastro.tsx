@@ -3,15 +3,12 @@ import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Upload, User, Check, Home, Loader2, CheckCircle2, Clock, Mail, AlertTriangle } from "lucide-react";
+import { Upload, User, Check, Home, Loader2, CheckCircle2, Clock, Mail, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
+import { DateInput } from "@/components/ui/date-input";
 import {
   Form,
   FormControl,
@@ -28,11 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -118,7 +110,6 @@ const Cadastro = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitSuccess, setIsSubmitSuccess] = useState(false);
   const [isDuplicateRequest, setIsDuplicateRequest] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [hasNoEmail, setHasNoEmail] = useState(false);
   const [isNoEmailDialogOpen, setIsNoEmailDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -583,45 +574,16 @@ const Cadastro = () => {
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
                           <FormLabel>Data de nascimento *</FormLabel>
-                          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full pl-3 text-left font-normal text-base",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "dd/MM/yyyy", { locale: ptBR })
-                                  ) : (
-                                    <span>Selecione a data</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={(date) => {
-                                  field.onChange(date);
-                                  setIsCalendarOpen(false);
-                                }}
-                                disabled={(date) =>
-                                  date > new Date() || date < new Date("1900-01-01")
-                                }
-                                initialFocus
-                                locale={ptBR}
-                                className="pointer-events-auto"
-                                captionLayout="dropdown-buttons"
-                                fromYear={1900}
-                                toYear={new Date().getFullYear()}
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <FormControl>
+                            <DateInput
+                              value={field.value}
+                              onChange={field.onChange}
+                              maxDate={new Date()}
+                              minDate={new Date("1900-01-01")}
+                              fromYear={1900}
+                              toYear={new Date().getFullYear()}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}

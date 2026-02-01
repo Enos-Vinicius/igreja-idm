@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 import skyClouds from "@/assets/sky-clouds.jpg";
 import logoWhite from "@/assets/logo-white.png";
 
@@ -21,18 +23,40 @@ interface LoginModalProps {
 }
 
 const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { login } = useAuth();
+
+  const handleOpenForgotPassword = () => {
+    onOpenChange(false); // Close login modal
+    setShowForgotPassword(true); // Open forgot password modal
+  };
+
+  const handleBackToLogin = () => {
+    setShowForgotPassword(false); // Close forgot password modal
+    onOpenChange(true); // Open login modal
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await login({ email, password });
+      const result = await login({ email, password });
+
+      // Se precisa trocar senha no primeiro acesso
+      if (result.mustChangePassword) {
+        setEmail("");
+        setPassword("");
+        onOpenChange(false);
+        navigate("/change-password");
+        return;
+      }
+
       toast.success("Login realizado com sucesso!");
       onLoginSuccess?.();
       setEmail("");
@@ -47,6 +71,7 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="sm:max-w-[800px] max-w-full w-full p-0 overflow-hidden max-h-[90vh] sm:max-h-[90vh] rounded-t-2xl sm:rounded-2xl border-0 sm:border data-[state=open]:!bottom-0 data-[state=open]:!top-auto data-[state=open]:sm:!top-[50%] data-[state=open]:sm:!bottom-auto data-[state=open]:!translate-x-[-50%] data-[state=open]:!translate-y-0 data-[state=open]:sm:!translate-y-[-50%]"
@@ -125,6 +150,7 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
               <div className="flex justify-end">
                 <button
                   type="button"
+                  onClick={handleOpenForgotPassword}
                   className="text-sm text-primary hover:text-primary/80 transition-colors"
                 >
                   Esqueceu a senha?
@@ -150,6 +176,13 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
         </div>
       </DialogContent>
     </Dialog>
+
+    <ForgotPasswordModal
+      open={showForgotPassword}
+      onOpenChange={setShowForgotPassword}
+      onBackToLogin={handleBackToLogin}
+    />
+    </>
   );
 };
 

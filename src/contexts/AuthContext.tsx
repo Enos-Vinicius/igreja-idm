@@ -17,9 +17,11 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   isSessionExpired: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  mustChangePassword: boolean;
+  login: (credentials: LoginRequest) => Promise<{ mustChangePassword: boolean }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  completePasswordChange: () => Promise<void>;
   openLoginFromSessionExpired: () => void;
   closeSessionExpiredModal: () => void;
 }
@@ -87,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSessionExpired, setIsSessionExpired] = useState(false);
   const [showLoginAfterExpiry, setShowLoginAfterExpiry] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
 
   const loadUser = useCallback(async (forceRefresh = false) => {
     const hasToken = authService.hasToken();
@@ -139,13 +142,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, [loadUser]);
 
-  const login = async (credentials: LoginRequest) => {
-    await authService.login(credentials);
+  const login = async (credentials: LoginRequest): Promise<{ mustChangePassword: boolean }> => {
+    const response = await authService.login(credentials);
     setIsSessionExpired(false);
     setShowLoginAfterExpiry(false);
+
+    // Se precisa trocar senha, não carrega usuário ainda
+    if (response.mustChangePassword) {
+      setMustChangePassword(true);
+      return { mustChangePassword: true };
+    }
+
     // O login já busca e cacheia o usuário, então só carrega do cache
     const cachedUser = authService.getCachedUser();
     setUser(cachedUser);
+    return { mustChangePassword: false };
   };
 
   const logout = async () => {
@@ -156,6 +167,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     // Força buscar do servidor e atualizar cache
     await loadUser(true);
+  };
+
+  const completePasswordChange = async () => {
+    // Após trocar a senha, busca dados do usuário e limpa o estado
+    setMustChangePassword(false);
+    try {
+      const currentUser = await authService.fetchAndCacheUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error('[Auth] Error loading user after password change:', error);
+    }
   };
 
   const openLoginFromSessionExpired = () => {
@@ -173,9 +195,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     isAdmin: authService.isAdmin(user),
     isSessionExpired,
+    mustChangePassword,
     login,
     logout,
     refreshUser,
+    completePasswordChange,
     openLoginFromSessionExpired,
     closeSessionExpiredModal,
   };

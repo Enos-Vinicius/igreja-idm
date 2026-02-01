@@ -7,6 +7,7 @@ import { Upload, X, Save, Loader2, ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { DateInput } from '@/components/ui/date-input';
 import {
   Form,
   FormControl,
@@ -375,7 +376,7 @@ const MemberForm = () => {
                   control={form.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-4">
+                    <FormItem className="md:col-span-6">
                       <FormLabel>Email *</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="email@exemplo.com" {...field} />
@@ -389,10 +390,14 @@ const MemberForm = () => {
                   control={form.control}
                   name="birthDate"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                    <FormItem className="md:col-span-4">
                       <FormLabel>Data de Nascimento *</FormLabel>
                       <FormControl>
-                        <Input type="date" className="w-[160px]" {...field} />
+                        <DateInput
+                          value={field.value}
+                          onChangeString={field.onChange}
+                          maxDate={new Date()}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -403,7 +408,7 @@ const MemberForm = () => {
                   control={form.control}
                   name="gender"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                    <FormItem className="md:col-span-4">
                       <FormLabel>Gênero *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
@@ -428,7 +433,7 @@ const MemberForm = () => {
                   control={form.control}
                   name="maritalStatus"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                    <FormItem className="md:col-span-4">
                       <FormLabel>Estado Civil *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
@@ -453,7 +458,7 @@ const MemberForm = () => {
                   control={form.control}
                   name="occupation"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-8">
+                    <FormItem className="md:col-span-12">
                       <FormLabel>Profissão *</FormLabel>
                       <FormControl>
                         <Input placeholder="Digite a profissão" {...field} />
@@ -750,7 +755,12 @@ const MemberForm = () => {
                     <FormItem className="md:col-span-2">
                       <FormLabel>Data de Batismo</FormLabel>
                       <FormControl>
-                        <Input type="date" className="w-[160px]" {...field} />
+                        <DateInput
+                          value={field.value}
+                          onChangeString={field.onChange}
+                          maxDate={new Date()}
+                          className="w-[180px]"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -764,7 +774,12 @@ const MemberForm = () => {
                     <FormItem className="md:col-span-3">
                       <FormLabel>Data que Aceitou Jesus</FormLabel>
                       <FormControl>
-                        <Input type="date" className="w-[160px]" {...field} />
+                        <DateInput
+                          value={field.value}
+                          onChangeString={field.onChange}
+                          maxDate={new Date()}
+                          className="w-[180px]"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

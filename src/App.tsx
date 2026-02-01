@@ -8,6 +8,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Cadastro from "./pages/Cadastro";
+import ResetPassword from "./pages/ResetPassword";
+import ChangePassword from "./pages/ChangePassword";
+import MemberHome from "./pages/MemberHome";
 import MembersList from "./pages/MembersList";
 import MemberForm from "./pages/MemberForm";
 import Users from "./pages/Users";
@@ -24,18 +27,21 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-        <Routes>
+    <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/change-password" element={<ChangePassword />} />
 
           {/* Protected Routes - Require Authentication */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/member-home" element={<ProtectedRoute><MemberHome /></ProtectedRoute>} />
           <Route path="/members" element={<ProtectedRoute><MembersList /></ProtectedRoute>} />
           <Route path="/members/new" element={<ProtectedRoute><MemberForm /></ProtectedRoute>} />
           <Route path="/members/edit/:id" element={<ProtectedRoute><MemberForm /></ProtectedRoute>} />
@@ -52,10 +58,10 @@ const App = () => (
 
           {/* Catch-all Route */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+          </Routes>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

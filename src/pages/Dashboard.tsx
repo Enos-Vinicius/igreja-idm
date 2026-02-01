@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Users,
   UserPlus,
@@ -120,8 +121,17 @@ const recentActivities = [
 
 const Dashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAdmin, isLoading, isAuthenticated } = useAuth();
   const [selectedUnit, setSelectedUnit] = useState<"todos" | "uberaba" | "conceicao">("todos");
   const [isMobile, setIsMobile] = useState(false);
+
+  // Redireciona membros não-admin para a área do membro
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !isAdmin) {
+      navigate("/member-home", { replace: true });
+    }
+  }, [isAdmin, isLoading, isAuthenticated, navigate]);
 
   // Verifica se deve forçar a exibição do dashboard completo (via location state)
   const showFullDashboard = location.state?.showFullDashboard === true;

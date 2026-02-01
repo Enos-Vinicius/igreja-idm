@@ -7,6 +7,21 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  mustChangePassword?: boolean;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface CurrentUser {
@@ -56,6 +71,11 @@ export const authService = {
     const response = await api.post<LoginResponse>('/auth/login', credentials, { skipAuth: true });
     setToken(response.token);
 
+    // Se precisa trocar senha, não busca dados do usuário ainda
+    if (response.mustChangePassword) {
+      return response;
+    }
+
     // Busca e cacheia os dados do usuário após login
     try {
       const user = await api.get<CurrentUser>('/auth/me');
@@ -104,5 +124,20 @@ export const authService = {
 
   isAdmin(user: CurrentUser | null): boolean {
     return user?.role?.toLowerCase() === 'admin';
+  },
+
+  // Solicita email de recuperação de senha
+  async forgotPassword(email: string): Promise<void> {
+    await api.post('/auth/forgot-password', { email }, { skipAuth: true });
+  },
+
+  // Reseta a senha usando o token recebido por email
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    await api.post('/auth/reset-password', { token, newPassword }, { skipAuth: true });
+  },
+
+  // Altera a senha (primeiro acesso ou alteração voluntária)
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await api.put('/auth/change-password', { currentPassword, newPassword });
   },
 };
