@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Settings,
   LogOut,
+  Heart,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -90,6 +91,14 @@ const DashboardMobileHome = () => {
       icon: CalendarIcon,
       path: "/calendar",
       color: "from-cyan-500 to-cyan-600",
+    },
+    {
+      id: "prayer-requests",
+      title: "Pedidos de Oração",
+      description: "Gerenciar pedidos de oração",
+      icon: Heart,
+      path: "/admin/prayer-requests",
+      color: "from-rose-500 to-rose-600",
     },
     {
       id: "users",

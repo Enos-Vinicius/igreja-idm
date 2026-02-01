@@ -12,6 +12,7 @@ import {
   CalendarCheck,
   Music,
   Calendar,
+  Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -111,6 +112,12 @@ const menuGroups: MenuGroup[] = [
     id: "admin",
     label: "Administração",
     items: [
+      {
+        id: "prayer-requests",
+        label: "Pedidos de Oração",
+        icon: Heart,
+        path: "/admin/prayer-requests",
+      },
       {
         id: "users",
         label: "Usuários",

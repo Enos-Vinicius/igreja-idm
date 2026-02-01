@@ -15,6 +15,7 @@ import MembersList from "./pages/MembersList";
 import MemberForm from "./pages/MemberForm";
 import Users from "./pages/Users";
 import AdminRegistrationRequests from "./pages/AdminRegistrationRequests";
+import AdminPrayerRequests from "./pages/AdminPrayerRequests";
 import AttendanceControl from "./pages/AttendanceControl";
 import Repertoire from "./pages/Repertoire";
 import WorshipForm from "./pages/WorshipForm";
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/members/edit/:id" element={<ProtectedRoute><MemberForm /></ProtectedRoute>} />
           <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
           <Route path="/admin/solicitacoes" element={<ProtectedRoute><AdminRegistrationRequests /></ProtectedRoute>} />
+          <Route path="/admin/prayer-requests" element={<ProtectedRoute><AdminPrayerRequests /></ProtectedRoute>} />
           <Route path="/attendance" element={<ProtectedRoute><AttendanceControl /></ProtectedRoute>} />
           <Route path="/repertoire" element={<ProtectedRoute><Repertoire /></ProtectedRoute>} />
           <Route path="/repertoire/new" element={<ProtectedRoute><WorshipForm /></ProtectedRoute>} />
