@@ -127,20 +127,40 @@ const Cadastro = () => {
     // Get the first error field name
     const firstErrorField = Object.keys(errors)[0] as keyof CadastroFormData;
     if (firstErrorField) {
-      // Find the element by name attribute
-      const element = document.querySelector(`[name="${firstErrorField}"]`);
+      // Try multiple selectors to find the element
+      const selectors = [
+        `[name="${firstErrorField}"]`,
+        `#${firstErrorField}`,
+        `[data-field="${firstErrorField}"]`,
+        // For Select components (shadcn/radix)
+        `button[id="${firstErrorField}"]`,
+        `[aria-labelledby*="${firstErrorField}"]`,
+      ];
+
+      let element: Element | null = null;
+      for (const selector of selectors) {
+        element = document.querySelector(selector);
+        if (element) break;
+      }
+
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Focus the element if it's focusable
-        if (element instanceof HTMLElement) {
-          setTimeout(() => element.focus(), 500);
-        }
+        // Focus the element after scroll completes
+        setTimeout(() => {
+          if (element instanceof HTMLElement) {
+            element.focus();
+          }
+          // For Select triggers, click to open
+          if (element instanceof HTMLButtonElement && element.getAttribute('role') === 'combobox') {
+            element.click();
+          }
+        }, 500);
       } else {
-        // For select fields or custom components, try to find by form field wrapper
-        const formField = document.querySelector(`[data-field="${firstErrorField}"]`) ||
-                         document.getElementById(firstErrorField);
-        if (formField) {
-          formField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Fallback: find error message and scroll to its parent form item
+        const errorMessage = document.querySelector(`[id="${firstErrorField}-form-item-message"]`);
+        if (errorMessage) {
+          const formItem = errorMessage.closest('[data-slot="form-item"]') || errorMessage.parentElement;
+          formItem?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
     }
