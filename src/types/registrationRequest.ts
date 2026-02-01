@@ -24,8 +24,9 @@ export interface RegistrationRequest {
   whatsappConsentGiven: boolean;
   status: RegistrationStatus;
   rejectionReason?: string;
-  createdAt: string;
-  updatedAt: string;
+  requestedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const statusLabels: Record<RegistrationStatus, string> = {

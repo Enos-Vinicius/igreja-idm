@@ -263,12 +263,18 @@ const AdminRegistrationRequests = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    return format(date, "dd/MM/yyyy", { locale: ptBR });
   };
 
-  const formatDateTime = (dateString: string) => {
-    return format(new Date(dateString), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+  const formatDateTime = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
   };
 
   const getInitials = (name: string) => {
@@ -420,7 +426,7 @@ const AdminRegistrationRequests = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
-                          {formatDate(request.createdAt)}
+                          {formatDate(request.requestedAt)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
@@ -476,8 +482,8 @@ const AdminRegistrationRequests = () => {
 
         {/* Details Modal */}
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col max-md:h-screen max-md:max-h-screen max-md:w-screen max-md:max-w-none max-md:rounded-none max-md:border-none">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>Detalhes da Solicitação</DialogTitle>
               <DialogDescription>
                 Informações completas do solicitante
@@ -485,7 +491,7 @@ const AdminRegistrationRequests = () => {
             </DialogHeader>
 
             {selectedRequest && (
-              <div className="space-y-6">
+              <div className="flex-1 overflow-y-auto space-y-6 pr-2">
                 {/* Photo and basic info */}
                 <div className="flex items-start gap-4">
                   <Avatar className="h-20 w-20">
@@ -528,56 +534,59 @@ const AdminRegistrationRequests = () => {
                   </div>
                 </div>
 
-                {/* Contact */}
-                <div>
-                  <h4 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
-                    Contato
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <Label className="text-muted-foreground">Telefone Principal</Label>
-                      <p>{selectedRequest.primaryPhone}</p>
-                    </div>
-                    {selectedRequest.secondaryPhone && (
-                      <div>
-                        <Label className="text-muted-foreground">Telefone Secundário</Label>
-                        <p>{selectedRequest.secondaryPhone}</p>
-                      </div>
-                    )}
-                    {selectedRequest.emergencyContact && (
-                      <div>
-                        <Label className="text-muted-foreground">Contato de Emergência</Label>
-                        <p>{selectedRequest.emergencyContact}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Address */}
-                {(selectedRequest.street || selectedRequest.city) && (
+                {/* Contact and Address */}
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Contact */}
                   <div>
                     <h4 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
-                      Endereço
+                      Contato
                     </h4>
-                    <div className="text-sm space-y-1">
-                      {selectedRequest.street && (
-                        <p>
-                          {selectedRequest.street}
-                          {selectedRequest.number && `, ${selectedRequest.number}`}
-                          {selectedRequest.complement && ` - ${selectedRequest.complement}`}
-                        </p>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <Label className="text-muted-foreground">Telefone Principal</Label>
+                        <p>{selectedRequest.primaryPhone}</p>
+                      </div>
+                      {selectedRequest.secondaryPhone && (
+                        <div>
+                          <Label className="text-muted-foreground">Telefone Secundário</Label>
+                          <p>{selectedRequest.secondaryPhone}</p>
+                        </div>
                       )}
-                      {selectedRequest.neighborhood && <p>{selectedRequest.neighborhood}</p>}
-                      {(selectedRequest.city || selectedRequest.state) && (
-                        <p>
-                          {selectedRequest.city}
-                          {selectedRequest.state && ` - ${selectedRequest.state}`}
-                        </p>
+                      {selectedRequest.emergencyContact && (
+                        <div>
+                          <Label className="text-muted-foreground">Contato de Emergência</Label>
+                          <p>{selectedRequest.emergencyContact}</p>
+                        </div>
                       )}
-                      {selectedRequest.zipCode && <p>CEP: {selectedRequest.zipCode}</p>}
                     </div>
                   </div>
-                )}
+
+                  {/* Address */}
+                  {(selectedRequest.street || selectedRequest.city) && (
+                    <div>
+                      <h4 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
+                        Endereço
+                      </h4>
+                      <div className="text-sm space-y-1">
+                        {selectedRequest.street && (
+                          <p>
+                            {selectedRequest.street}
+                            {selectedRequest.number && `, ${selectedRequest.number}`}
+                            {selectedRequest.complement && ` - ${selectedRequest.complement}`}
+                          </p>
+                        )}
+                        {selectedRequest.neighborhood && <p>{selectedRequest.neighborhood}</p>}
+                        {(selectedRequest.city || selectedRequest.state) && (
+                          <p>
+                            {selectedRequest.city}
+                            {selectedRequest.state && ` - ${selectedRequest.state}`}
+                          </p>
+                        )}
+                        {selectedRequest.zipCode && <p>CEP: {selectedRequest.zipCode}</p>}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Consents */}
                 <div>
@@ -611,14 +620,14 @@ const AdminRegistrationRequests = () => {
 
                 {/* Metadata */}
                 <div className="pt-4 border-t">
-                  <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                  <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground">
                     <div>
                       <Label className="text-muted-foreground">ID</Label>
                       <p>#{selectedRequest.id}</p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">Criado em</Label>
-                      <p>{formatDateTime(selectedRequest.createdAt)}</p>
+                      <Label className="text-muted-foreground">Solicitado em</Label>
+                      <p>{formatDateTime(selectedRequest.requestedAt)}</p>
                     </div>
                     <div>
                       <Label className="text-muted-foreground">Atualizado em</Label>
@@ -629,7 +638,7 @@ const AdminRegistrationRequests = () => {
               </div>
             )}
 
-            <DialogFooter className="mt-6">
+            <DialogFooter className="flex-shrink-0 pt-4 border-t gap-3 max-md:flex-col">
               {selectedRequest?.status === 'pending' && (
                 <>
                   <Button
