@@ -1,10 +1,10 @@
-import { useState, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useRef, useMemo, useEffect } from "react";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Upload, User, Check, Home, Loader2, CheckCircle2 } from "lucide-react";
+import { CalendarIcon, Upload, User, Check, Home, Loader2, CheckCircle2, Clock, Mail, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
@@ -33,6 +33,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { CHURCH_LOCATIONS } from "@/types/member";
@@ -53,11 +63,13 @@ declare global {
 const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const cepRegex = /^\d{5}-\d{3}$/;
 
-const cadastroSchema = z.object({
+const createCadastroSchema = (hasNoEmail: boolean) => z.object({
   photo: z.any().optional(),
   church: z.enum(['Uberaba', 'Conceição das Alagoas'], { required_error: "Selecione a igreja" }),
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
-  email: z.string().email("Email inválido").max(255, "Email muito longo"),
+  email: hasNoEmail
+    ? z.string().optional().or(z.literal(""))
+    : z.string().min(1, "Email é obrigatório").email("Email inválido").max(255, "Email muito longo"),
   birthDate: z.date({ required_error: "Data de nascimento é obrigatória" }),
   gender: z.string().min(1, "Gênero é obrigatório"),
   maritalStatus: z.string().min(1, "Estado civil é obrigatório"),
@@ -83,7 +95,7 @@ const cadastroSchema = z.object({
   whatsappConsentGiven: z.boolean().default(false),
 });
 
-type CadastroFormData = z.infer<typeof cadastroSchema>;
+type CadastroFormData = z.infer<ReturnType<typeof createCadastroSchema>>;
 
 const formatPhone = (value: string): string => {
   const numbers = value.replace(/\D/g, "");
@@ -105,8 +117,36 @@ const Cadastro = () => {
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitSuccess, setIsSubmitSuccess] = useState(false);
+  const [isDuplicateRequest, setIsDuplicateRequest] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [hasNoEmail, setHasNoEmail] = useState(false);
+  const [isNoEmailDialogOpen, setIsNoEmailDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const scrollToFirstError = (errors: FieldErrors<CadastroFormData>) => {
+    // Get the first error field name
+    const firstErrorField = Object.keys(errors)[0] as keyof CadastroFormData;
+    if (firstErrorField) {
+      // Find the element by name attribute
+      const element = document.querySelector(`[name="${firstErrorField}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Focus the element if it's focusable
+        if (element instanceof HTMLElement) {
+          setTimeout(() => element.focus(), 500);
+        }
+      } else {
+        // For select fields or custom components, try to find by form field wrapper
+        const formField = document.querySelector(`[data-field="${firstErrorField}"]`) ||
+                         document.getElementById(firstErrorField);
+        if (formField) {
+          formField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
+  };
+
+  const cadastroSchema = useMemo(() => createCadastroSchema(hasNoEmail), [hasNoEmail]);
 
   const form = useForm<CadastroFormData>({
     resolver: zodResolver(cadastroSchema),
@@ -133,6 +173,15 @@ const Cadastro = () => {
       whatsappConsentGiven: false,
     },
   });
+
+  // Clear email field and consent when user confirms they don't have email
+  useEffect(() => {
+    if (hasNoEmail) {
+      form.setValue("email", "");
+      form.setValue("emailConsentGiven", false);
+      form.clearErrors("email");
+    }
+  }, [hasNoEmail, form]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -288,24 +337,30 @@ const Cadastro = () => {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro ao enviar sua solicitação. Por favor, tente novamente.";
 
       // Check if it's a duplicate email error
-      const isDuplicateEmail = errorMessage.includes("Já existe uma solicitação pendente com este email");
+      const isDuplicateEmail = errorMessage.toLowerCase().includes("já existe") ||
+                              errorMessage.toLowerCase().includes("duplicat") ||
+                              errorMessage.toLowerCase().includes("pendente");
 
       // Check if it's a reCAPTCHA validation error
       const isRecaptchaError = errorMessage.toLowerCase().includes("recaptcha") ||
                               errorMessage.toLowerCase().includes("robot") ||
                               errorMessage.toLowerCase().includes("robo");
 
-      if (isRecaptchaError) {
-        console.error('⚠️ Erro de validação reCAPTCHA no backend');
-        console.error('💡 Verifique a configuração do reCAPTCHA no backend');
-      }
+      if (isDuplicateEmail) {
+        // Show friendly duplicate feedback
+        setIsDuplicateRequest(true);
+      } else {
+        if (isRecaptchaError) {
+          console.error('⚠️ Erro de validação reCAPTCHA no backend');
+          console.error('💡 Verifique a configuração do reCAPTCHA no backend');
+        }
 
-      toast({
-        title: isDuplicateEmail ? "Solicitação já existe" :
-               isRecaptchaError ? "Erro de validação reCAPTCHA" : "Erro ao enviar solicitação",
-        description: errorMessage,
-        variant: "destructive",
-      });
+        toast({
+          title: isRecaptchaError ? "Erro de validação reCAPTCHA" : "Erro ao enviar solicitação",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -348,7 +403,7 @@ const Cadastro = () => {
       {/* Form Content */}
       <div className="mx-auto max-w-4xl">
         <Card>
-          {!isSubmitSuccess ? (
+          {!isSubmitSuccess && !isDuplicateRequest ? (
             <>
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl md:text-3xl font-bold text-primary">
@@ -360,7 +415,7 @@ const Cadastro = () => {
               </CardHeader>
               <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form onSubmit={form.handleSubmit(onSubmit, scrollToFirstError)} className="space-y-8">
                 {/* Photo Upload */}
                 <div className="flex flex-col items-center gap-4">
                   <div 
@@ -449,19 +504,56 @@ const Cadastro = () => {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Email *</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="seu@email.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {!hasNoEmail ? (
+                      <div className="md:col-span-2 space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email *</FormLabel>
+                              <div className="flex flex-col sm:flex-row gap-2">
+                                <FormControl className="flex-1">
+                                  <Input type="email" placeholder="seu@email.com" {...field} />
+                                </FormControl>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="default"
+                                  onClick={() => setIsNoEmailDialogOpen(true)}
+                                  className="text-muted-foreground hover:text-foreground whitespace-nowrap"
+                                >
+                                  <Mail className="w-4 h-4 mr-2" />
+                                  Não tenho email
+                                </Button>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    ) : (
+                      <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-2 text-amber-700">
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                            <span className="text-sm font-medium">Cadastro sem email</span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setHasNoEmail(false)}
+                            className="text-amber-700 border-amber-300 hover:bg-amber-100"
+                          >
+                            Tenho email
+                          </Button>
+                        </div>
+                        <p className="text-xs text-amber-600 mt-2">
+                          Você não receberá notificações por email sobre sua solicitação.
+                        </p>
+                      </div>
+                    )}
 
                     <FormField
                       control={form.control}
@@ -807,35 +899,37 @@ const Cadastro = () => {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="emailConsentGiven"
-                      render={({ field }) => (
-                        <FormItem
-                          className="flex flex-row items-center space-x-4 space-y-0 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                          onClick={() => field.onChange(!field.value)}
-                        >
-                          <FormControl>
-                            <div
-                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 transition-colors ${
-                                field.value
-                                  ? 'bg-primary border-primary text-primary-foreground'
-                                  : 'border-muted-foreground/50'
-                              }`}
-                            >
-                              {field.value && <Check className="h-4 w-4" />}
+                    {!hasNoEmail && (
+                      <FormField
+                        control={form.control}
+                        name="emailConsentGiven"
+                        render={({ field }) => (
+                          <FormItem
+                            className="flex flex-row items-center space-x-4 space-y-0 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => field.onChange(!field.value)}
+                          >
+                            <FormControl>
+                              <div
+                                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                                  field.value
+                                    ? 'bg-primary border-primary text-primary-foreground'
+                                    : 'border-muted-foreground/50'
+                                }`}
+                              >
+                                {field.value && <Check className="h-4 w-4" />}
+                              </div>
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel className="cursor-pointer">Autorizo comunicação por e-mail</FormLabel>
+                              <FormDescription>
+                                Receba informações sobre cultos, eventos especiais, estudos bíblicos,
+                                avisos importantes e novidades da nossa comunidade
+                              </FormDescription>
                             </div>
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="cursor-pointer">Autorizo comunicação por e-mail</FormLabel>
-                            <FormDescription>
-                              Receba informações sobre cultos, eventos especiais, estudos bíblicos,
-                              avisos importantes e novidades da nossa comunidade
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
                     <FormField
                       control={form.control}
@@ -888,6 +982,59 @@ const Cadastro = () => {
             </Form>
           </CardContent>
             </>
+          ) : isDuplicateRequest ? (
+            // Duplicate Request Feedback
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center text-center space-y-6">
+                {/* Warning Icon */}
+                <div className="relative">
+                  <div className="absolute inset-0 bg-amber-500/20 blur-2xl rounded-full" />
+                  <div className="relative bg-gradient-to-br from-amber-500 to-amber-600 rounded-full p-6">
+                    <Clock className="w-16 h-16 text-white" />
+                  </div>
+                </div>
+
+                {/* Warning Message */}
+                <div className="space-y-3">
+                  <h2 className="text-3xl font-bold text-amber-600">
+                    Solicitação em Análise
+                  </h2>
+                  <p className="text-lg text-muted-foreground max-w-md">
+                    Já existe uma solicitação de cadastro pendente para este e-mail.
+                  </p>
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 max-w-md w-full">
+                  <h3 className="font-semibold text-amber-800 mb-2">O que você pode fazer?</h3>
+                  <ul className="text-sm text-amber-700 space-y-2 text-left">
+                    <li className="flex items-start gap-2">
+                      <Clock className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <span>Aguarde a análise da sua solicitação anterior</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <span>Você receberá um e-mail quando sua solicitação for analisada</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <span>Em caso de dúvidas, entre em contato com a secretaria da igreja</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Action Button */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                  <Button
+                    onClick={() => navigate('/')}
+                    className="flex-1 bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    <Home className="w-4 h-4 mr-2" />
+                    Voltar para Início
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
           ) : (
             // Success Feedback
             <CardContent className="py-12">
@@ -955,6 +1102,62 @@ const Cadastro = () => {
           )}
         </Card>
       </div>
+
+      {/* No Email Confirmation Dialog */}
+      <AlertDialog open={isNoEmailDialogOpen} onOpenChange={setIsNoEmailDialogOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-amber-100 rounded-full p-2">
+                <Mail className="w-6 h-6 text-amber-600" />
+              </div>
+              <AlertDialogTitle>Você realmente não tem email?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  O email é muito importante para o seu cadastro. Através dele você poderá:
+                </p>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Receber a confirmação da sua solicitação de cadastro</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Ser notificado quando sua solicitação for aprovada ou rejeitada</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Receber informações importantes sobre cultos e eventos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Recuperar acesso à área de membros caso necessário</span>
+                  </li>
+                </ul>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
+                  <p className="text-amber-800 text-sm font-medium">
+                    Marque esta opção apenas se você realmente não possui um endereço de email.
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel>Voltar e informar email</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setHasNoEmail(true);
+                setIsNoEmailDialogOpen(false);
+              }}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Confirmar: não tenho email
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
