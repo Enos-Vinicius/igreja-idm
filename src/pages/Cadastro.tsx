@@ -1053,7 +1053,7 @@ const Cadastro = () => {
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <span>Em caso de dúvidas, entre em contato com a secretaria da igreja</span>
+                      <span>Verifique sua caixa de SPAM, pois o email de confirmação pode ter caído nela</span>
                     </li>
                   </ul>
                 </div>
