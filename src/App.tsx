@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Cadastro from "./pages/Cadastro";
@@ -29,23 +30,27 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/members" element={<MembersList />} />
-          <Route path="/members/new" element={<MemberForm />} />
-          <Route path="/members/edit/:id" element={<MemberForm />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/admin/solicitacoes" element={<AdminRegistrationRequests />} />
-          <Route path="/attendance" element={<AttendanceControl />} />
-          <Route path="/repertoire" element={<Repertoire />} />
-          <Route path="/repertoire/new" element={<WorshipForm />} />
-          <Route path="/repertoire/edit/:id" element={<WorshipForm />} />
-          <Route path="/schedules" element={<Schedules />} />
-          <Route path="/schedules/new" element={<ScheduleForm />} />
-          <Route path="/schedules/edit/:id" element={<ScheduleForm />} />
-          <Route path="/calendar" element={<CalendarPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+          {/* Protected Routes - Require Authentication */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/members" element={<ProtectedRoute><MembersList /></ProtectedRoute>} />
+          <Route path="/members/new" element={<ProtectedRoute><MemberForm /></ProtectedRoute>} />
+          <Route path="/members/edit/:id" element={<ProtectedRoute><MemberForm /></ProtectedRoute>} />
+          <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+          <Route path="/admin/solicitacoes" element={<ProtectedRoute><AdminRegistrationRequests /></ProtectedRoute>} />
+          <Route path="/attendance" element={<ProtectedRoute><AttendanceControl /></ProtectedRoute>} />
+          <Route path="/repertoire" element={<ProtectedRoute><Repertoire /></ProtectedRoute>} />
+          <Route path="/repertoire/new" element={<ProtectedRoute><WorshipForm /></ProtectedRoute>} />
+          <Route path="/repertoire/edit/:id" element={<ProtectedRoute><WorshipForm /></ProtectedRoute>} />
+          <Route path="/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
+          <Route path="/schedules/new" element={<ProtectedRoute><ScheduleForm /></ProtectedRoute>} />
+          <Route path="/schedules/edit/:id" element={<ProtectedRoute><ScheduleForm /></ProtectedRoute>} />
+          <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+
+          {/* Catch-all Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
         </BrowserRouter>
