@@ -347,8 +347,9 @@ const Cadastro = () => {
 
       console.log('✅ Solicitação enviada com sucesso!');
 
-      // Show success feedback
+      // Show success feedback and scroll to top
       setIsSubmitSuccess(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error) {
       console.error('❌ Erro ao enviar solicitação:', error);
@@ -367,8 +368,9 @@ const Cadastro = () => {
                               errorMessage.toLowerCase().includes("robo");
 
       if (isDuplicateEmail) {
-        // Show friendly duplicate feedback
+        // Show friendly duplicate feedback and scroll to top
         setIsDuplicateRequest(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         if (isRecaptchaError) {
           console.error('⚠️ Erro de validação reCAPTCHA no backend');
