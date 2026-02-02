@@ -311,33 +311,23 @@ const Cadastro = () => {
       let recaptchaToken = '';
 
       try {
-        console.log('🔍 Verificando reCAPTCHA...');
-        console.log('📍 window.grecaptcha existe?', typeof window !== 'undefined' && !!window.grecaptcha);
-        console.log('🔑 Site Key:', environment.recaptchaSiteKey);
-
         if (typeof window !== 'undefined' && window.grecaptcha) {
           recaptchaToken = await new Promise<string>((resolve, reject) => {
             window.grecaptcha.ready(async () => {
               try {
-                console.log('⏳ Executando grecaptcha.execute...');
                 const token = await window.grecaptcha.execute(environment.recaptchaSiteKey, {
                   action: 'submit_registration'
                 });
-                console.log('✅ reCAPTCHA token gerado com sucesso');
-                console.log('📝 Token (primeiros 50 caracteres):', token.substring(0, 50) + '...');
                 resolve(token);
               } catch (err) {
-                console.error('❌ Erro no grecaptcha.execute:', err);
                 reject(err);
               }
             });
           });
         } else {
-          console.error('❌ window.grecaptcha não está disponível');
           throw new Error('reCAPTCHA não carregado');
         }
-      } catch (recaptchaError) {
-        console.error('❌ Erro ao gerar token reCAPTCHA:', recaptchaError);
+      } catch {
         toast({
           title: "Erro de verificação reCAPTCHA",
           description: "A chave do reCAPTCHA pode estar inválida ou o domínio não está autorizado. Verifique a configuração no Google reCAPTCHA Console.",
@@ -375,12 +365,7 @@ const Cadastro = () => {
         recaptchaToken,
       };
 
-      console.log('📤 Enviando solicitação para o backend...');
-      console.log('🔑 reCAPTCHA token será enviado com a requisição');
-
       await memberRequestsService.create(submissionData);
-
-      console.log('✅ Solicitação enviada com sucesso!');
 
       // Show success feedback and scroll to top
       setIsSubmitSuccess(true);
