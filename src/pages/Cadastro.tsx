@@ -3,7 +3,7 @@ import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Upload, User, Check, Home, Loader2, CheckCircle2, Clock, Mail, AlertTriangle } from "lucide-react";
+import { Upload, User, Check, Home, Loader2, CheckCircle2, Clock, Mail, AlertTriangle, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -109,6 +109,7 @@ const Cadastro = () => {
   const [isDuplicateRequest, setIsDuplicateRequest] = useState(false);
   const [hasNoEmail, setHasNoEmail] = useState(false);
   const [isNoEmailDialogOpen, setIsNoEmailDialogOpen] = useState(false);
+  const [churchSetByGeolocation, setChurchSetByGeolocation] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToFirstError = (errors: FieldErrors<CadastroFormData>) => {
@@ -204,20 +205,30 @@ const Cadastro = () => {
             );
             const data = await response.json();
 
-            const city = (data.address?.city || data.address?.town || data.address?.municipality || '').toLowerCase();
+            // Nominatim can return city in different fields depending on location
+            const address = data.address || {};
+            const cityName = (
+              address.city ||
+              address.town ||
+              address.municipality ||
+              address.village ||
+              address.county ||
+              ''
+            ).toLowerCase();
 
             // Check if city matches one of our churches (only if not already selected)
             const currentChurch = form.getValues('church');
             if (!currentChurch) {
-              if (city.includes('uberaba')) {
-                form.setValue('church', 'Uberaba');
-              } else if (city.includes('conceição das alagoas') || city.includes('conceicao das alagoas')) {
-                form.setValue('church', 'Conceição das Alagoas');
+              if (cityName.includes('uberaba')) {
+                form.setValue('church', 'Uberaba', { shouldDirty: true });
+                setChurchSetByGeolocation(true);
+              } else if (cityName.includes('conceição das alagoas') || cityName.includes('conceicao das alagoas')) {
+                form.setValue('church', 'Conceição das Alagoas', { shouldDirty: true });
+                setChurchSetByGeolocation(true);
               }
             }
-          } catch (error) {
+          } catch {
             // Silently fail - user can select manually
-            console.log('Could not determine location for church pre-fill');
           }
         },
         () => {
@@ -509,7 +520,16 @@ const Cadastro = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Selecione a igreja *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Se o usuário alterou manualmente, remove o indicador de geolocalização
+                            if (churchSetByGeolocation) {
+                              setChurchSetByGeolocation(false);
+                            }
+                          }}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Selecione a igreja" />
@@ -523,6 +543,12 @@ const Cadastro = () => {
                             ))}
                           </SelectContent>
                         </Select>
+                        {churchSetByGeolocation && field.value && (
+                          <p className="flex items-center gap-1.5 text-xs text-emerald-600 mt-1">
+                            <MapPin className="w-3 h-3" />
+                            Preenchido automaticamente pela sua localização
+                          </p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
