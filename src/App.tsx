@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Cadastro from "./pages/Cadastro";
 import ResetPassword from "./pages/ResetPassword";
+import SetPassword from "./pages/SetPassword";
+import ResendActivation from "./pages/ResendActivation";
 import ChangePassword from "./pages/ChangePassword";
 import MemberHome from "./pages/MemberHome";
 import MembersList from "./pages/MembersList";
@@ -39,6 +41,8 @@ const App = () => (
           <Route path="/login" element={<Navigate to="/?login=true" replace />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/definir-senha" element={<SetPassword />} />
+          <Route path="/reenviar-ativacao" element={<ResendActivation />} />
           <Route path="/change-password" element={<ChangePassword />} />
 
           {/* Protected Routes - Require Authentication */}

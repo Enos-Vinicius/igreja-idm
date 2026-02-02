@@ -155,4 +155,14 @@ export const authService = {
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     await api.put('/auth/change-password', { currentPassword, newPassword });
   },
+
+  // Define a senha no primeiro acesso usando o token de ativação
+  async setPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    return api.post<{ message: string }>('/auth/set-password', { token, newPassword }, { skipAuth: true });
+  },
+
+  // Reenvia link de ativação para usuário que não definiu senha
+  async resendActivation(email: string): Promise<{ message: string }> {
+    return api.post<{ message: string }>('/auth/resend-activation', { email }, { skipAuth: true });
+  },
 };
