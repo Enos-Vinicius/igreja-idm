@@ -3,9 +3,9 @@ import { Church, Users, Globe, Award } from "lucide-react";
 const HistorySection = () => {
   const milestones = [
     {
-      year: "2004",
+      year: "2003",
       title: "O Início",
-      description: "Primeiros passos da visão que Deus colocou no coração.",
+      description: "Fundação da Igreja do Deus de Maravilhas em 18 de junho.",
       icon: Church,
     },
     {

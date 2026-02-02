@@ -82,7 +82,7 @@ const FoundationSection = () => {
                 
                 <div className="bg-background border border-border/50 rounded-2xl p-8 shadow-lg">
                   <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-                    Desde <strong className="text-golden">2004</strong>, a <strong className="text-secondary">Igreja do Deus de Maravilhas</strong> escreve
+                    Desde <strong className="text-golden">2003</strong>, a <strong className="text-secondary">Igreja do Deus de Maravilhas</strong> escreve
                     uma história de fé sob a liderança do <strong className="text-secondary">Pastor Alceu da Silva</strong>. Somos
                     uma comunidade evangélica presente em duas cidades: em <strong>Uberaba</strong> (nossa sede na Av. Coronel
                     Joaquim de Oliveira Prata, 1817) e em nossa <strong>sede própria no centro de Conceição das Alagoas</strong> (na Rua Santa Rita, 149).
@@ -92,11 +92,11 @@ const FoundationSection = () => {
                   {/* Foundation Details */}
                   <div className="grid sm:grid-cols-2 gap-4 pt-6 border-t border-border/50">
                     <div className="text-center p-4 bg-muted rounded-xl">
-                      <span className="text-3xl font-bold text-gradient-golden">4 de Junho</span>
+                      <span className="text-3xl font-bold text-gradient-golden">18 de Junho</span>
                       <p className="text-muted-foreground text-sm mt-1">Data de Fundação</p>
                     </div>
                     <div className="text-center p-4 bg-muted rounded-xl">
-                      <span className="text-3xl font-bold text-gradient-golden">2004</span>
+                      <span className="text-3xl font-bold text-gradient-golden">2003</span>
                       <p className="text-muted-foreground text-sm mt-1">Ano de Fundação</p>
                     </div>
                   </div>
@@ -129,7 +129,7 @@ const FoundationSection = () => {
                   {/* Years Counter */}
                   <div className="mt-8 text-center">
                     <span className="text-5xl md:text-6xl font-bold text-gradient-golden">
-                      {new Date().getFullYear() - 2004}+
+                      {new Date().getFullYear() - 2003}+
                     </span>
                     <p className="text-muted-foreground mt-2">Anos de Fidelidade e Milagres</p>
                   </div>
