@@ -568,29 +568,29 @@ const Cadastro = () => {
                       </div>
                     )}
 
-                    <FormField
-                      control={form.control}
-                      name="birthDate"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Data de nascimento *</FormLabel>
-                          <FormControl>
-                            <DateInput
-                              value={field.value}
-                              onChange={field.onChange}
-                              maxDate={new Date()}
-                              minDate={new Date("1900-01-01")}
-                              fromYear={1900}
-                              toYear={new Date().getFullYear()}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Birth Date, Gender and Marital Status - Same row on desktop */}
+                    <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="birthDate"
+                        render={({ field }) => (
+                          <FormItem className="col-span-2 md:col-span-1">
+                            <FormLabel>Data de nascimento *</FormLabel>
+                            <FormControl>
+                              <DateInput
+                                value={field.value}
+                                onChange={field.onChange}
+                                maxDate={new Date()}
+                                minDate={new Date("1900-01-01")}
+                                fromYear={1900}
+                                toYear={new Date().getFullYear()}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    {/* Gender and Marital Status - Same row on mobile */}
-                    <div className="md:col-span-2 grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="gender"
