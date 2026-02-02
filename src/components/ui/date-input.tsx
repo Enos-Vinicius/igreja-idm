@@ -179,7 +179,7 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
     const effectiveMinDate = minDate || new Date("1900-01-01");
 
     return (
-      <div className={cn("relative flex", className)}>
+      <div className={cn("relative flex", className)} data-field={name}>
         <Input
           ref={(node) => {
             // Handle both refs

@@ -611,6 +611,7 @@ const Cadastro = () => {
                             <FormLabel>Data de nascimento *</FormLabel>
                             <FormControl>
                               <DateInput
+                                name={field.name}
                                 value={field.value}
                                 onChange={field.onChange}
                                 maxDate={new Date()}
