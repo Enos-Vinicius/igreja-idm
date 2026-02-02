@@ -1290,8 +1290,17 @@ const AttendanceControl = () => {
                 placeholder="Buscar por nome ou telefone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-11 md:pl-10 h-12 md:h-10 text-base md:text-sm"
+                className="pl-11 md:pl-10 pr-10 h-12 md:h-10 text-base md:text-sm"
               />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-5 w-5 md:h-4 md:w-4" />
+                </button>
+              )}
             </div>
 
             {/* Lista */}
