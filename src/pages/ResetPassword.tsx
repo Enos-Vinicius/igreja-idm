@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, Home, KeyRound } from "lucide-react";
+import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, Home, KeyRound, Check, X } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +32,32 @@ const resetPasswordSchema = z.object({
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
+// Password strength criteria
+interface PasswordCriteria {
+  minLength: boolean;
+  hasUppercase: boolean;
+  hasLowercase: boolean;
+  hasNumber: boolean;
+  hasSpecial: boolean;
+}
+
+const checkPasswordStrength = (password: string): PasswordCriteria => ({
+  minLength: password.length >= 6,
+  hasUppercase: /[A-Z]/.test(password),
+  hasLowercase: /[a-z]/.test(password),
+  hasNumber: /[0-9]/.test(password),
+  hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+});
+
+const getStrengthLevel = (criteria: PasswordCriteria): { level: number; label: string; color: string } => {
+  const met = Object.values(criteria).filter(Boolean).length;
+  if (met <= 1) return { level: 1, label: "Muito fraca", color: "bg-red-500" };
+  if (met === 2) return { level: 2, label: "Fraca", color: "bg-orange-500" };
+  if (met === 3) return { level: 3, label: "Média", color: "bg-yellow-500" };
+  if (met === 4) return { level: 4, label: "Forte", color: "bg-lime-500" };
+  return { level: 5, label: "Muito forte", color: "bg-green-500" };
+};
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -50,7 +76,21 @@ const ResetPassword = () => {
       newPassword: "",
       confirmPassword: "",
     },
+    mode: "onBlur", // Validate on blur
   });
+
+  const newPassword = form.watch("newPassword");
+
+  const passwordStrength = useMemo(() => {
+    const criteria = checkPasswordStrength(newPassword || "");
+    const strength = getStrengthLevel(criteria);
+    return { criteria, strength };
+  }, [newPassword]);
+
+  // Trigger confirmPassword validation when it loses focus
+  const handleConfirmPasswordBlur = () => {
+    form.trigger("confirmPassword");
+  };
 
   // Redirect if no token
   useEffect(() => {
@@ -152,7 +192,8 @@ const ResetPassword = () => {
                             <div className="relative">
                               <Input
                                 type={showPassword ? "text" : "password"}
-                                placeholder="••••••••"
+                                placeholder="Crie uma senha segura"
+                                autoComplete="new-password"
                                 {...field}
                                 disabled={isLoading}
                                 className="pr-10"
@@ -166,6 +207,62 @@ const ResetPassword = () => {
                               </button>
                             </div>
                           </FormControl>
+
+                          {/* Password Strength Indicator */}
+                          {newPassword && (
+                            <div className="space-y-3 pt-2">
+                              {/* Strength Bar */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs text-muted-foreground">Força da senha</span>
+                                  <span className={`text-xs font-medium ${
+                                    passwordStrength.strength.level <= 2 ? "text-red-600" :
+                                    passwordStrength.strength.level === 3 ? "text-yellow-600" :
+                                    "text-green-600"
+                                  }`}>
+                                    {passwordStrength.strength.label}
+                                  </span>
+                                </div>
+                                <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map((level) => (
+                                    <div
+                                      key={level}
+                                      className={`h-1.5 flex-1 rounded-full transition-colors ${
+                                        level <= passwordStrength.strength.level
+                                          ? passwordStrength.strength.color
+                                          : "bg-muted"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Criteria Checklist */}
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                <div className={`flex items-center gap-1.5 ${passwordStrength.criteria.minLength ? "text-green-600" : "text-muted-foreground"}`}>
+                                  {passwordStrength.criteria.minLength ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                  <span>Mínimo 6 caracteres</span>
+                                </div>
+                                <div className={`flex items-center gap-1.5 ${passwordStrength.criteria.hasUppercase ? "text-green-600" : "text-muted-foreground"}`}>
+                                  {passwordStrength.criteria.hasUppercase ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                  <span>Letra maiúscula</span>
+                                </div>
+                                <div className={`flex items-center gap-1.5 ${passwordStrength.criteria.hasLowercase ? "text-green-600" : "text-muted-foreground"}`}>
+                                  {passwordStrength.criteria.hasLowercase ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                  <span>Letra minúscula</span>
+                                </div>
+                                <div className={`flex items-center gap-1.5 ${passwordStrength.criteria.hasNumber ? "text-green-600" : "text-muted-foreground"}`}>
+                                  {passwordStrength.criteria.hasNumber ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                  <span>Número</span>
+                                </div>
+                                <div className={`flex items-center gap-1.5 col-span-2 ${passwordStrength.criteria.hasSpecial ? "text-green-600" : "text-muted-foreground"}`}>
+                                  {passwordStrength.criteria.hasSpecial ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                  <span>Caractere especial (!@#$%...)</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           <FormMessage />
                         </FormItem>
                       )}
@@ -181,8 +278,13 @@ const ResetPassword = () => {
                             <div className="relative">
                               <Input
                                 type={showConfirmPassword ? "text" : "password"}
-                                placeholder="••••••••"
+                                placeholder="Confirme a nova senha"
+                                autoComplete="new-password"
                                 {...field}
+                                onBlur={(e) => {
+                                  field.onBlur();
+                                  handleConfirmPasswordBlur();
+                                }}
                                 disabled={isLoading}
                                 className="pr-10"
                               />

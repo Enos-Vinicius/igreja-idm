@@ -80,6 +80,7 @@ const ChangePassword = () => {
       newPassword: "",
       confirmPassword: "",
     },
+    mode: "onBlur", // Validate on blur
   });
 
   const newPassword = form.watch("newPassword");
@@ -89,6 +90,11 @@ const ChangePassword = () => {
     const strength = getStrengthLevel(criteria);
     return { criteria, strength };
   }, [newPassword]);
+
+  // Trigger confirmPassword validation when it loses focus
+  const handleConfirmPasswordBlur = () => {
+    form.trigger("confirmPassword");
+  };
 
   const onSubmit = async (data: ChangePasswordFormData) => {
     setIsLoading(true);
@@ -322,6 +328,10 @@ const ChangePassword = () => {
                             placeholder="Confirme a nova senha"
                             autoComplete="new-password"
                             {...field}
+                            onBlur={(e) => {
+                              field.onBlur();
+                              handleConfirmPasswordBlur();
+                            }}
                             disabled={isLoading}
                             className="pr-10"
                           />
