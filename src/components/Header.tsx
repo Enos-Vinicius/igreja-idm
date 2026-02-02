@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Menu, X, Home, Info, Clock, Briefcase, Heart } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import logoClean from "@/assets/logo-clean.png";
 import logoWhite from "@/assets/logo-white.png";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,18 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  // Open login modal if ?login=true is in URL
+  useEffect(() => {
+    if (searchParams.get('login') === 'true' && !isAuthenticated && !isLoading) {
+      setIsLoginOpen(true);
+      // Remove the param from URL without navigation
+      searchParams.delete('login');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, isAuthenticated, isLoading]);
 
   const userData = useMemo(() => {
     if (!user?.member?.name) {

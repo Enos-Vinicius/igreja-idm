@@ -482,7 +482,7 @@ const AdminRegistrationRequests = () => {
 
         {/* Details Modal */}
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col max-md:h-screen max-md:max-h-screen max-md:w-screen max-md:max-w-none max-md:rounded-none max-md:border-none">
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col dialog-mobile-fullscreen">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle>Detalhes da Solicitação</DialogTitle>
               <DialogDescription>
