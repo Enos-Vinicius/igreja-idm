@@ -67,9 +67,6 @@ const createCadastroSchema = (hasNoEmail: boolean) => z.object({
   maritalStatus: z.string().min(1, "Estado civil é obrigatório"),
   occupation: z.string().min(1, "Profissão é obrigatória").max(100, "Profissão muito longa"),
   primaryPhone: z.string().regex(phoneRegex, "Telefone inválido. Use: (99) 99999-9999"),
-  secondaryPhone: z.string().refine(val => val === "" || phoneRegex.test(val), {
-    message: "Telefone inválido. Use: (99) 99999-9999"
-  }).optional().or(z.literal("")),
   emergencyContact: z.string().refine(val => val === "" || phoneRegex.test(val), {
     message: "Telefone inválido. Use: (99) 99999-9999"
   }).optional().or(z.literal("")),
@@ -170,7 +167,6 @@ const Cadastro = () => {
       maritalStatus: "",
       occupation: "",
       primaryPhone: "",
-      secondaryPhone: "",
       emergencyContact: "",
       zipCode: "",
       street: "",
@@ -315,7 +311,6 @@ const Cadastro = () => {
         occupation: data.occupation,
         primaryPhone: data.primaryPhone,
         church: data.church,
-        secondaryPhone: data.secondaryPhone,
         emergencyContact: data.emergencyContact,
         zipCode: data.zipCode,
         street: data.street,
@@ -394,7 +389,7 @@ const Cadastro = () => {
             />
 
             {/* Title - Centered */}
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold">
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-center">
               Solicitação de Cadastro
             </h1>
 
@@ -661,13 +656,14 @@ const Cadastro = () => {
                   <h3 className="text-lg font-semibold text-foreground border-b pb-2">
                     Contato
                   </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  {/* Primary Phone and Emergency Contact - Same row */}
+                  <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="primaryPhone"
                       render={({ field }) => (
-                        <FormItem className="md:col-span-2">
+                        <FormItem>
                           <FormLabel>Telefone principal *</FormLabel>
                           <FormControl>
                             <Input
@@ -682,46 +678,24 @@ const Cadastro = () => {
                       )}
                     />
 
-                    {/* Secondary Phone and Emergency Contact - Same row on mobile */}
-                    <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="secondaryPhone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Telefone secundário</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="(99) 99999-9999"
-                                {...field}
-                                onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                                maxLength={15}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="emergencyContact"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Contato de emergência</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="(99) 99999-9999"
-                                {...field}
-                                onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                                maxLength={15}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="emergencyContact"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contato de emergência</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="(99) 99999-9999"
+                              {...field}
+                              onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                              maxLength={15}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
 

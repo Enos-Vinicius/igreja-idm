@@ -20,9 +20,10 @@ interface LoginModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLoginSuccess?: () => void;
+  isFirstAccess?: boolean;
 }
 
-const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => {
+const LoginModal = ({ open, onOpenChange, onLoginSuccess, isFirstAccess = false }: LoginModalProps) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -110,32 +111,41 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
               </DialogTitle>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4" autoComplete={isFirstAccess ? "off" : "on"}>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor={isFirstAccess ? "first-access-email" : "email"}>Email</Label>
                 <Input
-                  id="email"
-                  type="email"
+                  id={isFirstAccess ? "first-access-email" : "email"}
+                  name={isFirstAccess ? "first-access-email" : "email"}
+                  type={isFirstAccess ? "text" : "email"}
+                  inputMode={isFirstAccess ? "email" : undefined}
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
+                  autoComplete={isFirstAccess ? "one-time-code" : "email"}
+                  data-lpignore={isFirstAccess ? "true" : undefined}
+                  data-form-type={isFirstAccess ? "other" : undefined}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor={isFirstAccess ? "first-access-password" : "password"}>Senha</Label>
                 <div className="relative">
                   <Input
-                    id="password"
+                    id={isFirstAccess ? "first-access-password" : "password"}
+                    name={isFirstAccess ? "first-access-password" : "password"}
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder="Digite aqui sua senha"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
                     className="pr-10"
+                    autoComplete={isFirstAccess ? "one-time-code" : "current-password"}
+                    data-lpignore={isFirstAccess ? "true" : undefined}
+                    data-form-type={isFirstAccess ? "other" : undefined}
                   />
                   <button
                     type="button"
@@ -145,17 +155,24 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess }: LoginModalProps) => 
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                {isFirstAccess && (
+                  <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2 mt-2">
+                    Para o primeiro acesso utilize a senha enviada por email.
+                  </p>
+                )}
               </div>
 
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleOpenForgotPassword}
-                  className="text-sm text-primary hover:text-primary/80 transition-colors"
-                >
-                  Esqueceu a senha?
-                </button>
-              </div>
+              {!isFirstAccess && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleOpenForgotPassword}
+                    className="text-sm text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Esqueceu a senha?
+                  </button>
+                </div>
+              )}
 
               <Button
                 type="submit"

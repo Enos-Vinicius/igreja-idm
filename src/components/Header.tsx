@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Menu, X, Home, Info, Clock, Briefcase, Heart } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import logoClean from "@/assets/logo-clean.png";
@@ -21,19 +21,42 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isFirstAccessLogin, setIsFirstAccessLogin] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
 
-  // Open login modal if ?login=true is in URL
+  // Capture the login param on initial mount (before auth check completes)
+  const pendingLoginRef = useRef(searchParams.get('login') === 'true');
+
+  // Handle ?login=true in URL
   useEffect(() => {
-    if (searchParams.get('login') === 'true' && !isAuthenticated && !isLoading) {
-      setIsLoginOpen(true);
-      // Remove the param from URL without navigation
-      searchParams.delete('login');
-      setSearchParams(searchParams, { replace: true });
+    if (pendingLoginRef.current && !isLoading) {
+      pendingLoginRef.current = false; // Prevent re-triggering
+
+      // Remove the param from URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('login');
+      setSearchParams(newParams, { replace: true });
+
+      if (isAuthenticated) {
+        // User is already logged in, redirect to dashboard
+        navigate('/dashboard');
+      } else {
+        // User is not logged in, open login modal (first access flow)
+        setIsFirstAccessLogin(true);
+        setIsLoginOpen(true);
+      }
     }
-  }, [searchParams, setSearchParams, isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, searchParams, setSearchParams, navigate]);
+
+  // Reset first access flag when modal closes
+  const handleLoginOpenChange = (open: boolean) => {
+    setIsLoginOpen(open);
+    if (!open) {
+      setIsFirstAccessLogin(false);
+    }
+  };
 
   const userData = useMemo(() => {
     if (!user?.member?.name) {
@@ -281,7 +304,7 @@ const Header = () => {
         )}
       </div>
 
-      <LoginModal open={isLoginOpen} onOpenChange={setIsLoginOpen} onLoginSuccess={handleLoginSuccess} />
+      <LoginModal open={isLoginOpen} onOpenChange={handleLoginOpenChange} onLoginSuccess={handleLoginSuccess} isFirstAccess={isFirstAccessLogin} />
     </header>
   );
 };
