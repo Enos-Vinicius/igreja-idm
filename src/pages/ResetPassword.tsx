@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { authService } from "@/services/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import logoWhite from "@/assets/logo-white.png";
 
 const resetPasswordSchema = z.object({
@@ -62,6 +63,7 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const { syncUserAfterPasswordReset } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -107,9 +109,17 @@ const ResetPassword = () => {
     setIsError(false);
 
     try {
-      await authService.resetPassword(token, data.newPassword);
-      setIsSuccess(true);
+      const response = await authService.resetPassword(token, data.newPassword);
       toast.success("Senha alterada com sucesso!");
+
+      // Se o backend retornou token, faz login automático
+      if (response.token) {
+        syncUserAfterPasswordReset();
+        navigate("/dashboard");
+      } else {
+        // Fallback: mostra tela de sucesso se não tiver login automático
+        setIsSuccess(true);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao redefinir senha";
 

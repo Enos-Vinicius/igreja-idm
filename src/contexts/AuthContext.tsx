@@ -22,6 +22,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   completePasswordChange: () => Promise<void>;
+  syncUserAfterPasswordReset: () => void;
   openLoginFromSessionExpired: () => void;
   closeSessionExpiredModal: () => void;
 }
@@ -180,6 +181,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Sincroniza o estado do React com o usuário já cacheado após reset de senha
+  const syncUserAfterPasswordReset = () => {
+    const cachedUser = authService.getCachedUser();
+    if (cachedUser) {
+      setUser(cachedUser);
+    }
+  };
+
   const openLoginFromSessionExpired = () => {
     setIsSessionExpired(false);
     setShowLoginAfterExpiry(true);
@@ -200,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     refreshUser,
     completePasswordChange,
+    syncUserAfterPasswordReset,
     openLoginFromSessionExpired,
     closeSessionExpiredModal,
   };

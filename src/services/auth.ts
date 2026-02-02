@@ -131,9 +131,24 @@ export const authService = {
     await api.post('/auth/forgot-password', { email }, { skipAuth: true });
   },
 
-  // Reseta a senha usando o token recebido por email
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    await api.post('/auth/reset-password', { token, newPassword }, { skipAuth: true });
+  // Reseta a senha usando o token recebido por email e faz login automático
+  async resetPassword(token: string, newPassword: string): Promise<LoginResponse> {
+    const response = await api.post<LoginResponse>('/auth/reset-password', { token, newPassword }, { skipAuth: true });
+
+    // Se o backend retornou um token, salva para login automático
+    if (response.token) {
+      setToken(response.token);
+
+      // Busca e cacheia os dados do usuário
+      try {
+        const user = await api.get<CurrentUser>('/auth/me');
+        saveUserToStorage(user);
+      } catch (error) {
+        console.error('[Auth] Error fetching user after password reset:', error);
+      }
+    }
+
+    return response;
   },
 
   // Altera a senha (primeiro acesso ou alteração voluntária)
