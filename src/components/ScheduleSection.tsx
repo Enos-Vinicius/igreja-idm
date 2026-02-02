@@ -285,7 +285,7 @@ END:VCALENDAR`;
             variant="outline"
             size="icon"
             onClick={handlePrev}
-            className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 z-[70] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
+            className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 z-[40] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
@@ -294,20 +294,20 @@ END:VCALENDAR`;
             variant="outline"
             size="icon"
             onClick={handleNext}
-            className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 z-[70] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
+            className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 z-[40] bg-background/80 backdrop-blur-sm hover:bg-background border-border shadow-lg"
           >
             <ChevronRight className="w-5 h-5" />
           </Button>
 
           {/* Fade Gradient Overlays - Desktop Only */}
           <div
-            className="hidden md:block absolute left-0 top-0 bottom-0 w-[600px] z-[60] pointer-events-none"
+            className="hidden md:block absolute left-0 top-0 bottom-0 w-[600px] z-[35] pointer-events-none"
             style={{
               background: 'linear-gradient(to right, hsl(var(--muted)) 0%, hsl(var(--muted)) 15%, transparent 100%)',
             }}
           />
           <div
-            className="hidden md:block absolute right-0 top-0 bottom-0 w-[600px] z-[60] pointer-events-none"
+            className="hidden md:block absolute right-0 top-0 bottom-0 w-[600px] z-[35] pointer-events-none"
             style={{
               background: 'linear-gradient(to left, hsl(var(--muted)) 0%, hsl(var(--muted)) 15%, transparent 100%)',
             }}
