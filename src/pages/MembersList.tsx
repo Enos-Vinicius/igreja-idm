@@ -256,10 +256,18 @@ const MembersList = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredMembers.map((member) => (
-                        <TableRow key={member.id}>
+                      filteredMembers.map((member) => {
+                      const isRowDeleting = isDeleting && memberToDelete?.id === member.id;
+                      return (
+                        <TableRow
+                          key={member.id}
+                          className={isRowDeleting ? "opacity-50 pointer-events-none" : ""}
+                        >
                           <TableCell className="font-medium">
-                            {member.name}
+                            <div className="flex items-center gap-2">
+                              {isRowDeleting && <Loader2 className="h-4 w-4 animate-spin text-destructive" />}
+                              {member.name}
+                            </div>
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
                             {member.email || '-'}
@@ -286,6 +294,7 @@ const MembersList = () => {
                                 size="icon"
                                 onClick={() => navigate(`/members/edit/${member.id}`)}
                                 title="Editar"
+                                disabled={isRowDeleting}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -295,13 +304,15 @@ const MembersList = () => {
                                 onClick={() => handleDelete(member)}
                                 className="text-destructive hover:text-destructive"
                                 title="Excluir"
+                                disabled={isRowDeleting}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))
+                      );
+                    })
                     )}
                   </TableBody>
                 </Table>

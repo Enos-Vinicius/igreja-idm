@@ -409,15 +409,23 @@ const AdminRegistrationRequests = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredRequests.map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell>
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={request.photoUrl} alt={request.name} />
-                            <AvatarFallback>{getInitials(request.name)}</AvatarFallback>
-                          </Avatar>
-                        </TableCell>
-                        <TableCell className="font-medium">{request.name}</TableCell>
+                    filteredRequests.map((request) => {
+                      const isRowProcessing = isSubmitting && selectedRequest?.id === request.id;
+                      return (
+                        <TableRow
+                          key={request.id}
+                          className={isRowProcessing ? "opacity-50 pointer-events-none" : ""}
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {isRowProcessing && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={request.photoUrl} alt={request.name} />
+                                <AvatarFallback>{getInitials(request.name)}</AvatarFallback>
+                              </Avatar>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{request.name}</TableCell>
                         <TableCell className="hidden md:table-cell">{request.email}</TableCell>
                         <TableCell className="hidden lg:table-cell">{request.primaryPhone}</TableCell>
                         <TableCell>
@@ -435,6 +443,7 @@ const AdminRegistrationRequests = () => {
                               size="icon"
                               onClick={() => handleViewDetails(request)}
                               title="Visualizar detalhes"
+                              disabled={isRowProcessing}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -446,6 +455,7 @@ const AdminRegistrationRequests = () => {
                                   onClick={() => handleApproveClick(request)}
                                   title="Aprovar"
                                   className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  disabled={isRowProcessing}
                                 >
                                   <Check className="h-4 w-4" />
                                 </Button>
@@ -455,6 +465,7 @@ const AdminRegistrationRequests = () => {
                                   onClick={() => handleRejectClick(request)}
                                   title="Rejeitar"
                                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  disabled={isRowProcessing}
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
@@ -466,13 +477,15 @@ const AdminRegistrationRequests = () => {
                               onClick={() => handleDeleteClick(request)}
                               title="Excluir permanentemente"
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              disabled={isRowProcessing}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
