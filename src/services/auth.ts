@@ -41,8 +41,8 @@ const USER_STORAGE_KEY = 'genesis_current_user';
 function saveUserToStorage(user: CurrentUser): void {
   try {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  } catch (error) {
-    console.error('[Auth] Error saving user to storage:', error);
+  } catch {
+    // Silently fail - storage might be full or unavailable
   }
 }
 
@@ -52,8 +52,8 @@ function getUserFromStorage(): CurrentUser | null {
     if (data) {
       return JSON.parse(data) as CurrentUser;
     }
-  } catch (error) {
-    console.error('[Auth] Error reading user from storage:', error);
+  } catch {
+    // Silently fail - storage might be unavailable or data corrupted
   }
   return null;
 }
@@ -61,8 +61,8 @@ function getUserFromStorage(): CurrentUser | null {
 function removeUserFromStorage(): void {
   try {
     localStorage.removeItem(USER_STORAGE_KEY);
-  } catch (error) {
-    console.error('[Auth] Error removing user from storage:', error);
+  } catch {
+    // Silently fail - storage might be unavailable
   }
 }
 
@@ -80,8 +80,8 @@ export const authService = {
     try {
       const user = await api.get<CurrentUser>('/auth/me');
       saveUserToStorage(user);
-    } catch (error) {
-      console.error('[Auth] Error fetching user after login:', error);
+    } catch {
+      // Silently fail - user data will be fetched on next page load
     }
 
     return response;
@@ -143,8 +143,8 @@ export const authService = {
       try {
         const user = await api.get<CurrentUser>('/auth/me');
         saveUserToStorage(user);
-      } catch (error) {
-        console.error('[Auth] Error fetching user after password reset:', error);
+      } catch {
+        // Silently fail - user data will be fetched on next page load
       }
     }
 

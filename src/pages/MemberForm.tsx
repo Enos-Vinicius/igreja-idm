@@ -230,8 +230,8 @@ const MemberForm = () => {
         form.setValue('city', address.city);
         form.setValue('state', address.state);
       }
-    } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
+    } catch {
+      // Silently fail - user can fill address manually
     } finally {
       setIsLoadingCep(false);
     }

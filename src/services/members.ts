@@ -20,7 +20,6 @@ export const membersService = {
 
         // Se o cache é recente, usa ele
         if (age < CACHE_DURATION) {
-          console.log('[Cache] Usando dados em cache (membros)');
           return data;
         }
       }

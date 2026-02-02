@@ -94,8 +94,7 @@ const PrayerSection = () => {
         } else {
           throw new Error("reCAPTCHA não carregado");
         }
-      } catch (recaptchaError) {
-        console.error("Erro ao gerar token reCAPTCHA:", recaptchaError);
+      } catch {
         toast.error(
           "Erro de verificação. Por favor, recarregue a página e tente novamente."
         );

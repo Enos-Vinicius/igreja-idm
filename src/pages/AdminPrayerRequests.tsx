@@ -168,8 +168,8 @@ const AdminPrayerRequests = () => {
           prev.map((r) => (r.id === request.id ? { ...r, read: true } : r))
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
-      } catch (error) {
-        console.error('Error marking as read:', error);
+      } catch {
+        // Silently fail - request is already being viewed
       }
     }
   };

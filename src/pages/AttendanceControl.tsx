@@ -203,10 +203,9 @@ const AttendanceControl = () => {
           description: `Igreja mais próxima: ${nearestChurch}`,
         });
       },
-      (error) => {
-        console.log("Geolocation error:", error.message);
+      () => {
         setIsDetectingLocation(false);
-        // Não mostra erro - apenas não pré-seleciona
+        // Silently fail - user can select manually
       },
       {
         enableHighAccuracy: false,

@@ -336,8 +336,7 @@ const WorshipForm = () => {
 
       setSearchResults(results);
       setShowSearchResults(true);
-    } catch (error) {
-      console.error('YouTube search error:', error);
+    } catch {
       setSearchResults([]);
     } finally {
       setIsSearching(false);

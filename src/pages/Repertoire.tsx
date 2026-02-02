@@ -111,8 +111,8 @@ const Repertoire = () => {
       try {
         const results = await songsService.getAll(term);
         setSongs(results);
-      } catch (error) {
-        console.error("Search error:", error);
+      } catch {
+        // Silently fail - search will be empty
       }
     } else if (term.length === 0) {
       loadData();

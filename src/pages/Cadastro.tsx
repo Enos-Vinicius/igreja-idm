@@ -372,8 +372,6 @@ const Cadastro = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error) {
-      console.error('❌ Erro ao enviar solicitação:', error);
-
       // Get error message
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro ao enviar sua solicitação. Por favor, tente novamente.";
 
@@ -392,11 +390,6 @@ const Cadastro = () => {
         setIsDuplicateRequest(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        if (isRecaptchaError) {
-          console.error('⚠️ Erro de validação reCAPTCHA no backend');
-          console.error('💡 Verifique a configuração do reCAPTCHA no backend');
-        }
-
         toast({
           title: isRecaptchaError ? "Erro de validação reCAPTCHA" : "Erro ao enviar solicitação",
           description: errorMessage,

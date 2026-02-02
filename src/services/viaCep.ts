@@ -41,8 +41,7 @@ export const viaCepService = {
         city: data.localidade || '',
         state: data.uf || '',
       };
-    } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
+    } catch {
       return null;
     }
   },

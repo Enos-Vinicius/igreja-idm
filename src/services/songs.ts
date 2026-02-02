@@ -31,7 +31,6 @@ export const songsService = {
         const age = Date.now() - timestamp;
 
         if (age < CACHE_DURATION) {
-          console.log('[Cache] Usando dados em cache (louvores)');
           return data;
         }
       }

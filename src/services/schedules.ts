@@ -42,7 +42,6 @@ export const schedulesService = {
         const age = Date.now() - timestamp;
 
         if (age < CACHE_DURATION) {
-          console.log('[Cache] Usando dados em cache (escalas)');
           return data;
         }
       }

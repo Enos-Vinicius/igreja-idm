@@ -1,5 +1,5 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 import { Home, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoClean from "@/assets/logo-clean.png";
@@ -53,7 +53,6 @@ const promiseVerses: BibleVerse[] = [
 ];
 
 const NotFound = () => {
-  const location = useLocation();
   const navigate = useNavigate();
 
   // Select a random verse - useMemo ensures it stays the same during the component's lifecycle
@@ -62,12 +61,6 @@ const NotFound = () => {
     return promiseVerses[randomIndex];
   }, []);
 
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted to-background flex flex-col items-center justify-center p-6">

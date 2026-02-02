@@ -114,8 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const currentUser = await authService.fetchAndCacheUser();
       setUser(currentUser);
-    } catch (error) {
-      console.error('[Auth] Error loading user:', error);
+    } catch {
       authService.logoutLocal();
       setUser(null);
     } finally {
@@ -126,7 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Listen for session expired events
   useEffect(() => {
     const handleSessionExpired = () => {
-      console.log('[Auth] Session expired event received');
       // Limpa dados do usuário do cache quando a sessão expira
       authService.logoutLocal();
       setUser(null);
@@ -176,8 +174,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const currentUser = await authService.fetchAndCacheUser();
       setUser(currentUser);
-    } catch (error) {
-      console.error('[Auth] Error loading user after password change:', error);
+    } catch {
+      // Error loading user after password change
     }
   };
 
