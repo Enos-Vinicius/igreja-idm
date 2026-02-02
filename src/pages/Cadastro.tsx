@@ -190,6 +190,44 @@ const Cadastro = () => {
     }
   }, [hasNoEmail, form]);
 
+  // Try to get user's location to pre-fill church field
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            // Use Nominatim (OpenStreetMap) for reverse geocoding
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+              { headers: { 'Accept-Language': 'pt-BR' } }
+            );
+            const data = await response.json();
+
+            const city = (data.address?.city || data.address?.town || data.address?.municipality || '').toLowerCase();
+
+            // Check if city matches one of our churches (only if not already selected)
+            const currentChurch = form.getValues('church');
+            if (!currentChurch) {
+              if (city.includes('uberaba')) {
+                form.setValue('church', 'Uberaba');
+              } else if (city.includes('conceição das alagoas') || city.includes('conceicao das alagoas')) {
+                form.setValue('church', 'Conceição das Alagoas');
+              }
+            }
+          } catch (error) {
+            // Silently fail - user can select manually
+            console.log('Could not determine location for church pre-fill');
+          }
+        },
+        () => {
+          // Silently fail if permission denied - user can select manually
+        },
+        { timeout: 10000, enableHighAccuracy: false }
+      );
+    }
+  }, [form]);
+
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
