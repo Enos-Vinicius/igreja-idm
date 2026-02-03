@@ -20,6 +20,7 @@ import { authService } from "@/services/auth";
 import logoWhite from "@/assets/logo-white.png";
 
 const setPasswordSchema = z.object({
+  email: z.string().email("Email inválido"),
   newPassword: z
     .string()
     .min(6, "A senha deve ter no mínimo 6 caracteres")
@@ -73,6 +74,7 @@ const SetPassword = () => {
   const form = useForm<SetPasswordFormData>({
     resolver: zodResolver(setPasswordSchema),
     defaultValues: {
+      email: "",
       newPassword: "",
       confirmPassword: "",
     },
@@ -107,8 +109,17 @@ const SetPassword = () => {
 
     try {
       await authService.setPassword(token, data.newPassword);
-      toast.success("Senha criada com sucesso!");
-      setIsSuccess(true);
+
+      // Após criar a senha, faz login automático
+      try {
+        await authService.login({ email: data.email, password: data.newPassword });
+        toast.success("Senha criada com sucesso! Redirecionando...");
+        navigate("/dashboard");
+      } catch (loginError) {
+        // Se o login falhar, mostra tela de sucesso e pede login manual
+        toast.success("Senha criada com sucesso!");
+        setIsSuccess(true);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao criar senha";
 
@@ -177,6 +188,26 @@ const SetPassword = () => {
               <CardContent>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="seu@email.com"
+                              autoComplete="email"
+                              {...field}
+                              disabled={isLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="newPassword"
