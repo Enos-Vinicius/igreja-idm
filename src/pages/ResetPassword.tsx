@@ -21,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import logoWhite from "@/assets/logo-white.png";
 
 const resetPasswordSchema = z.object({
+  email: z.string().email("Email inválido"),
   newPassword: z
     .string()
     .min(6, "A senha deve ter no mínimo 6 caracteres")
@@ -75,6 +76,7 @@ const ResetPassword = () => {
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
+      email: "",
       newPassword: "",
       confirmPassword: "",
     },
@@ -110,15 +112,24 @@ const ResetPassword = () => {
 
     try {
       const response = await authService.resetPassword(token, data.newPassword);
-      toast.success("Senha alterada com sucesso!");
 
       // Se o backend retornou token, faz login automático
       if (response.token) {
         syncUserAfterPasswordReset();
+        toast.success("Senha alterada com sucesso! Redirecionando...");
         navigate("/dashboard");
       } else {
-        // Fallback: mostra tela de sucesso se não tiver login automático
-        setIsSuccess(true);
+        // Fallback: faz login automático usando email e nova senha
+        try {
+          await authService.login({ email: data.email, password: data.newPassword });
+          syncUserAfterPasswordReset();
+          toast.success("Senha alterada com sucesso! Redirecionando...");
+          navigate("/dashboard");
+        } catch (loginError) {
+          // Se o login falhar, mostra tela de sucesso e pede login manual
+          toast.success("Senha alterada com sucesso!");
+          setIsSuccess(true);
+        }
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao redefinir senha";
@@ -192,6 +203,26 @@ const ResetPassword = () => {
               <CardContent>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="seu@email.com"
+                              autoComplete="email"
+                              {...field}
+                              disabled={isLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="newPassword"
