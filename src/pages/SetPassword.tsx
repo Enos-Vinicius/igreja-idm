@@ -63,6 +63,7 @@ const SetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const emailParam = searchParams.get("email");
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -100,6 +101,13 @@ const SetPassword = () => {
       setErrorMessage("Link de ativação não encontrado. Solicite um novo link.");
     }
   }, [token]);
+
+  // Preenche o email automaticamente se vier como parâmetro
+  useEffect(() => {
+    if (emailParam) {
+      form.setValue("email", emailParam);
+    }
+  }, [emailParam, form]);
 
   const onSubmit = async (data: SetPasswordFormData) => {
     if (!token) return;

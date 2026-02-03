@@ -64,6 +64,7 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const emailParam = searchParams.get("email");
   const { syncUserAfterPasswordReset } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -103,6 +104,13 @@ const ResetPassword = () => {
       setErrorMessage("Token de recuperação não encontrado. Solicite um novo link de recuperação de senha.");
     }
   }, [token]);
+
+  // Preenche o email automaticamente se vier como parâmetro
+  useEffect(() => {
+    if (emailParam) {
+      form.setValue("email", emailParam);
+    }
+  }, [emailParam, form]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!token) return;
