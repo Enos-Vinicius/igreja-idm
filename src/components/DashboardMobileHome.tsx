@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -16,6 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import logoWhite from "@/assets/logo-white.png";
+import { UserRole } from "@/types/user";
+import { canAccessFeature, Feature } from "@/config/permissions";
 
 interface DashboardCard {
   id: string;
@@ -23,12 +26,13 @@ interface DashboardCard {
   description: string;
   icon: React.ElementType;
   path: string;
-  color: string;
+  feature?: Feature; // Optional feature for permission checking
 }
 
 const DashboardMobileHome = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const userRole = (user?.role as UserRole) || "member";
 
   const handleLogout = () => {
     logout();
@@ -42,7 +46,7 @@ const DashboardMobileHome = () => {
       description: "Estatísticas e gráficos",
       icon: LayoutDashboard,
       path: "/dashboard",
-      color: "from-blue-500 to-blue-600",
+      // Dashboard is always visible
     },
     {
       id: "members",
@@ -50,7 +54,7 @@ const DashboardMobileHome = () => {
       description: "Gerenciar membros da igreja",
       icon: Users,
       path: "/members",
-      color: "from-purple-500 to-purple-600",
+      feature: "members",
     },
     {
       id: "requests",
@@ -58,7 +62,7 @@ const DashboardMobileHome = () => {
       description: "Pedidos de cadastro",
       icon: ClipboardList,
       path: "/admin/solicitacoes",
-      color: "from-orange-500 to-orange-600",
+      feature: "registration-requests",
     },
     {
       id: "repertoire",
@@ -66,7 +70,7 @@ const DashboardMobileHome = () => {
       description: "Músicas e louvor",
       icon: Music,
       path: "/repertoire",
-      color: "from-pink-500 to-pink-600",
+      feature: "songs",
     },
     {
       id: "schedules",
@@ -74,7 +78,7 @@ const DashboardMobileHome = () => {
       description: "Escalas de louvor",
       icon: CalendarDays,
       path: "/schedules",
-      color: "from-indigo-500 to-indigo-600",
+      feature: "schedules",
     },
     {
       id: "attendance",
@@ -82,7 +86,7 @@ const DashboardMobileHome = () => {
       description: "Controle de presença",
       icon: ClipboardCheck,
       path: "/attendance",
-      color: "from-teal-500 to-teal-600",
+      feature: "attendance",
     },
     {
       id: "calendar",
@@ -90,7 +94,7 @@ const DashboardMobileHome = () => {
       description: "Eventos e programações",
       icon: CalendarIcon,
       path: "/calendar",
-      color: "from-cyan-500 to-cyan-600",
+      // Calendar might not have specific permissions yet
     },
     {
       id: "prayer-requests",
@@ -98,7 +102,7 @@ const DashboardMobileHome = () => {
       description: "Gerenciar pedidos de oração",
       icon: Heart,
       path: "/admin/prayer-requests",
-      color: "from-rose-500 to-rose-600",
+      feature: "prayer-requests",
     },
     {
       id: "users",
@@ -106,9 +110,19 @@ const DashboardMobileHome = () => {
       description: "Administração de usuários",
       icon: Settings,
       path: "/users",
-      color: "from-red-500 to-red-600",
+      feature: "users",
     },
   ];
+
+  // Filter cards based on user role permissions
+  const filteredCards = useMemo(() => {
+    return dashboardCards.filter((card) => {
+      // If card has no feature requirement, show it to everyone
+      if (!card.feature) return true;
+      // Check if user has permission for this feature
+      return canAccessFeature(userRole, card.feature);
+    });
+  }, [userRole]);
 
   const handleCardClick = (path: string, cardId: string) => {
     if (cardId === "dashboard") {
@@ -143,26 +157,31 @@ const DashboardMobileHome = () => {
       {/* Cards Grid */}
       <div className="p-4">
         <div className="grid grid-cols-2 gap-4">
-        {dashboardCards.map((card) => {
+        {filteredCards.map((card) => {
           const Icon = card.icon;
           return (
             <Card
               key={card.id}
-              className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95"
+              className="cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.97] aspect-square rounded-2xl"
               onClick={() => handleCardClick(card.path, card.id)}
             >
-              <CardContent className="p-6 flex flex-col items-center justify-center text-center min-h-[140px]">
+              <CardContent className="p-4 h-full flex flex-col items-center justify-center text-center gap-3">
                 <div
-                  className={`w-12 h-12 rounded-full bg-gradient-to-br ${card.color} flex items-center justify-center mb-3`}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, #00d4ff 0%, #0099ff 50%, #0066ff 100%)"
+                  }}
                 >
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="font-semibold text-sm text-secondary mb-1">
-                  {card.title}
-                </h3>
-                <p className="text-xs text-muted-foreground leading-tight">
-                  {card.description}
-                </p>
+                <div>
+                  <h3 className="font-semibold text-sm text-foreground">
+                    {card.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {card.description}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           );

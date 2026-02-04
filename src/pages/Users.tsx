@@ -40,6 +40,18 @@ import MobileBackButton from "@/components/MobileBackButton";
 
 type ModalType = "create" | "edit" | "password" | null;
 
+type UserRole = "admin" | "admin2" | "secretary" | "treasurer" | "receptionist" | "leader" | "member";
+
+const roleLabels: Record<UserRole, string> = {
+  admin: "Administrador",
+  admin2: "Administrador 2",
+  secretary: "Secretária",
+  treasurer: "Tesoureiro",
+  receptionist: "Recepcionista",
+  leader: "Líder",
+  member: "Membro",
+};
+
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +62,7 @@ const Users = () => {
   // Form states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "member">("member");
+  const [role, setRole] = useState<UserRole>("member");
 
   useEffect(() => {
     loadUsers();
@@ -209,7 +221,7 @@ const Users = () => {
                     <TableHead className="w-12">ID</TableHead>
                     <TableHead>Membro</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Função</TableHead>
+                    <TableHead>Perfil</TableHead>
                     <TableHead>Criado em</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -254,9 +266,9 @@ const Users = () => {
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           <Badge
-                            variant={user.role === "admin" ? "default" : "secondary"}
+                            variant={user.role === "admin" || user.role === "admin2" ? "default" : "secondary"}
                           >
-                            {user.role === "admin" ? "Administrador" : "Membro"}
+                            {roleLabels[user.role as UserRole] || user.role}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -329,14 +341,19 @@ const Users = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="role">Função *</Label>
-                <Select value={role} onValueChange={(v: "admin" | "member") => setRole(v)} disabled={isSubmitting}>
+                <Label htmlFor="role">Perfil *</Label>
+                <Select value={role} onValueChange={(v: UserRole) => setRole(v)} disabled={isSubmitting}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma função" />
+                    <SelectValue placeholder="Selecione um perfil" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="member">Membro</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="admin2">Administrador 2</SelectItem>
+                    <SelectItem value="secretary">Secretária</SelectItem>
+                    <SelectItem value="treasurer">Tesoureiro</SelectItem>
+                    <SelectItem value="receptionist">Recepcionista</SelectItem>
+                    <SelectItem value="leader">Líder</SelectItem>
+                    <SelectItem value="member">Membro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -378,14 +395,19 @@ const Users = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-role">Função *</Label>
-                <Select value={role} onValueChange={(v: "admin" | "member") => setRole(v)} disabled={isSubmitting}>
+                <Label htmlFor="edit-role">Perfil *</Label>
+                <Select value={role} onValueChange={(v: UserRole) => setRole(v)} disabled={isSubmitting}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma função" />
+                    <SelectValue placeholder="Selecione um perfil" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="member">Membro</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="admin2">Administrador 2</SelectItem>
+                    <SelectItem value="secretary">Secretária</SelectItem>
+                    <SelectItem value="treasurer">Tesoureiro</SelectItem>
+                    <SelectItem value="receptionist">Recepcionista</SelectItem>
+                    <SelectItem value="leader">Líder</SelectItem>
+                    <SelectItem value="member">Membro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

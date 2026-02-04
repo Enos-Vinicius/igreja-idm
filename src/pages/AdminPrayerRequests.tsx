@@ -61,7 +61,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const ITEMS_PER_PAGE = 10;
 
 const AdminPrayerRequests = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [requests, setRequests] = useState<PrayerRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -161,11 +161,11 @@ const AdminPrayerRequests = () => {
     setIsDetailsOpen(true);
 
     // Mark as read if not already
-    if (!request.read) {
+    if (!request.read && user) {
       try {
-        await prayerRequestsService.markAsRead(request.id);
+        await prayerRequestsService.markAsRead(request.id, user.id);
         setRequests((prev) =>
-          prev.map((r) => (r.id === request.id ? { ...r, read: true } : r))
+          prev.map((r) => (r.id === request.id ? { ...r, read: true, readByName: user.member?.name } : r))
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
       } catch {
@@ -175,18 +175,20 @@ const AdminPrayerRequests = () => {
   };
 
   const handleToggleRead = async (request: PrayerRequest) => {
+    if (!user) return;
+
     try {
       if (request.read) {
         await prayerRequestsService.markAsUnread(request.id);
         setRequests((prev) =>
-          prev.map((r) => (r.id === request.id ? { ...r, read: false } : r))
+          prev.map((r) => (r.id === request.id ? { ...r, read: false, readByName: undefined } : r))
         );
         setUnreadCount((prev) => prev + 1);
         toast.success('Marcado como não lido');
       } else {
-        await prayerRequestsService.markAsRead(request.id);
+        await prayerRequestsService.markAsRead(request.id, user.id);
         setRequests((prev) =>
-          prev.map((r) => (r.id === request.id ? { ...r, read: true } : r))
+          prev.map((r) => (r.id === request.id ? { ...r, read: true, readByName: user.member?.name } : r))
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
         toast.success('Marcado como lido');
@@ -340,13 +342,14 @@ const AdminPrayerRequests = () => {
                     <TableHead className="hidden md:table-cell">Pedido</TableHead>
                     <TableHead className="hidden lg:table-cell">Telefone</TableHead>
                     <TableHead className="hidden sm:table-cell">Data</TableHead>
+                    <TableHead className="hidden lg:table-cell">Lido por</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         <div className="flex items-center justify-center gap-2">
                           <Loader2 className="h-5 w-5 animate-spin" />
                           <span>Carregando...</span>
@@ -355,7 +358,7 @@ const AdminPrayerRequests = () => {
                     </TableRow>
                   ) : filteredRequests.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <Heart className="h-8 w-8" />
                           <p>Nenhum pedido de oração encontrado</p>
@@ -401,6 +404,9 @@ const AdminPrayerRequests = () => {
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           {formatDateShort(request.createdAt)}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-muted-foreground">
+                          {request.readByName || '-'}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
@@ -510,11 +516,19 @@ const AdminPrayerRequests = () => {
                 </div>
 
                 {/* Status */}
-                <div className="flex items-center gap-2 pt-2 border-t">
-                  <span className="text-sm text-muted-foreground">Status:</span>
-                  <Badge variant={selectedRequest.read ? 'secondary' : 'default'}>
-                    {selectedRequest.read ? 'Lido' : 'Não lido'}
-                  </Badge>
+                <div className="flex flex-col gap-2 pt-2 border-t">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Status:</span>
+                    <Badge variant={selectedRequest.read ? 'secondary' : 'default'}>
+                      {selectedRequest.read ? 'Lido' : 'Não lido'}
+                    </Badge>
+                  </div>
+                  {selectedRequest.read && selectedRequest.readByName && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Lido por:</span>
+                      <span className="text-sm font-medium">{selectedRequest.readByName}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

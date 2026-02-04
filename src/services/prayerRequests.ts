@@ -13,6 +13,7 @@ export interface PrayerRequest {
   phone?: string;
   content: string;
   read: boolean;
+  readByName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,8 +57,8 @@ export const prayerRequestsService = {
     return api.get<PrayerRequest>(`/prayer-requests/${id}`);
   },
 
-  async markAsRead(id: number): Promise<void> {
-    await api.patch(`/prayer-requests/${id}/read`);
+  async markAsRead(id: number, readBy: number): Promise<void> {
+    await api.patch(`/prayer-requests/${id}/read`, { readBy });
   },
 
   async markAsUnread(id: number): Promise<void> {

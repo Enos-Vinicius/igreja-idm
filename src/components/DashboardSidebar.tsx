@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -17,6 +17,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logoWhite from "@/assets/logo-white.png";
+import { UserRole } from "@/types/user";
+import { canAccessFeature, Feature } from "@/config/permissions";
 
 interface DashboardSidebarProps {
   user: {
@@ -33,6 +35,7 @@ interface MenuItem {
   label: string;
   icon: typeof LayoutDashboard;
   path: string;
+  feature?: Feature; // Optional feature for permission checking
 }
 
 interface MenuGroup {
@@ -51,6 +54,7 @@ const menuGroups: MenuGroup[] = [
         label: "Dashboard",
         icon: LayoutDashboard,
         path: "/dashboard",
+        // Dashboard is always visible
       },
     ],
   },
@@ -63,12 +67,14 @@ const menuGroups: MenuGroup[] = [
         label: "Membros",
         icon: Users,
         path: "/members",
+        feature: "members",
       },
       {
         id: "solicitacoes",
         label: "Solicitações",
         icon: ClipboardList,
         path: "/admin/solicitacoes",
+        feature: "registration-requests",
       },
     ],
   },
@@ -81,12 +87,14 @@ const menuGroups: MenuGroup[] = [
         label: "Repertório",
         icon: Music,
         path: "/repertoire",
+        feature: "songs",
       },
       {
         id: "schedules",
         label: "Escalas",
         icon: Calendar,
         path: "/schedules",
+        feature: "schedules",
       },
     ],
   },
@@ -99,12 +107,14 @@ const menuGroups: MenuGroup[] = [
         label: "Presença",
         icon: CalendarCheck,
         path: "/attendance",
+        feature: "attendance",
       },
       {
         id: "calendar",
         label: "Calendário",
         icon: CalendarCheck,
         path: "/calendar",
+        // Calendar might not have specific permissions yet
       },
     ],
   },
@@ -117,16 +127,28 @@ const menuGroups: MenuGroup[] = [
         label: "Pedidos de Oração",
         icon: Heart,
         path: "/admin/prayer-requests",
+        feature: "prayer-requests",
       },
       {
         id: "users",
         label: "Usuários",
         icon: Settings,
         path: "/users",
+        feature: "users",
       },
     ],
   },
 ];
+
+const roleLabels: Record<UserRole, string> = {
+  admin: "Administrador",
+  admin2: "Administrador 2",
+  secretary: "Secretária",
+  treasurer: "Tesoureiro",
+  receptionist: "Recepcionista",
+  leader: "Líder",
+  member: "Membro",
+};
 
 const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -135,8 +157,25 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
 
   const initials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
   const displayName = `${user.firstName} ${user.lastName}`;
+  const userRole = (user.role as UserRole) || "member";
+  const roleLabel = roleLabels[userRole] || "Membro";
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Filter menu items based on user role permissions
+  const filteredMenuGroups = useMemo(() => {
+    return menuGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => {
+          // If item has no feature requirement, show it to everyone
+          if (!item.feature) return true;
+          // Check if user has permission for this feature
+          return canAccessFeature(userRole, item.feature);
+        }),
+      }))
+      .filter((group) => group.items.length > 0); // Remove empty groups
+  }, [userRole]);
 
   return (
     <aside
@@ -184,7 +223,7 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
         >
           <p className="text-sm font-medium text-white whitespace-nowrap">{displayName}</p>
           <p className="text-xs text-white/60 whitespace-nowrap">
-            {user.role === 'admin' ? 'Administrador' : 'Membro'}
+            {roleLabel}
           </p>
         </div>
       </div>
@@ -192,7 +231,7 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
       {/* Navigation */}
       <nav className="flex-1 py-4 overflow-y-auto">
         <div className="space-y-4 px-2">
-          {menuGroups.map((group, groupIndex) => (
+          {filteredMenuGroups.map((group, groupIndex) => (
             <div key={group.id}>
               {/* Group separator - not shown for first group */}
               {groupIndex > 0 && (
