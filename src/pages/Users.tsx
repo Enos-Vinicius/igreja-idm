@@ -37,6 +37,8 @@ import { User } from "@/types/user";
 import { usersService } from "@/services/users";
 import DashboardLayout from "@/components/DashboardLayout";
 import MobileBackButton from "@/components/MobileBackButton";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasPermission } from "@/config/permissions";
 
 type ModalType = "create" | "edit" | "password" | null;
 
@@ -53,6 +55,7 @@ const roleLabels: Record<UserRole, string> = {
 };
 
 const Users = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalType, setModalType] = useState<ModalType>(null);
@@ -203,10 +206,12 @@ const Users = () => {
           <h1 className="text-2xl font-bold text-foreground">
             Gestão de Usuários
           </h1>
+          {currentUser && hasPermission(currentUser.role, 'users', 'create') && (
             <Button onClick={openCreateModal}>
               <Plus className="h-4 w-4 mr-2" />
               Novo Usuário
             </Button>
+          )}
           </div>
 
           {/* Table Card */}
@@ -292,15 +297,17 @@ const Users = () => {
                             >
                               <KeyRound className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(user)}
-                              title="Excluir"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {currentUser && hasPermission(currentUser.role, 'users', 'delete') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(user)}
+                                title="Excluir"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

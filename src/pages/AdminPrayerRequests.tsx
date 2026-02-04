@@ -57,11 +57,12 @@ import { prayerRequestsService, PrayerRequest } from '@/services/prayerRequests'
 import DashboardLayout from '@/components/DashboardLayout';
 import MobileBackButton from '@/components/MobileBackButton';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission } from '@/config/permissions';
 
 const ITEMS_PER_PAGE = 10;
 
 const AdminPrayerRequests = () => {
-  const { isAdmin, user } = useAuth();
+  const { user } = useAuth();
   const [requests, setRequests] = useState<PrayerRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -418,7 +419,7 @@ const AdminPrayerRequests = () => {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {isAdmin && (
+                            {user && hasPermission(user.role, 'prayer-requests', 'delete') && (
                               <Button
                                 variant="ghost"
                                 size="icon"

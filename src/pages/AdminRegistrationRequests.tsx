@@ -65,8 +65,11 @@ import {
 } from '@/types/registrationRequest';
 import DashboardLayout from '@/components/DashboardLayout';
 import MobileBackButton from '@/components/MobileBackButton';
+import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission } from '@/config/permissions';
 
 const AdminRegistrationRequests = () => {
+  const { user: currentUser } = useAuth();
   const [requests, setRequests] = useState<RegistrationRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -480,16 +483,18 @@ const AdminRegistrationRequests = () => {
                                 </Button>
                               </>
                             )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteClick(request)}
-                              title="Excluir permanentemente"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              disabled={isRowProcessing}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {currentUser && hasPermission(currentUser.role, 'registration-requests', 'delete') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteClick(request)}
+                                title="Excluir permanentemente"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                disabled={isRowProcessing}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

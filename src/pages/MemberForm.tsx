@@ -36,6 +36,9 @@ import {
   CHURCH_LOCATIONS,
 } from '@/types/member';
 import DashboardLayout from '@/components/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission } from '@/config/permissions';
+import { useEffect as useEffectPermission } from 'react';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome deve ter no máximo 100 caracteres'),
@@ -103,9 +106,21 @@ function formatCEP(value: string): string {
 }
 
 const MemberForm = () => {
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = !!id;
+
+  // Verificar permissões
+  useEffectPermission(() => {
+    if (!currentUser) return;
+
+    const requiredAction = isEditing ? 'edit' : 'create';
+    if (!hasPermission(currentUser.role, 'members', requiredAction)) {
+      toast.error('Você não tem permissão para ' + (isEditing ? 'editar' : 'criar') + ' membros');
+      navigate('/members', { replace: true });
+    }
+  }, [currentUser, isEditing, navigate]);
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);

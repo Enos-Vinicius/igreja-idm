@@ -52,6 +52,8 @@ import { ScheduleType, SCHEDULE_CATEGORIES, CHURCHES } from "@/types/schedule";
 import { Song } from "@/types/worship";
 import { Member } from "@/types/member";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasPermission } from "@/config/permissions";
 
 const worshipScheduleSchema = z.object({
   date: z.date({ required_error: "Selecione a data do culto" }),
@@ -70,10 +72,26 @@ const preachingScheduleSchema = z.object({
 });
 
 const ScheduleForm = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
   const isEditing = Boolean(id);
+
+  // Verificar permissões
+  useEffect(() => {
+    if (!user) return;
+
+    const requiredAction = isEditing ? 'edit' : 'create';
+    if (!hasPermission(user.role, 'schedules', requiredAction)) {
+      toast({
+        title: 'Sem permissão',
+        description: 'Você não tem permissão para ' + (isEditing ? 'editar' : 'criar') + ' escalas',
+        variant: 'destructive',
+      });
+      navigate('/schedules', { replace: true });
+    }
+  }, [user, isEditing, navigate, toast]);
 
   const [scheduleType, setScheduleType] = useState<ScheduleType>("Louvor");
   const [selectedSongs, setSelectedSongs] = useState<number[]>([]);

@@ -29,8 +29,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { songsService } from "@/services/songs";
 import { Song, SongStats } from "@/types/worship";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasPermission } from "@/config/permissions";
 
 const Repertoire = () => {
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -162,10 +165,12 @@ const Repertoire = () => {
               Gerencie os louvores e músicas do ministério
             </p>
           </div>
-          <Button onClick={() => navigate("/repertoire/new")} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Louvor
-          </Button>
+          {currentUser && hasPermission(currentUser.role, 'songs', 'create') && (
+            <Button onClick={() => navigate("/repertoire/new")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Novo Louvor
+            </Button>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -332,37 +337,39 @@ const Repertoire = () => {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" disabled={isDeleting === song.id}>
-                                  {isDeleting === song.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  )}
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Excluir louvor?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Tem certeza que deseja excluir "{song.title}"?
-                                    Esta ação não pode ser desfeita.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(song.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Excluir
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            {currentUser && hasPermission(currentUser.role, 'songs', 'delete') && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" disabled={isDeleting === song.id}>
+                                    {isDeleting === song.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    )}
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Excluir louvor?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir "{song.title}"?
+                                      Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(song.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

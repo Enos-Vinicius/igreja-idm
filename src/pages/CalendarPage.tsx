@@ -12,6 +12,8 @@ import MobileBackButton from "@/components/MobileBackButton";
 import { mockSchedules } from "@/data/mockSchedules";
 import { Schedule } from "@/types/schedule";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasPermission } from "@/config/permissions";
 
 type ViewType = "day" | "week" | "month" | "year";
 
@@ -35,6 +37,7 @@ const scheduleToEvents = (schedules: Schedule[]) => {
 const hours = Array.from({ length: 24 }, (_, i) => i);
 
 export default function CalendarPage() {
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>("month");
@@ -374,10 +377,12 @@ export default function CalendarPage() {
             <h1 className="text-3xl font-bold text-foreground">Calendário</h1>
             <p className="text-muted-foreground">Gerencie eventos e programações</p>
           </div>
-          <Button className="gap-2" onClick={() => navigate("/schedules/new")}>
-            <Plus className="h-4 w-4" />
-            Nova Escala
-          </Button>
+          {currentUser && hasPermission(currentUser.role, 'schedules', 'create') && (
+            <Button className="gap-2" onClick={() => navigate("/schedules/new")}>
+              <Plus className="h-4 w-4" />
+              Nova Escala
+            </Button>
+          )}
         </div>
 
         {/* Calendar Card */}

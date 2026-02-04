@@ -32,8 +32,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { schedulesService } from "@/services/schedules";
 import { Schedule, ScheduleStats } from "@/types/schedule";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasPermission } from "@/config/permissions";
 
 const Schedules = () => {
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -154,10 +157,12 @@ const Schedules = () => {
               Gerencie as escalas de louvor e pregação
             </p>
           </div>
-          <Button onClick={() => navigate("/schedules/new")} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Escala
-          </Button>
+          {currentUser && hasPermission(currentUser.role, 'schedules', 'create') && (
+            <Button onClick={() => navigate("/schedules/new")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Escala
+            </Button>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -340,38 +345,40 @@ const Schedules = () => {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" disabled={isDeleting === schedule.id}>
-                                  {isDeleting === schedule.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  )}
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Excluir escala?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Tem certeza que deseja excluir esta escala de{" "}
-                                    {format(new Date(schedule.date), "dd/MM/yyyy")}? Esta ação não
-                                    pode ser desfeita.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(schedule.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Excluir
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            {currentUser && hasPermission(currentUser.role, 'schedules', 'delete') && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" disabled={isDeleting === schedule.id}>
+                                    {isDeleting === schedule.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    )}
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Excluir escala?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir esta escala de{" "}
+                                      {format(new Date(schedule.date), "dd/MM/yyyy")}? Esta ação não
+                                      pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(schedule.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

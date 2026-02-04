@@ -39,6 +39,7 @@ import { songsService } from "@/services/songs";
 import { MUSICAL_KEYS, SongMinister } from "@/types/worship";
 import { cn } from "@/lib/utils";
 import { environment } from "@/config/environment";
+import { hasPermission } from "@/config/permissions";
 
 const worshipSchema = z.object({
   title: z.string().min(1, "Título é obrigatório").max(100, "Título muito longo"),
@@ -202,6 +203,21 @@ const WorshipForm = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const isEditing = Boolean(id);
+
+  // Verificar permissões
+  useEffect(() => {
+    if (!user) return;
+
+    const requiredAction = isEditing ? 'edit' : 'create';
+    if (!hasPermission(user.role, 'songs', requiredAction)) {
+      toast({
+        title: 'Sem permissão',
+        description: 'Você não tem permissão para ' + (isEditing ? 'editar' : 'criar') + ' louvores',
+        variant: 'destructive',
+      });
+      navigate('/repertoire', { replace: true });
+    }
+  }, [user, isEditing, navigate, toast]);
 
   const [availableMinisters, setAvailableMinisters] = useState<SongMinister[]>([]);
   const [selectedMinisterIds, setSelectedMinisterIds] = useState<string[]>([]);

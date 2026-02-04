@@ -79,7 +79,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
 
   // Leader - Ministry leader (schedules, worship, attendance)
   leader: [
-    { feature: 'members', actions: ['list'] },
+    { feature: 'members', actions: ['list', 'create', 'edit', 'upload-photo'] },
     { feature: 'schedules', actions: ['list', 'create', 'edit'] },
     { feature: 'songs', actions: ['list', 'create', 'edit'] },
     { feature: 'attendance', actions: ['list', 'register'] },

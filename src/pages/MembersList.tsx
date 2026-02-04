@@ -41,8 +41,11 @@ import {
 } from '@/types/member';
 import DashboardLayout from '@/components/DashboardLayout';
 import MobileBackButton from '@/components/MobileBackButton';
+import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission } from '@/config/permissions';
 
 const MembersList = () => {
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [members, setMembers] = useState<Member[]>([]);
@@ -161,10 +164,12 @@ const MembersList = () => {
               Gerencie os membros da igreja
             </p>
           </div>
-          <Button onClick={() => navigate('/members/new')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Membro
-          </Button>
+          {currentUser && hasPermission(currentUser.role, 'members', 'create') && (
+            <Button onClick={() => navigate('/members/new')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Membro
+            </Button>
+          )}
         </div>
 
         {/* Filters */}
@@ -298,16 +303,18 @@ const MembersList = () => {
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(member)}
-                                className="text-destructive hover:text-destructive"
-                                title="Excluir"
-                                disabled={isRowDeleting}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              {currentUser && hasPermission(currentUser.role, 'members', 'delete') && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDelete(member)}
+                                  className="text-destructive hover:text-destructive"
+                                  title="Excluir"
+                                  disabled={isRowDeleting}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
