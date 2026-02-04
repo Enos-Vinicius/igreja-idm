@@ -123,7 +123,8 @@ export const authService = {
   removeToken,
 
   isAdmin(user: CurrentUser | null): boolean {
-    return user?.role?.toLowerCase() === 'admin';
+    // All roles except 'member' should have access to the dashboard
+    return user?.role?.toLowerCase() !== 'member';
   },
 
   // Solicita email de recuperação de senha
