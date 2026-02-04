@@ -411,7 +411,7 @@ const ScheduleForm = () => {
                       control={worshipForm.control}
                       name="date"
                       render={({ field }) => (
-                        <FormItem className="flex flex-col">
+                        <FormItem>
                           <FormLabel>Data do Culto</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
@@ -647,7 +647,7 @@ const ScheduleForm = () => {
                       control={preachingForm.control}
                       name="date"
                       render={({ field }) => (
-                        <FormItem className="flex flex-col">
+                        <FormItem>
                           <FormLabel>Data do Culto</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
