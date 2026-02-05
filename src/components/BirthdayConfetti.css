@@ -1,0 +1,117 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes cakeBounce {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  50% {
+    transform: scale(1) rotate(0deg);
+  }
+  75% {
+    transform: scale(1.2) rotate(-10deg);
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    top: -10%;
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+  100% {
+    top: 110%;
+    opacity: 0;
+    transform: rotate(720deg);
+  }
+}
+
+@keyframes balloonFloat {
+  0% {
+    bottom: -20%;
+    transform: scale(0) translateX(0);
+  }
+  10% {
+    transform: scale(1) translateX(0);
+  }
+  25% {
+    transform: scale(1) translateX(30px);
+  }
+  50% {
+    transform: scale(1) translateX(-30px);
+  }
+  75% {
+    transform: scale(1) translateX(30px);
+  }
+  100% {
+    bottom: 110%;
+    transform: scale(1) translateX(0);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.animate-cake-bounce {
+  animation: cakeBounce 1s ease-in-out infinite;
+}
+
+.confetti-piece {
+  animation: confettiFall 4s linear forwards;
+}
+
+.balloon {
+  animation: balloonFloat 8s ease-out forwards;
+}
+
+.birthday-card {
+  cursor: pointer;
+}
+
+.birthday-card:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+.animated-gradient {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab, #f093fb, #f5576c, #4facfe, #00f2fe);
+  background-size: 400% 400%;
+  animation: gradientShift 10s ease infinite;
+}
