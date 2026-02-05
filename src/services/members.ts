@@ -57,6 +57,12 @@ export const membersService = {
     return result;
   },
 
+  async updateMe(member: Partial<Member>): Promise<Member> {
+    const result = await api.put<Member>('/members/me', member);
+    this.clearCache(); // Limpa cache após atualizar
+    return result;
+  },
+
   async delete(id: number | string): Promise<void> {
     await api.delete(`/members/${id}`);
     this.clearCache(); // Limpa cache após deletar
