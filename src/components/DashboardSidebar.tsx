@@ -13,6 +13,7 @@ import {
   Music,
   Calendar,
   Heart,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,6 +50,13 @@ const menuGroups: MenuGroup[] = [
     id: "main",
     label: "Principal",
     items: [
+      {
+        id: "member-area",
+        label: "Área de Membro",
+        icon: CreditCard,
+        path: "/member-home",
+        // Member area for non-admin users
+      },
       {
         id: "dashboard",
         label: "Dashboard",
@@ -164,10 +172,15 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
 
   // Filter menu items based on user role permissions
   const filteredMenuGroups = useMemo(() => {
+    const isAdmin = userRole === "admin" || userRole === "admin2";
+
     return menuGroups
       .map((group) => ({
         ...group,
         items: group.items.filter((item) => {
+          // Hide "Área de Membro" for admin and admin2
+          if (item.id === "member-area" && isAdmin) return false;
+
           // If item has no feature requirement, show it to everyone
           if (!item.feature) return true;
           // Check if user has permission for this feature

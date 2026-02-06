@@ -1,4 +1,4 @@
-import { ChevronDown, Users, UserPlus, Settings, LogOut } from "lucide-react";
+import { ChevronDown, Users, UserPlus, Settings, LogOut, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -8,12 +8,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserRole } from "@/types/user";
 
 interface UserMenuProps {
   user: {
     firstName: string;
     lastName: string;
     avatarUrl?: string;
+    role?: string;
   };
   onLogout: () => void;
   isScrolled?: boolean;
@@ -23,8 +25,16 @@ const UserMenu = ({ user, onLogout, isScrolled = false }: UserMenuProps) => {
   const navigate = useNavigate();
   const initials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
   const displayName = `${user.firstName} ${user.lastName}`;
+  const userRole = (user.role as UserRole) || "member";
+  const isAdmin = userRole === "admin" || userRole === "admin2";
 
   const menuItems = [
+    // Área de Membro - primeira opção para não-admins
+    ...(!isAdmin ? [{
+      label: "Área de Membro",
+      icon: CreditCard,
+      onClick: () => navigate("/member-home"),
+    }] : []),
     {
       label: "Auto Cadastro",
       icon: UserPlus,

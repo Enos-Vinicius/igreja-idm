@@ -7,7 +7,6 @@ import {
   User,
   Mail,
   Phone,
-  MapPin,
   Cake,
   Church,
   Music,
@@ -21,7 +20,8 @@ import {
   CreditCard,
   QrCode,
   X,
-  Printer
+  Printer,
+  LayoutDashboard
 } from "lucide-react";
 import { format, differenceInYears, isSameDay, getMonth, getDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -49,7 +49,7 @@ import { membersService } from "@/services/members";
 import { Schedule } from "@/types/schedule";
 import { Member } from "@/types/member";
 import BirthdayConfetti from "@/components/BirthdayConfetti";
-import skyClouds from "@/assets/sky-clouds.jpg";
+import heroRoad from "@/assets/hero-road.jpg";
 import logoWhite from "@/assets/logo-white.png";
 import logoClean from "@/assets/logo-clean.png";
 
@@ -113,7 +113,6 @@ const MemberHome = () => {
   });
 
   const member = user?.member as Member | undefined;
-  const memberName = member?.name?.split(" ")[0] || "Membro";
 
   // Verificar se é aniversário
   const isBirthday = (): boolean => {
@@ -413,7 +412,7 @@ const MemberHome = () => {
       <div className="relative h-48 md:h-64 flex flex-col">
         {/* Background Image */}
         <img
-          src={skyClouds}
+          src={heroRoad}
           alt="Igreja do Deus de Maravilhas"
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -444,17 +443,27 @@ const MemberHome = () => {
             Graça e Paz!
           </h1>
           <h2 className="text-white/90 text-lg md:text-xl">
-            Seja bem-vindo(a), {memberName}!
+            Seja bem-vindo(a) à área de membros
           </h2>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex-1 -mt-8 px-4 pb-8">
+      <div className="relative z-10 flex-1 mt-4 md:-mt-8 px-4 pb-8">
         <div className="max-w-4xl mx-auto space-y-4">
           {/* Profile Card */}
           <Card className="border-2">
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 relative">
+              {/* Anos como membro - fixo no topo direito */}
+              {yearsAsMember !== null && (
+                <div className="absolute top-[10px] right-[10px] text-right max-w-[80px] md:max-w-none">
+                  <div className="text-3xl font-bold text-primary">{yearsAsMember}</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide leading-tight">
+                    {yearsAsMember === 1 ? 'ano' : 'anos'} como membro
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Avatar */}
                 <div className="flex justify-center md:justify-start">
@@ -468,35 +477,37 @@ const MemberHome = () => {
 
                 {/* Info */}
                 <div className="flex-1 space-y-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-foreground">{member?.name || "Membro"}</h2>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {member?.churchRole && (
-                          <Badge variant="secondary" className="bg-primary/10 text-primary">
-                            {member.churchRole}
-                          </Badge>
-                        )}
-                        {member?.membershipStatus && (
-                          <Badge variant="outline">
-                            {member.membershipStatus}
-                          </Badge>
-                        )}
-                      </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-foreground pr-20 md:pr-24">{member?.name || "Membro"}</h2>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {member?.churchRole && (
+                        <Badge variant="secondary" className="bg-primary/10 text-primary">
+                          {member.churchRole}
+                        </Badge>
+                      )}
+                      {member?.membershipStatus && (
+                        <Badge variant="outline">
+                          {member.membershipStatus}
+                        </Badge>
+                      )}
                     </div>
-                    {yearsAsMember !== null && (
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-3xl font-bold text-primary">{yearsAsMember}</div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide">
-                          {yearsAsMember === 1 ? 'ano' : 'anos'} como membro
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <Separator />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    {member?.memberCode && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <CreditCard className="h-4 w-4 flex-shrink-0" />
+                        <span>Código: <span className="text-primary font-semibold">{member.memberCode}</span></span>
+                      </div>
+                    )}
+                    {member?.church && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Church className="h-4 w-4 flex-shrink-0" />
+                        <span>{member.church}</span>
+                      </div>
+                    )}
                     {member?.email && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Mail className="h-4 w-4 flex-shrink-0" />
@@ -507,22 +518,6 @@ const MemberHome = () => {
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Phone className="h-4 w-4 flex-shrink-0" />
                         <span>{member.primaryPhone}</span>
-                      </div>
-                    )}
-                    {member?.church && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Church className="h-4 w-4 flex-shrink-0" />
-                        <span>{member.church}</span>
-                      </div>
-                    )}
-                    {(member?.city || member?.state) && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-4 w-4 flex-shrink-0" />
-                        <span>
-                          {member.city}
-                          {member.city && member.state && " - "}
-                          {member.state}
-                        </span>
                       </div>
                     )}
                   </div>
@@ -599,14 +594,28 @@ const MemberHome = () => {
                   )}
                 </div>
 
+                {/* Botão Painel Gerencial - Apenas para não-membros */}
+                {user?.role && user.role !== 'member' && (
+                  <div className="pt-2">
+                    <Button
+                      variant="default"
+                      className="w-full px-4 py-3 md:px-8 md:py-4 gap-2 md:gap-3 text-[0.8rem]"
+                      onClick={() => navigate('/dashboard')}
+                    >
+                      <LayoutDashboard className="h-4 w-4 md:h-5 md:w-5" />
+                      Acessar Painel Gerencial
+                    </Button>
+                  </div>
+                )}
+
                 {/* Botão Carteira de Membro */}
                 <div className="pt-2">
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full px-4 py-3 md:px-8 md:py-4 gap-2 md:gap-3 text-[0.8rem]"
                     onClick={() => setShowMemberCardModal(true)}
                   >
-                    <User className="h-4 w-4 mr-2" />
+                    <User className="h-4 w-4 md:h-5 md:w-5" />
                     Visualizar Carteira de Membro
                   </Button>
                 </div>
@@ -1126,8 +1135,9 @@ const MemberHome = () => {
 
       {/* Modal Pré-visualização e Customização da Carteira */}
       <Dialog open={showMemberCardModal} onOpenChange={setShowMemberCardModal}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden max-h-[90vh] w-full [&>button]:hidden">
-          <div className="relative h-auto flex flex-col lg:flex-row overflow-auto">
+        <DialogContent className="w-screen h-screen max-w-none max-h-none lg:max-w-5xl lg:max-h-[90vh] lg:w-auto lg:h-auto p-0 overflow-y-auto rounded-none lg:rounded-lg [&>button]:hidden">
+          <DialogTitle className="sr-only">Carteirinha de Membro</DialogTitle>
+          <div className="relative h-full flex flex-col lg:flex-row">
             {/* Botão fechar */}
             <button
               onClick={() => setShowMemberCardModal(false)}
@@ -1137,27 +1147,26 @@ const MemberHome = () => {
               <X className="h-4 w-4" />
             </button>
 
-            {/* Área de Pré-visualização */}
-            <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-8 flex items-center justify-center">
-              <div className="w-full max-w-md">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-4 text-center">
+            {/* Área de Pré-visualização - Visível apenas no desktop */}
+            <div className="hidden lg:flex flex-1 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-3 lg:p-8 items-center justify-center">
+              <div className="w-full">
+                <h3 className="text-xs lg:text-sm font-semibold text-muted-foreground mb-3 lg:mb-4 text-center">
                   Pré-visualização da Carteirinha {showCardBack ? '(Verso)' : '(Frente)'}
                 </h3>
 
-                <div className="transition-all duration-500 ease-in-out" style={{
-                  transform: showCardBack ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                <div className="relative transition-all duration-500 ease-in-out" style={{
                   transformStyle: 'preserve-3d'
                 }}>
-                  {!showCardBack ? (
-                    // FRENTE DA CARTEIRINHA
-                    <div
-                      className="p-5 text-white relative rounded-2xl shadow-2xl aspect-[16/10]"
-                      style={{
-                        background: cardGradients[selectedGradient],
-                        overflow: 'hidden',
-                        backfaceVisibility: 'hidden'
-                      }}
-                    >
+                  {/* FRENTE DA CARTEIRINHA */}
+                  <div
+                    className="p-3 lg:p-5 text-white relative rounded-2xl shadow-2xl aspect-[16/10] transition-all duration-500 ease-in-out"
+                    style={{
+                      background: cardGradients[selectedGradient],
+                      overflow: 'hidden',
+                      backfaceVisibility: 'hidden',
+                      transform: showCardBack ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                    }}
+                  >
               {/* Logo marca d'água de fundo */}
               <div
                 className="absolute -right-16 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none z-0"
@@ -1175,56 +1184,56 @@ const MemberHome = () => {
               <div className="absolute inset-0 bg-black/20 pointer-events-none z-10" />
 
               {/* Logo e Header */}
-              <div className="flex items-center justify-between mb-3 relative z-20">
-                <div className="flex items-center gap-2">
-                  <img src={logoClean} alt="Logo" className="h-8 w-8" />
+              <div className="flex items-center justify-between mb-2 lg:mb-3 relative z-20">
+                <div className="flex items-center gap-1.5 lg:gap-2">
+                  <img src={logoClean} alt="Logo" className="h-6 w-6 lg:h-8 lg:w-8" />
                   <div>
-                    <div className="text-sm font-semibold opacity-90 leading-tight">Igreja do Deus de Maravilhas</div>
-                    <div className="text-xs opacity-75 leading-tight">Comunidade da Redenção em Jesus Cristo</div>
+                    <div className="text-xs lg:text-sm font-semibold opacity-90 leading-tight">Igreja do Deus de Maravilhas</div>
+                    <div className="text-[9px] lg:text-xs opacity-75 leading-tight">Comunidade da Redenção em Jesus Cristo</div>
                   </div>
                 </div>
               </div>
 
               {/* Foto e Info Principal */}
-              <div className="flex items-center gap-3 mb-3 relative z-20">
-                <Avatar className="h-16 w-16 border-2 border-white/30 shadow-lg flex-shrink-0">
+              <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-3 relative z-20">
+                <Avatar className="h-14 w-14 lg:h-16 lg:w-16 border-2 border-white/30 shadow-lg flex-shrink-0">
                   <AvatarImage src={member?.photoUrl} alt={member?.name} />
-                  <AvatarFallback className="text-lg bg-white text-primary">
+                  <AvatarFallback className="text-base lg:text-lg bg-white text-primary">
                     {getInitials(member?.name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[9px] opacity-75 mb-0.5">MEMBRO</div>
-                  <h3 className="text-base font-bold leading-tight mb-0.5 truncate">{member?.name}</h3>
-                  <div className="text-xs opacity-90">ID: #{member?.id}</div>
+                  <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">MEMBRO</div>
+                  <h3 className="text-sm lg:text-base font-bold leading-tight mb-0.5 truncate">{member?.name}</h3>
+                  <div className="text-[10px] lg:text-xs opacity-90">ID: #{member?.memberCode}</div>
                 </div>
               </div>
 
               {/* Informações */}
-              <div className="grid grid-cols-2 gap-x-3 gap-y-2 mb-3 relative z-20">
+              <div className="grid grid-cols-2 gap-x-2 lg:gap-x-3 gap-y-1.5 lg:gap-y-2 mb-2 lg:mb-3 relative z-20">
                 <div>
-                  <div className="text-[9px] opacity-75 mb-0.5">Data de Nascimento</div>
-                  <div className="text-xs font-semibold">{formatDate(member?.birthDate)}</div>
+                  <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Data de Nascimento</div>
+                  <div className="text-[10px] lg:text-xs font-semibold">{formatDate(member?.birthDate)}</div>
                 </div>
                 <div>
-                  <div className="text-[9px] opacity-75 mb-0.5">Membro desde</div>
-                  <div className="text-xs font-semibold">{formatDate(member?.joinDate)}</div>
+                  <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Membro desde</div>
+                  <div className="text-[10px] lg:text-xs font-semibold">{formatDate(member?.joinDate)}</div>
                 </div>
                 <div>
-                  <div className="text-[9px] opacity-75 mb-0.5">Função</div>
-                  <div className="text-xs font-semibold">{member?.churchRole || 'Membro'}</div>
+                  <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Função</div>
+                  <div className="text-[10px] lg:text-xs font-semibold">{member?.churchRole || 'Membro'}</div>
                 </div>
                 <div>
-                  <div className="text-[9px] opacity-75 mb-0.5">Batismo</div>
-                  <div className="text-xs font-semibold">{formatDate(member?.baptismDate)}</div>
+                  <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Batismo</div>
+                  <div className="text-[10px] lg:text-xs font-semibold">{formatDate(member?.baptismDate)}</div>
                 </div>
               </div>
 
               {/* Endereço da Igreja e Validade */}
-              <div className="flex items-center justify-between gap-3 relative z-20">
+              <div className="flex items-center justify-between gap-2 lg:gap-3 relative z-20">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[9px] opacity-75 mb-0.5">Endereço</div>
-                  <div className="text-[10px] font-semibold leading-tight">
+                  <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Endereço</div>
+                  <div className="text-[9px] lg:text-[10px] font-semibold leading-tight">
                     {member?.church === 'Conceição das Alagoas'
                       ? 'R. Santa Rita, 149 - Centro'
                       : 'Av. Cel. Joaquim de Oliveira Prata, 1817 - Parque São Geraldo'
@@ -1232,22 +1241,22 @@ const MemberHome = () => {
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-[9px] opacity-75">Válido até</div>
-                  <div className="text-xs font-semibold">
+                  <div className="text-[8px] lg:text-[9px] opacity-75">Válido até</div>
+                  <div className="text-[10px] lg:text-xs font-semibold">
                     {format(new Date(new Date().getFullYear() + 1, 11, 31), "dd/MM/yyyy")}
                   </div>
                 </div>
               </div>
                   </div>
-                ) : (
-                  // VERSO DA CARTEIRINHA
+
+                  {/* VERSO DA CARTEIRINHA */}
                   <div
-                    className="p-5 text-white relative rounded-2xl shadow-2xl aspect-[16/10]"
+                    className="absolute top-0 left-0 w-full p-3 lg:p-5 text-white rounded-2xl shadow-2xl aspect-[16/10] transition-all duration-500 ease-in-out"
                     style={{
                       background: cardGradients[selectedGradient],
                       overflow: 'hidden',
                       backfaceVisibility: 'hidden',
-                      transform: 'rotateY(180deg)'
+                      transform: showCardBack ? 'rotateY(0deg)' : 'rotateY(-180deg)'
                     }}
                   >
                     {/* Logo marca d'água de fundo */}
@@ -1268,34 +1277,34 @@ const MemberHome = () => {
 
                     <div className="relative z-20 flex flex-col justify-between h-full">
                       {/* Versículo Bíblico */}
-                      <div className="flex items-center justify-center py-2">
+                      <div className="flex items-center justify-center py-1 lg:py-2">
                         <div className="text-center">
-                          <p className="text-sm font-serif italic opacity-95 leading-relaxed mb-1">
+                          <p className="text-[10px] lg:text-sm font-serif italic opacity-95 leading-relaxed mb-1">
                             "Nós porém não somos daqueles que se<br />
                             retiram para perdição, mas daqueles que<br />
                             creem para a conservação da alma."
                           </p>
-                          <p className="text-xs opacity-75">Hebreus 10:39</p>
+                          <p className="text-[9px] lg:text-xs opacity-75">Hebreus 10:39</p>
                         </div>
                       </div>
 
                       {/* Informações do verso */}
-                      <div className="space-y-1.5">
-                        <div className="text-center border-t border-white/20 pt-2">
-                          <p className="text-[9px] opacity-75 mb-1 leading-tight">Esta carteirinha é de uso pessoal e intransferível</p>
-                          <p className="text-[9px] opacity-75 leading-tight">Em caso de perda, comunique à secretaria da igreja</p>
+                      <div className="space-y-1 lg:space-y-1.5">
+                        <div className="text-center border-t border-white/20 pt-1.5 lg:pt-2">
+                          <p className="text-[7px] lg:text-[9px] opacity-75 mb-0.5 lg:mb-1 leading-tight">Esta carteirinha é de uso pessoal e intransferível</p>
+                          <p className="text-[7px] lg:text-[9px] opacity-75 leading-tight">Em caso de perda, comunique à secretaria da igreja</p>
                         </div>
 
-                        <div className="border-t border-white/20 pt-2 text-center">
-                          <h4 className="text-[10px] font-semibold mb-1 opacity-90">Contatos da Igreja</h4>
-                          <div className="space-y-0.5 text-[9px] opacity-75">
-                            <p>✉️ Email: contato@igrejadm.com</p>
+                        <div className="border-t border-white/20 pt-1.5 lg:pt-2 text-center">
+                          <h4 className="text-[8px] lg:text-[10px] font-semibold mb-0.5 lg:mb-1 opacity-90">Contatos da Igreja</h4>
+                          <div className="space-y-0.5 text-[7px] lg:text-[9px] opacity-75">
+                            <p>✉️ Email: idmigreja@gmail.com</p>
                             <p>🌐 Site: www.ideusdemaravilhas.com.br</p>
                           </div>
                         </div>
 
-                        <div className="text-center border-t border-white/20 pt-2">
-                          <p className="text-[8px] opacity-60 leading-tight">
+                        <div className="text-center border-t border-white/20 pt-1.5 lg:pt-2">
+                          <p className="text-[7px] lg:text-[8px] opacity-60 leading-tight">
                             Igreja do Deus de Maravilhas<br />
                             Comunidade da Redenção em Jesus Cristo
                           </p>
@@ -1303,7 +1312,6 @@ const MemberHome = () => {
                       </div>
                     </div>
                   </div>
-                )}
                 </div>
 
                 <div className="text-center text-xs text-muted-foreground mt-4 px-4">
@@ -1313,7 +1321,7 @@ const MemberHome = () => {
             </div>
 
             {/* Painel de Ferramentas de Customização */}
-            <div className="w-full lg:w-80 bg-background border-l">
+            <div className="w-full lg:w-80 bg-background lg:border-l">
               <div className="p-6 space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-1">Customização</h3>
@@ -1322,21 +1330,188 @@ const MemberHome = () => {
                   </p>
                 </div>
 
-                <Separator />
+                {/* Pré-visualização Mobile - Visível apenas no mobile */}
+                <div className="lg:hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-3 rounded-lg -mx-6">
+                  <div className="w-full">
+                    <h3 className="text-xs font-semibold text-muted-foreground mb-3 text-center">
+                      Pré-visualização da Carteirinha {showCardBack ? '(Verso)' : '(Frente)'}
+                    </h3>
+                    {/* A carteirinha aqui - mesma estrutura da desktop */}
+                    <div className="relative transition-all duration-500 ease-in-out" style={{transformStyle: 'preserve-3d'}}>
+                      {/* FRENTE DA CARTEIRINHA */}
+                      <div
+                        className="p-3 lg:p-5 text-white relative rounded-2xl shadow-2xl aspect-[16/10] transition-all duration-500 ease-in-out"
+                        style={{
+                          background: cardGradients[selectedGradient],
+                          overflow: 'hidden',
+                          backfaceVisibility: 'hidden',
+                          transform: showCardBack ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                        }}
+                      >
+                        {/* Logo marca d'água de fundo */}
+                        <div
+                          className="absolute -right-16 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none z-0"
+                          style={{
+                            width: '200px',
+                            height: '200px',
+                            backgroundImage: `url(${logoClean})`,
+                            backgroundSize: 'contain',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
+                          }}
+                        />
+
+                        {/* Película escura para suavizar o gradiente */}
+                        <div className="absolute inset-0 bg-black/20 pointer-events-none z-10" />
+
+                        {/* Logo e Header */}
+                        <div className="flex items-center justify-between mb-2 lg:mb-3 relative z-20">
+                          <div className="flex items-center gap-1.5 lg:gap-2">
+                            <img src={logoClean} alt="Logo" className="h-6 w-6 lg:h-8 lg:w-8" />
+                            <div>
+                              <div className="text-xs lg:text-sm font-semibold opacity-90 leading-tight">Igreja do Deus de Maravilhas</div>
+                              <div className="text-[9px] lg:text-xs opacity-75 leading-tight">Comunidade da Redenção em Jesus Cristo</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Foto e Info Principal */}
+                        <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-3 relative z-20">
+                          <Avatar className="h-14 w-14 lg:h-16 lg:w-16 border-2 border-white/30 shadow-lg flex-shrink-0">
+                            <AvatarImage src={member?.photoUrl} alt={member?.name} />
+                            <AvatarFallback className="text-base lg:text-lg bg-white text-primary">
+                              {getInitials(member?.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">MEMBRO</div>
+                            <h3 className="text-sm lg:text-base font-bold leading-tight mb-0.5 truncate">{member?.name}</h3>
+                            <div className="text-[10px] lg:text-xs opacity-90">ID: #{member?.memberCode}</div>
+                          </div>
+                        </div>
+
+                        {/* Informações */}
+                        <div className="grid grid-cols-2 gap-x-2 lg:gap-x-3 gap-y-1.5 lg:gap-y-2 mb-2 lg:mb-3 relative z-20">
+                          <div>
+                            <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Data de Nascimento</div>
+                            <div className="text-[10px] lg:text-xs font-semibold">{formatDate(member?.birthDate)}</div>
+                          </div>
+                          <div>
+                            <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Membro desde</div>
+                            <div className="text-[10px] lg:text-xs font-semibold">{formatDate(member?.joinDate)}</div>
+                          </div>
+                          <div>
+                            <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Função</div>
+                            <div className="text-[10px] lg:text-xs font-semibold">{member?.churchRole || 'Membro'}</div>
+                          </div>
+                          <div>
+                            <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Batismo</div>
+                            <div className="text-[10px] lg:text-xs font-semibold">{formatDate(member?.baptismDate)}</div>
+                          </div>
+                        </div>
+
+                        {/* Endereço da Igreja e Validade */}
+                        <div className="flex items-center justify-between gap-2 lg:gap-3 relative z-20">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[8px] lg:text-[9px] opacity-75 mb-0.5">Endereço</div>
+                            <div className="text-[9px] lg:text-[10px] font-semibold leading-tight">
+                              {member?.church === 'Conceição das Alagoas'
+                                ? 'R. Santa Rita, 149 - Centro'
+                                : 'Av. Cel. Joaquim de Oliveira Prata, 1817 - Parque São Geraldo'
+                              }
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-[8px] lg:text-[9px] opacity-75">Válido até</div>
+                            <div className="text-[10px] lg:text-xs font-semibold">
+                              {format(new Date(new Date().getFullYear() + 1, 11, 31), "dd/MM/yyyy")}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* VERSO DA CARTEIRINHA */}
+                      <div
+                        className="absolute top-0 left-0 w-full p-3 lg:p-5 text-white rounded-2xl shadow-2xl aspect-[16/10] transition-all duration-500 ease-in-out"
+                        style={{
+                          background: cardGradients[selectedGradient],
+                          overflow: 'hidden',
+                          backfaceVisibility: 'hidden',
+                          transform: showCardBack ? 'rotateY(0deg)' : 'rotateY(-180deg)'
+                        }}
+                      >
+                        {/* Logo marca d'água de fundo */}
+                        <div
+                          className="absolute -left-16 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none z-0"
+                          style={{
+                            width: '200px',
+                            height: '200px',
+                            backgroundImage: `url(${logoClean})`,
+                            backgroundSize: 'contain',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
+                          }}
+                        />
+
+                        {/* Película escura para suavizar o gradiente */}
+                        <div className="absolute inset-0 bg-black/20 pointer-events-none z-10" />
+
+                        <div className="relative z-20 flex flex-col justify-between h-full">
+                          {/* Versículo Bíblico */}
+                          <div className="flex items-center justify-center py-1 lg:py-2">
+                            <div className="text-center">
+                              <p className="text-[10px] lg:text-sm font-serif italic opacity-95 leading-relaxed mb-1">
+                                "Nós porém não somos daqueles que se<br />
+                                retiram para perdição, mas daqueles que<br />
+                                creem para a conservação da alma."
+                              </p>
+                              <p className="text-[9px] lg:text-xs opacity-75">Hebreus 10:39</p>
+                            </div>
+                          </div>
+
+                          {/* Informações do verso */}
+                          <div className="space-y-1 lg:space-y-1.5">
+                            <div className="text-center border-t border-white/20 pt-1.5 lg:pt-2">
+                              <p className="text-[7px] lg:text-[9px] opacity-75 mb-0.5 lg:mb-1 leading-tight">Esta carteirinha é de uso pessoal e intransferível</p>
+                              <p className="text-[7px] lg:text-[9px] opacity-75 leading-tight">Em caso de perda, comunique à secretaria da igreja</p>
+                            </div>
+
+                            <div className="border-t border-white/20 pt-1.5 lg:pt-2 text-center">
+                              <h4 className="text-[8px] lg:text-[10px] font-semibold mb-0.5 lg:mb-1 opacity-90">Contatos da Igreja</h4>
+                              <div className="space-y-0.5 text-[7px] lg:text-[9px] opacity-75">
+                                <p>✉️ Email: idmigreja@gmail.com</p>
+                                <p>🌐 Site: www.ideusdemaravilhas.com.br</p>
+                              </div>
+                            </div>
+
+                            <div className="text-center border-t border-white/20 pt-1.5 lg:pt-2">
+                              <p className="text-[7px] lg:text-[8px] opacity-60 leading-tight">
+                                Igreja do Deus de Maravilhas<br />
+                                Comunidade da Redenção em Jesus Cristo
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="lg:hidden" />
 
                 {/* Alternador Frente/Verso */}
-                <div className="space-y-3">
-                  <div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
                     <h4 className="text-sm font-semibold mb-1">Visualização</h4>
                     <p className="text-xs text-muted-foreground">Escolha qual lado visualizar</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 flex-shrink-0">
                     <Button
                       variant={!showCardBack ? "default" : "outline"}
                       size="sm"
                       onClick={() => setShowCardBack(false)}
-                      className="w-full"
+                      className="min-w-[70px]"
                     >
                       Frente
                     </Button>
@@ -1344,7 +1519,7 @@ const MemberHome = () => {
                       variant={showCardBack ? "default" : "outline"}
                       size="sm"
                       onClick={() => setShowCardBack(true)}
-                      className="w-full"
+                      className="min-w-[70px]"
                     >
                       Verso
                     </Button>
@@ -1360,12 +1535,12 @@ const MemberHome = () => {
                     <p className="text-xs text-muted-foreground">Escolha o gradiente da sua carteirinha</p>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-4 gap-2 lg:gap-3">
                     {cardGradients.map((gradient, index) => (
                       <button
                         key={index}
                         onClick={() => setSelectedGradient(index)}
-                        className={`aspect-square rounded-lg cursor-pointer transition-all duration-200 ${
+                        className={`h-12 lg:h-auto lg:aspect-square rounded-lg cursor-pointer transition-all duration-200 ${
                           selectedGradient === index
                             ? 'ring-2 ring-primary ring-offset-2 scale-105'
                             : 'hover:scale-105 opacity-70 hover:opacity-100'
@@ -1511,7 +1686,7 @@ const MemberHome = () => {
                   <div className="flex-1 min-w-0">
                     <div className="text-[8px] opacity-75 mb-0.5">MEMBRO</div>
                     <h3 className="text-sm font-bold leading-tight mb-0.5 truncate">{member?.name}</h3>
-                    <div className="text-[10px] opacity-90">ID: #{member?.id}</div>
+                    <div className="text-[10px] opacity-90">ID: #{member?.memberCode}</div>
                   </div>
                 </div>
 
@@ -1604,7 +1779,7 @@ const MemberHome = () => {
                     <div className="border-t border-white/20 pt-1.5 text-center">
                       <h4 className="text-[10px] font-semibold mb-0.5 opacity-90">Contatos da Igreja</h4>
                       <div className="space-y-0.5 text-[9px] opacity-75">
-                        <p>✉️ Email: contato@igrejadm.com</p>
+                        <p>✉️ Email: idmigreja@gmail.com</p>
                         <p>🌐 Site: www.ideusdemaravilhas.com.br</p>
                       </div>
                     </div>

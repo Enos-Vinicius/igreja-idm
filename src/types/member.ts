@@ -20,6 +20,7 @@ export type ChurchLocation = 'Uberaba' | 'Conceição das Alagoas';
 export interface Member {
   id: number;
   userId?: number;
+  memberCode?: string;
   photoUrl?: string;
 
   // Informações Pessoais

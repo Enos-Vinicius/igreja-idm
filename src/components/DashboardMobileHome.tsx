@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   Heart,
+  CreditCard,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,14 @@ const DashboardMobileHome = () => {
       icon: LayoutDashboard,
       path: "/dashboard",
       // Dashboard is always visible
+    },
+    {
+      id: "member-area",
+      title: "Área de Membro",
+      description: "Minha área pessoal",
+      icon: CreditCard,
+      path: "/member-home",
+      // Member area is always visible
     },
     {
       id: "members",
