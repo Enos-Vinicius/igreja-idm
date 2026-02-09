@@ -97,7 +97,13 @@ const ScheduleForm = () => {
   const [selectedSongs, setSelectedSongs] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [songs, setSongs] = useState<Song[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
+  const [ministers, setMinisters] = useState<Member[]>([]);
+  const [preachers, setPreachers] = useState<Member[]>([]);
+  const [ministersLoaded, setMinistersLoaded] = useState(false);
+  const [preachersLoaded, setPreachersLoaded] = useState(false);
+  const [memberSearchTerm, setMemberSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<Member[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [isLoadingSongs, setIsLoadingSongs] = useState(false);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,18 +128,19 @@ const ScheduleForm = () => {
     },
   });
 
-  // Load members and songs
+  // Load ministers and songs initially (Louvor is the default tab)
   useEffect(() => {
     const loadData = async () => {
       setIsLoadingMembers(true);
       setIsLoadingSongs(true);
 
       try {
-        const [membersData, songsData] = await Promise.all([
-          membersService.getAll(),
+        const [ministersData, songsData] = await Promise.all([
+          membersService.getAll({ churchRoles: ["Ministro de Louvor", "Líder"] }),
           songsService.getAll(),
         ]);
-        setMembers(membersData);
+        setMinisters(ministersData);
+        setMinistersLoaded(true);
         setSongs(songsData);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Erro ao carregar dados";
@@ -149,7 +156,34 @@ const ScheduleForm = () => {
     };
 
     loadData();
-  }, []);
+  }, [toast]);
+
+  // Load preachers when switching to Pregação tab (only once)
+  useEffect(() => {
+    const loadPreachers = async () => {
+      if (scheduleType === "Pregação" && !preachersLoaded) {
+        setIsLoadingMembers(true);
+        try {
+          const preachersData = await membersService.getAll({
+            churchRoles: ["Líder", "Diácono", "Pastor(a)", "Presbítero"]
+          });
+          setPreachers(preachersData);
+          setPreachersLoaded(true);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Erro ao carregar pregadores";
+          toast({
+            title: "Erro",
+            description: message,
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoadingMembers(false);
+        }
+      }
+    };
+
+    loadPreachers();
+  }, [scheduleType, preachersLoaded, toast]);
 
   // Load existing schedule if editing
   useEffect(() => {
@@ -209,6 +243,39 @@ const ScheduleForm = () => {
         ? prev.filter((id) => id !== songId)
         : [...prev, songId]
     );
+  };
+
+  const searchMemberByName = async () => {
+    if (!memberSearchTerm.trim()) {
+      toast({
+        title: "Digite um nome",
+        description: "Informe o nome do membro para buscar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await membersService.getAll({ search: memberSearchTerm.trim() });
+      setSearchResults(results);
+
+      if (results.length === 0) {
+        toast({
+          title: "Nenhum resultado",
+          description: "Nenhum membro encontrado com esse nome",
+        });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao buscar membro";
+      toast({
+        title: "Erro",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const onSubmitWorship = async (data: z.infer<typeof worshipScheduleSchema>) => {
@@ -344,24 +411,6 @@ const ScheduleForm = () => {
     </div>
   );
 
-  // Get ministers (members with role worship or leader/admin)
-  const ministers = members.filter(
-    (m) =>
-      m.ministry === "worship" ||
-      m.ministry === "leadership" ||
-      m.isLeader ||
-      m.isAdmin
-  );
-
-  // Get preachers (members with role preaching or leader/admin)
-  const preachers = members.filter(
-    (m) =>
-      m.ministry === "preaching" ||
-      m.ministry === "leadership" ||
-      m.isLeader ||
-      m.isAdmin
-  );
-
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6 max-w-6xl mx-auto">
@@ -483,12 +532,46 @@ const ScheduleForm = () => {
                                   {minister.name}
                                 </SelectItem>
                               ))}
+                              {searchResults.length > 0 && searchResults.map((member) => (
+                                <SelectItem key={`search-${member.id}`} value={member.id.toString()}>
+                                  {member.name} (Busca)
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  {/* Search by name */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Não encontrou? Busque por nome..."
+                      value={memberSearchTerm}
+                      onChange={(e) => setMemberSearchTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), searchMemberByName())}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={searchMemberByName}
+                      disabled={isSearching}
+                      className="gap-2 whitespace-nowrap"
+                    >
+                      {isSearching ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Buscando...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="h-4 w-4" />
+                          Buscar
+                        </>
+                      )}
+                    </Button>
                   </div>
 
                   {/* Category and Church */}
@@ -719,12 +802,46 @@ const ScheduleForm = () => {
                                   {preacher.name}
                                 </SelectItem>
                               ))}
+                              {searchResults.length > 0 && searchResults.map((member) => (
+                                <SelectItem key={`search-${member.id}`} value={member.id.toString()}>
+                                  {member.name} (Busca)
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  {/* Search by name */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Não encontrou? Busque por nome..."
+                      value={memberSearchTerm}
+                      onChange={(e) => setMemberSearchTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), searchMemberByName())}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={searchMemberByName}
+                      disabled={isSearching}
+                      className="gap-2 whitespace-nowrap"
+                    >
+                      {isSearching ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Buscando...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="h-4 w-4" />
+                          Buscar
+                        </>
+                      )}
+                    </Button>
                   </div>
 
                   {/* Category and Church */}

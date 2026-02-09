@@ -122,16 +122,16 @@ const recentActivities = [
 const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAdmin, isLoading, isAuthenticated } = useAuth();
+  const { isAdmin, canAccessDashboard, isLoading, isAuthenticated } = useAuth();
   const [selectedUnit, setSelectedUnit] = useState<"todos" | "uberaba" | "conceicao">("todos");
   const [isMobile, setIsMobile] = useState(false);
 
-  // Redireciona membros não-admin para a área do membro
+  // Redireciona membros comuns (sem acesso ao painel) para a área do membro
   useEffect(() => {
-    if (!isLoading && isAuthenticated && !isAdmin) {
+    if (!isLoading && isAuthenticated && !canAccessDashboard) {
       navigate("/member-home", { replace: true });
     }
-  }, [isAdmin, isLoading, isAuthenticated, navigate]);
+  }, [canAccessDashboard, isLoading, isAuthenticated, navigate]);
 
   // Verifica se deve forçar a exibição do dashboard completo (via location state)
   const showFullDashboard = location.state?.showFullDashboard === true;

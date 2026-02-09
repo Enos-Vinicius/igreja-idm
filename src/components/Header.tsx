@@ -40,8 +40,12 @@ const Header = () => {
       setSearchParams(newParams, { replace: true });
 
       if (isAuthenticated) {
-        // User is already logged in, redirect to dashboard
-        navigate('/dashboard');
+        // User is already logged in, redirect based on role
+        if (user?.role === 'admin' || user?.role === 'admin2') {
+          navigate('/dashboard');
+        } else {
+          navigate('/member-home');
+        }
       } else {
         // User is not logged in, open login modal (first access flow)
         setIsFirstAccessLogin(true);
@@ -92,11 +96,21 @@ const Header = () => {
 
   const handleLoginSuccess = () => {
     setIsLoginOpen(false);
-    navigate("/dashboard");
+    // Redireciona baseado no role do usuário
+    if (user?.role === 'admin' || user?.role === 'admin2') {
+      navigate("/dashboard");
+    } else {
+      navigate("/member-home");
+    }
   };
 
   const handleUserClick = () => {
-    navigate("/dashboard");
+    // Redireciona baseado no role do usuário
+    if (user?.role === 'admin' || user?.role === 'admin2') {
+      navigate("/dashboard");
+    } else {
+      navigate("/member-home");
+    }
   };
 
   useEffect(() => {

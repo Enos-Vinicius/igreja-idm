@@ -14,6 +14,7 @@ import {
   Calendar,
   Heart,
   CreditCard,
+  Church,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -143,6 +144,13 @@ const menuGroups: MenuGroup[] = [
         icon: Settings,
         path: "/users",
         feature: "users",
+      },
+      {
+        id: "service-schedule",
+        label: "Cultos",
+        icon: Church,
+        path: "/service-schedule",
+        feature: "schedules",
       },
     ],
   },

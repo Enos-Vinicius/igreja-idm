@@ -19,6 +19,7 @@ export interface Attendance {
   member: AttendanceMember | null;
   visitorName: string | null;
   visitorPhone: string | null;
+  serviceScheduleId?: string;
   serviceDate: string;
   serviceTime: string;
   serviceType: ScheduleCategory;
@@ -32,10 +33,7 @@ export interface AttendanceInput {
   memberId?: number;
   visitorName?: string;
   visitorPhone?: string;
-  serviceDate: string;
-  serviceTime: string;
-  serviceType: ScheduleCategory;
-  church: Church;
+  serviceScheduleId: string;
 }
 
 export interface AttendanceListResponse {

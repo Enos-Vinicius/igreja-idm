@@ -16,6 +16,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isAdmin: boolean;
+  canAccessDashboard: boolean;
   isSessionExpired: boolean;
   mustChangePassword: boolean;
   login: (credentials: LoginRequest) => Promise<{ mustChangePassword: boolean }>;
@@ -201,6 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     isLoading,
     isAdmin: authService.isAdmin(user),
+    canAccessDashboard: authService.canAccessDashboard(user),
     isSessionExpired,
     mustChangePassword,
     login,

@@ -21,7 +21,13 @@ import {
   QrCode,
   X,
   Printer,
-  LayoutDashboard
+  LayoutDashboard,
+  Info,
+  AlertCircle,
+  Target,
+  Award,
+  Settings,
+  Palette
 } from "lucide-react";
 import { format, differenceInYears, isSameDay, getMonth, getDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -53,6 +59,204 @@ import heroRoad from "@/assets/hero-road.jpg";
 import logoWhite from "@/assets/logo-white.png";
 import logoClean from "@/assets/logo-clean.png";
 
+// Definições de Temas
+interface PageTheme {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    cardBg: string;
+    cardHover: string;
+    headerBg: string;
+    textPrimary: string;
+    textSecondary: string;
+    border: string;
+    buttonPrimary: string;
+    buttonHover: string;
+  };
+}
+
+const PAGE_THEMES: PageTheme[] = [
+  {
+    id: 'default',
+    name: 'Jerusalém Dourada',
+    description: 'Brilho da Cidade Santa',
+    icon: <Palette className="h-5 w-5" />,
+    colors: {
+      primary: 'from-golden to-golden-light',
+      secondary: 'bg-background',
+      accent: 'text-primary',
+      cardBg: 'bg-card',
+      cardHover: 'hover:bg-accent/50',
+      headerBg: 'bg-gradient-to-r from-golden to-golden-light',
+      textPrimary: 'text-foreground',
+      textSecondary: 'text-muted-foreground',
+      border: 'border-border',
+      buttonPrimary: 'bg-gradient-to-r from-golden to-golden-light',
+      buttonHover: 'hover:opacity-90',
+    }
+  },
+  {
+    id: 'dark',
+    name: 'Noite no Getsêmani',
+    description: 'Serenidade na Noite',
+    icon: <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>,
+    colors: {
+      primary: 'from-slate-900 to-slate-800',
+      secondary: 'bg-slate-950',
+      accent: 'text-amber-400',
+      cardBg: 'bg-slate-900',
+      cardHover: 'hover:bg-slate-800',
+      headerBg: 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900',
+      textPrimary: 'text-slate-100',
+      textSecondary: 'text-slate-400',
+      border: 'border-slate-700',
+      buttonPrimary: 'bg-gradient-to-r from-amber-600 to-amber-500',
+      buttonHover: 'hover:from-amber-700 hover:to-amber-600',
+    }
+  },
+  {
+    id: 'rose',
+    name: 'Rosa de Sarom',
+    description: 'Delicadeza do Cântico dos Cânticos',
+    icon: <Heart className="h-5 w-5" />,
+    colors: {
+      primary: 'from-rose-400 to-pink-300',
+      secondary: 'bg-rose-50',
+      accent: 'text-rose-600',
+      cardBg: 'bg-white',
+      cardHover: 'hover:bg-rose-50',
+      headerBg: 'bg-gradient-to-r from-rose-400 via-pink-400 to-rose-300',
+      textPrimary: 'text-rose-900',
+      textSecondary: 'text-rose-600',
+      border: 'border-rose-200',
+      buttonPrimary: 'bg-gradient-to-r from-rose-500 to-pink-500',
+      buttonHover: 'hover:from-rose-600 hover:to-pink-600',
+    }
+  },
+  {
+    id: 'ocean',
+    name: 'Mar da Galileia',
+    description: 'Profundidade das águas sagradas',
+    icon: <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" /></svg>,
+    colors: {
+      primary: 'from-blue-900 to-slate-800',
+      secondary: 'bg-slate-900',
+      accent: 'text-cyan-400',
+      cardBg: 'bg-slate-800',
+      cardHover: 'hover:bg-slate-700',
+      headerBg: 'bg-gradient-to-r from-blue-900 via-blue-800 to-slate-800',
+      textPrimary: 'text-slate-100',
+      textSecondary: 'text-slate-300',
+      border: 'border-slate-600',
+      buttonPrimary: 'bg-gradient-to-r from-blue-600 to-cyan-600',
+      buttonHover: 'hover:from-blue-700 hover:to-cyan-700',
+    }
+  },
+  {
+    id: 'nature',
+    name: 'Monte das Oliveiras',
+    description: 'Verdor da terra prometida',
+    icon: <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" /></svg>,
+    colors: {
+      primary: 'from-green-700 to-emerald-600',
+      secondary: 'bg-green-50',
+      accent: 'text-green-700',
+      cardBg: 'bg-white',
+      cardHover: 'hover:bg-green-50',
+      headerBg: 'bg-gradient-to-r from-green-700 via-emerald-600 to-teal-600',
+      textPrimary: 'text-green-900',
+      textSecondary: 'text-green-700',
+      border: 'border-green-300',
+      buttonPrimary: 'bg-gradient-to-r from-green-600 to-emerald-600',
+      buttonHover: 'hover:from-green-700 hover:to-emerald-700',
+    }
+  },
+  {
+    id: 'sunset',
+    name: 'Aurora de Sião',
+    description: 'Esplendor do amanhecer divino',
+    icon: <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" /></svg>,
+    colors: {
+      primary: 'from-orange-600 to-pink-600',
+      secondary: 'bg-orange-50',
+      accent: 'text-orange-600',
+      cardBg: 'bg-white',
+      cardHover: 'hover:bg-orange-50',
+      headerBg: 'bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600',
+      textPrimary: 'text-orange-900',
+      textSecondary: 'text-orange-700',
+      border: 'border-orange-300',
+      buttonPrimary: 'bg-gradient-to-r from-orange-600 to-pink-600',
+      buttonHover: 'hover:from-orange-700 hover:to-pink-700',
+    }
+  },
+];
+
+// Helper para obter a cor dos ícones baseada no tema
+const getIconColorClass = (themeId: string): string => {
+  switch (themeId) {
+    case 'default':
+      return 'text-primary';
+    case 'dark':
+      return 'text-amber-400';
+    case 'rose':
+      return 'text-rose-600';
+    case 'ocean':
+      return 'text-cyan-400';
+    case 'nature':
+      return 'text-green-700';
+    case 'sunset':
+      return 'text-orange-600';
+    default:
+      return 'text-primary';
+  }
+};
+
+// Helper para obter as classes do badge baseada no tema
+const getBadgeClasses = (themeId: string): string => {
+  switch (themeId) {
+    case 'default':
+      return 'bg-primary/10 text-primary';
+    case 'dark':
+      return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+    case 'rose':
+      return 'bg-rose-500/20 text-rose-600 border-rose-500/30';
+    case 'ocean':
+      return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+    case 'nature':
+      return 'bg-green-500/20 text-green-700 border-green-500/30';
+    case 'sunset':
+      return 'bg-orange-500/20 text-orange-600 border-orange-500/30';
+    default:
+      return 'bg-primary/10 text-primary';
+  }
+};
+
+// Helper para obter a cor da barra de progresso baseada no tema
+const getProgressBarColor = (themeId: string): string => {
+  switch (themeId) {
+    case 'default':
+      return 'bg-primary';
+    case 'dark':
+      return 'bg-amber-400';
+    case 'rose':
+      return 'bg-rose-600';
+    case 'ocean':
+      return 'bg-cyan-400';
+    case 'nature':
+      return 'bg-green-700';
+    case 'sunset':
+      return 'bg-orange-600';
+    default:
+      return 'bg-primary';
+  }
+};
+
 const MemberHome = () => {
   const navigate = useNavigate();
   const { logout, user, refreshUser } = useAuth();
@@ -64,6 +268,8 @@ const MemberHome = () => {
   const [showDatesModal, setShowDatesModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showMemberCardModal, setShowMemberCardModal] = useState(false);
+  const [showAttendanceInfoModal, setShowAttendanceInfoModal] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
   const [baptismDate, setBaptismDate] = useState("");
   const [joinDate, setJoinDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,10 +279,27 @@ const MemberHome = () => {
   });
   const [showCardBack, setShowCardBack] = useState(false);
 
+  // Tema da página
+  const [selectedTheme, setSelectedTheme] = useState<string>(() => {
+    const saved = localStorage.getItem('memberHomeTheme');
+    if (saved) return saved;
+
+    // Se não tem tema salvo, detecta o tema do dispositivo (mobile ou desktop)
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return prefersDark ? 'dark' : 'default';
+  });
+
+  const currentTheme = PAGE_THEMES.find(t => t.id === selectedTheme) || PAGE_THEMES[0];
+
   // Salva a escolha do gradiente no localStorage
   useEffect(() => {
     localStorage.setItem('memberCardGradient', selectedGradient.toString());
   }, [selectedGradient]);
+
+  // Salva a escolha do tema no localStorage
+  useEffect(() => {
+    localStorage.setItem('memberHomeTheme', selectedTheme);
+  }, [selectedTheme]);
 
   // Gradientes disponíveis para a carteirinha
   const cardGradients = [
@@ -89,6 +312,51 @@ const MemberHome = () => {
     `radial-gradient(at 96.13735746565624% 80.17190943240347%, hsla(219.21787709497207, 100%, 35.09803921568627%, 1) 0%, hsla(219.21787709497207, 100%, 35.09803921568627%, 0) 100%), radial-gradient(at 80.17866141269798% 68.22058624580039%, hsla(241.9672131147541, 100%, 23.92156862745098%, 1) 0%, hsla(241.9672131147541, 100%, 23.92156862745098%, 0) 100%), radial-gradient(at 48.66814495639351% 47.90492349070592%, hsla(219.21787709497207, 100%, 35.09803921568627%, 1) 0%, hsla(219.21787709497207, 100%, 35.09803921568627%, 0) 100%), radial-gradient(at 9.237576199346332% 65.41627506571648%, hsla(241.9672131147541, 100%, 23.92156862745098%, 1) 0%, hsla(241.9672131147541, 100%, 23.92156862745098%, 0) 100%), radial-gradient(at 7.1165208774113475% 89.5297496302607%, hsla(219.21787709497207, 100%, 35.09803921568627%, 1) 0%, hsla(219.21787709497207, 100%, 35.09803921568627%, 0) 100%), radial-gradient(at 75.19639499278834% 65.08267205365021%, hsla(241.9672131147541, 100%, 23.92156862745098%, 1) 0%, hsla(241.9672131147541, 100%, 23.92156862745098%, 0) 100%), radial-gradient(at 60.60505948753201% 31.899020704306125%, hsla(219.21787709497207, 100%, 35.09803921568627%, 1) 0%, hsla(219.21787709497207, 100%, 35.09803921568627%, 0) 100%), radial-gradient(at 95.2895008292364% 11.13339013752408%, hsla(241.9672131147541, 100%, 23.92156862745098%, 1) 0%, hsla(241.9672131147541, 100%, 23.92156862745098%, 0) 100%), radial-gradient(at 95.14351046985506% 49.036773380224915%, hsla(219.21787709497207, 100%, 35.09803921568627%, 1) 0%, hsla(219.21787709497207, 100%, 35.09803921568627%, 0) 100%), radial-gradient(at 74.72059198593612% 92.81927561773404%, hsla(241.9672131147541, 100%, 23.92156862745098%, 1) 0%, hsla(241.9672131147541, 100%, 23.92156862745098%, 0) 100%), radial-gradient(at 83.21611385029983% 10.190692410264157%, hsla(219.21787709497207, 100%, 35.09803921568627%, 1) 0%, hsla(219.21787709497207, 100%, 35.09803921568627%, 0) 100%), radial-gradient(at 34.73292974529307% 3.6566772751892573%, hsla(241.9672131147541, 100%, 23.92156862745098%, 1) 0%, hsla(241.9672131147541, 100%, 23.92156862745098%, 0) 100%)`,
     `radial-gradient(at 9.488796373887176% 78.0619836634001%, hsla(323.73626373626377, 90.09900990099013%, 60.392156862745104%, 1) 0%, hsla(323.73626373626377, 90.09900990099013%, 60.392156862745104%, 0) 100%), radial-gradient(at 41.21931927193037% 40.68703187684145%, hsla(279.2178770949721, 90.86294416243655%, 61.372549019607845%, 1) 0%, hsla(279.2178770949721, 90.86294416243655%, 61.372549019607845%, 0) 100%), radial-gradient(at 84.91906789923802% 82.55723450511073%, hsla(31.86721991701245, 97.57085020242916%, 51.5686274509804%, 1) 0%, hsla(31.86721991701245, 97.57085020242916%, 51.5686274509804%, 0) 100%), radial-gradient(at 7.261533176902346% 93.15418702920093%, hsla(194.0689655172414, 96.02649006622518%, 70.3921568627451%, 1) 0%, hsla(194.0689655172414, 96.02649006622518%, 70.3921568627451%, 0) 100%), radial-gradient(at 29.93046872483671% 5.108960065500822%, hsla(323.73626373626377, 90.09900990099013%, 60.392156862745104%, 1) 0%, hsla(323.73626373626377, 90.09900990099013%, 60.392156862745104%, 0) 100%), radial-gradient(at 90.87601584733964% 69.81026831684231%, hsla(279.2178770949721, 90.86294416243655%, 61.372549019607845%, 1) 0%, hsla(279.2178770949721, 90.86294416243655%, 61.372549019607845%, 0) 100%), radial-gradient(at 48.06082848829216% 32.83930819838551%, hsla(31.86721991701245, 97.57085020242916%, 51.5686274509804%, 1) 0%, hsla(31.86721991701245, 97.57085020242916%, 51.5686274509804%, 0) 100%), radial-gradient(at 22.2862923952733% 94.21886437369025%, hsla(194.0689655172414, 96.02649006622518%, 70.3921568627451%, 1) 0%, hsla(194.0689655172414, 96.02649006622518%, 70.3921568627451%, 0) 100%)`
   ];
+
+  // Função para obter mensagem e estilo baseado na frequência
+  const getAttendanceMessage = (percentage: number, themeId: string) => {
+    if (percentage >= 90) {
+      return {
+        icon: Award,
+        message: "🏆 Excelente! Você é um exemplo de dedicação!",
+        bgColor: "bg-yellow-50 dark:bg-yellow-950",
+        borderColor: "border-yellow-500",
+        textColor: "text-yellow-700 dark:text-yellow-300"
+      };
+    } else if (percentage >= 70) {
+      return {
+        icon: Target,
+        message: "🎯 Parabéns! Você é um membro assíduo!",
+        bgColor: getBadgeClasses(themeId).split(' ')[0],
+        borderColor: getBadgeClasses(themeId).split(' ').find(c => c.startsWith('border-')) || "border-primary/20",
+        textColor: getIconColorClass(themeId)
+      };
+    } else if (percentage >= 50) {
+      return {
+        icon: TrendingUp,
+        message: "📈 Continue assim! Sua presença é importante!",
+        bgColor: "bg-blue-50 dark:bg-blue-950",
+        borderColor: "border-blue-500",
+        textColor: "text-blue-700 dark:text-blue-300"
+      };
+    } else if (percentage >= 30) {
+      return {
+        icon: AlertCircle,
+        message: "⚠️ Que tal participar mais? Sentimos sua falta!",
+        bgColor: "bg-orange-50 dark:bg-orange-950",
+        borderColor: "border-orange-500",
+        textColor: "text-orange-700 dark:text-orange-300"
+      };
+    } else {
+      return {
+        icon: AlertCircle,
+        message: "🙏 Estamos com saudades! Volte a participar conosco!",
+        bgColor: "bg-red-50 dark:bg-red-950",
+        borderColor: "border-red-500",
+        textColor: "text-red-700 dark:text-red-300"
+      };
+    }
+  };
 
   // Profile form states
   const [profileData, setProfileData] = useState({
@@ -407,17 +675,17 @@ const MemberHome = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted/30">
+    <div className={`min-h-screen flex flex-col ${currentTheme.colors.secondary}`}>
       {/* Header with background image */}
       <div className="relative h-48 md:h-64 flex flex-col">
-        {/* Background Image */}
+        {/* Background Image - Sempre visível */}
         <img
           src={heroRoad}
           alt="Igreja do Deus de Maravilhas"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-secondary/95 via-secondary/70 to-secondary/40" />
+        {/* Película transparente com cor primária do tema */}
+        <div className={`absolute inset-0 bg-gradient-to-r ${currentTheme.colors.primary} opacity-70`} />
 
         {/* Header Bar */}
         <header className="relative z-10 flex items-center justify-between p-4">
@@ -426,15 +694,26 @@ const MemberHome = () => {
             alt="Igreja do Deus de Maravilhas"
             className="w-10 h-10 object-contain"
           />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="text-white hover:bg-white/10"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowThemeModal(true)}
+              className="text-white hover:bg-white/10"
+              title="Personalizar tema"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="text-white hover:bg-white/10"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
+            </Button>
+          </div>
         </header>
 
         {/* Welcome Message */}
@@ -452,12 +731,12 @@ const MemberHome = () => {
       <div className="relative z-10 flex-1 mt-4 md:-mt-8 px-4 pb-8">
         <div className="max-w-4xl mx-auto space-y-4">
           {/* Profile Card */}
-          <Card className="border-2">
+          <Card className={`border-2 ${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
             <CardContent className="pt-6 relative">
               {/* Anos como membro - fixo no topo direito */}
               {yearsAsMember !== null && (
                 <div className="absolute top-[10px] right-[10px] text-right max-w-[80px] md:max-w-none">
-                  <div className="text-3xl font-bold text-primary">{yearsAsMember}</div>
+                  <div className={`text-3xl font-bold ${getIconColorClass(currentTheme.id)}`}>{yearsAsMember}</div>
                   <div className="text-xs text-muted-foreground uppercase tracking-wide leading-tight">
                     {yearsAsMember === 1 ? 'ano' : 'anos'} como membro
                   </div>
@@ -478,15 +757,25 @@ const MemberHome = () => {
                 {/* Info */}
                 <div className="flex-1 space-y-3">
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground pr-20 md:pr-24">{member?.name || "Membro"}</h2>
+                    <h2 className={`text-2xl font-bold pr-20 md:pr-24 ${currentTheme.colors.textPrimary}`}>{member?.name || "Membro"}</h2>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {member?.churchRole && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary">
+                        <Badge
+                          variant="secondary"
+                          className={getBadgeClasses(currentTheme.id)}
+                        >
                           {member.churchRole}
                         </Badge>
                       )}
                       {member?.membershipStatus && (
-                        <Badge variant="outline">
+                        <Badge
+                          variant="outline"
+                          className={
+                            ['dark', 'ocean'].includes(currentTheme.id)
+                              ? "border-slate-600 text-slate-300"
+                              : ""
+                          }
+                        >
                           {member.membershipStatus}
                         </Badge>
                       )}
@@ -497,25 +786,25 @@ const MemberHome = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     {member?.memberCode && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className={`flex items-center gap-2 ${currentTheme.colors.textSecondary}`}>
                         <CreditCard className="h-4 w-4 flex-shrink-0" />
-                        <span>Código: <span className="text-primary font-semibold">{member.memberCode}</span></span>
+                        <span>Código: <span className={`${getIconColorClass(currentTheme.id)} font-semibold`}>{member.memberCode}</span></span>
                       </div>
                     )}
                     {member?.church && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className={`flex items-center gap-2 ${currentTheme.colors.textSecondary}`}>
                         <Church className="h-4 w-4 flex-shrink-0" />
                         <span>{member.church}</span>
                       </div>
                     )}
                     {member?.email && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className={`flex items-center gap-2 ${currentTheme.colors.textSecondary}`}>
                         <Mail className="h-4 w-4 flex-shrink-0" />
                         <span className="truncate">{member.email}</span>
                       </div>
                     )}
                     {member?.primaryPhone && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className={`flex items-center gap-2 ${currentTheme.colors.textSecondary}`}>
                         <Phone className="h-4 w-4 flex-shrink-0" />
                         <span>{member.primaryPhone}</span>
                       </div>
@@ -528,17 +817,17 @@ const MemberHome = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Informações Pessoais */}
-            <Card>
+            <Card className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
+                <CardTitle className={`text-lg flex items-center gap-2 ${currentTheme.colors.textPrimary}`}>
+                  <User className={`h-5 w-5 ${currentTheme.colors.accent}`} />
                   Informações Pessoais
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {member?.birthDate && (
                   <div className="flex justify-between items-start py-2 border-b">
-                    <Cake className="h-5 w-5 text-primary flex-shrink-0" />
+                    <Cake className={`h-5 w-5 flex-shrink-0 ${getIconColorClass(currentTheme.id)}`} />
                     <div className="text-sm font-medium text-right flex flex-col gap-0.5">
                       <span>{formatDate(member?.birthDate)}</span>
                       {formatAge(member?.birthDate) && (
@@ -599,7 +888,7 @@ const MemberHome = () => {
                   <div className="pt-2">
                     <Button
                       variant="default"
-                      className="w-full px-4 py-3 md:px-8 md:py-4 gap-2 md:gap-3 text-[0.8rem]"
+                      className={`w-full px-4 py-3 md:px-8 md:py-4 gap-2 md:gap-3 text-[0.8rem] ${currentTheme.colors.buttonPrimary} ${currentTheme.colors.buttonHover} text-white`}
                       onClick={() => navigate('/dashboard')}
                     >
                       <LayoutDashboard className="h-4 w-4 md:h-5 md:w-5" />
@@ -612,7 +901,7 @@ const MemberHome = () => {
                 <div className="pt-2">
                   <Button
                     variant="outline"
-                    className="w-full px-4 py-3 md:px-8 md:py-4 gap-2 md:gap-3 text-[0.8rem]"
+                    className={`w-full px-4 py-3 md:px-8 md:py-4 gap-2 md:gap-3 text-[0.8rem] ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
                     onClick={() => setShowMemberCardModal(true)}
                   >
                     <User className="h-4 w-4 md:h-5 md:w-5" />
@@ -623,10 +912,10 @@ const MemberHome = () => {
             </Card>
 
             {/* Minhas Escalas */}
-            <Card>
+            <Card className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5 text-primary" />
+                <CardTitle className={`text-lg flex items-center gap-2 ${currentTheme.colors.textPrimary}`}>
+                  <CalendarIcon className={`h-5 w-5 ${currentTheme.colors.accent}`} />
                   Minhas Próximas Escalas
                 </CardTitle>
                 <CardDescription>
@@ -643,30 +932,35 @@ const MemberHome = () => {
                     {upcomingSchedules.map((schedule) => (
                       <div
                         key={schedule.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                        className="flex flex-col items-center text-center p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
                       >
-                        <div className={`p-2 rounded-lg ${
+                        <div className={`p-3 rounded-lg mb-3 ${
                           schedule.type === 'Louvor'
                             ? 'bg-primary/10 text-primary'
                             : 'bg-accent/10 text-accent-foreground'
                         }`}>
                           {schedule.type === 'Louvor' ? (
-                            <Music className="h-5 w-5" />
+                            <Music className="h-6 w-6" />
                           ) : (
-                            <BookOpen className="h-5 w-5" />
+                            <BookOpen className="h-6 w-6" />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
+                        <div className="w-full space-y-2">
+                          <p className="text-base font-semibold leading-tight">
                             {schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Pregação'}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatScheduleDate(schedule.date)} • {schedule.church}
+                          <p className="text-sm font-medium text-foreground">
+                            {formatScheduleDate(schedule.date)}
                           </p>
+                          <div className="flex items-center justify-center gap-2 flex-wrap">
+                            <p className="text-sm text-muted-foreground">
+                              {schedule.church}
+                            </p>
+                            <Badge variant="outline" className="text-xs">
+                              {schedule.category}
+                            </Badge>
+                          </div>
                         </div>
-                        <Badge variant="outline" className="flex-shrink-0">
-                          {schedule.category}
-                        </Badge>
                       </div>
                     ))}
 
@@ -692,15 +986,27 @@ const MemberHome = () => {
             </Card>
 
             {/* Frequência nos Cultos */}
-            <Card>
+            <Card className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  Frequência nos Cultos
-                </CardTitle>
-                <CardDescription>
-                  Sua participação este ano
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <TrendingUp className={`h-5 w-5 ${getIconColorClass(currentTheme.id)}`} />
+                      Frequência nos Cultos
+                    </CardTitle>
+                    <CardDescription>
+                      Sua participação este ano
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
+                    onClick={() => setShowAttendanceInfoModal(true)}
+                  >
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -708,7 +1014,7 @@ const MemberHome = () => {
                     <span className="text-muted-foreground">Total de Presenças</span>
                     <span className="font-semibold">32 cultos</span>
                   </div>
-                  <Progress value={80} className="h-2" />
+                  <Progress value={80} className="h-2" indicatorClassName={getProgressBarColor(currentTheme.id)} />
                   <p className="text-xs text-muted-foreground text-right">80% de frequência</p>
                 </div>
 
@@ -717,7 +1023,7 @@ const MemberHome = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <CheckCircle2 className={`h-4 w-4 ${getIconColorClass(currentTheme.id)}`} />
                       <span className="text-sm text-muted-foreground">Este mês</span>
                     </div>
                     <span className="text-sm font-medium">4/4 cultos</span>
@@ -725,7 +1031,7 @@ const MemberHome = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <CheckCircle2 className={`h-4 w-4 ${getIconColorClass(currentTheme.id)}`} />
                       <span className="text-sm text-muted-foreground">Mês anterior</span>
                     </div>
                     <span className="text-sm font-medium">4/5 cultos</span>
@@ -733,26 +1039,37 @@ const MemberHome = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4 text-primary" />
+                      <CalendarIcon className={`h-4 w-4 ${getIconColorClass(currentTheme.id)}`} />
                       <span className="text-sm text-muted-foreground">Última presença</span>
                     </div>
                     <span className="text-sm font-medium">Domingo passado</span>
                   </div>
                 </div>
 
-                <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                  <p className="text-xs text-center text-primary font-medium">
-                    🎯 Parabéns! Você é um membro assíduo!
-                  </p>
-                </div>
+                {(() => {
+                  const attendancePercentage = 80; // Mock data
+                  const attendanceInfo = getAttendanceMessage(attendancePercentage, currentTheme.id);
+                  const MessageIcon = attendanceInfo.icon;
+
+                  return (
+                    <div className={`mt-4 p-3 rounded-lg border ${attendanceInfo.bgColor} ${attendanceInfo.borderColor}`}>
+                      <div className="flex items-center justify-center gap-2">
+                        <MessageIcon className={`h-4 w-4 ${attendanceInfo.textColor}`} />
+                        <p className={`text-xs text-center font-medium ${attendanceInfo.textColor}`}>
+                          {attendanceInfo.message}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </div>
 
           {/* Ações Rápidas */}
-          <Card>
+          <Card className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
             <CardHeader>
-              <CardTitle className="text-lg">Ações Rápidas</CardTitle>
+              <CardTitle className={`text-lg ${currentTheme.colors.textPrimary}`}>Ações Rápidas</CardTitle>
               <CardDescription>
                 Acesso rápido às principais funcionalidades
               </CardDescription>
@@ -761,10 +1078,10 @@ const MemberHome = () => {
               <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${isBirthday() ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex-col gap-2"
+                  className={`h-auto py-4 flex-col gap-2 ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
                   onClick={() => navigate('/prayer-request')}
                 >
-                  <Heart className="h-6 w-6 text-primary" />
+                  <Heart className={`h-6 w-6 ${getIconColorClass(currentTheme.id)}`} />
                   <div className="text-center">
                     <div className="font-semibold">Pedido de Oração</div>
                     <div className="text-xs text-muted-foreground">Envie seu pedido</div>
@@ -773,10 +1090,10 @@ const MemberHome = () => {
 
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex-col gap-2"
+                  className={`h-auto py-4 flex-col gap-2 ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
                   onClick={() => navigate('/calendar')}
                 >
-                  <CalendarIcon className="h-6 w-6 text-primary" />
+                  <CalendarIcon className={`h-6 w-6 ${getIconColorClass(currentTheme.id)}`} />
                   <div className="text-center">
                     <div className="font-semibold">Calendário</div>
                     <div className="text-xs text-muted-foreground">Eventos e escalas</div>
@@ -785,10 +1102,10 @@ const MemberHome = () => {
 
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex-col gap-2"
+                  className={`h-auto py-4 flex-col gap-2 ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
                   onClick={openProfileModal}
                 >
-                  <Edit className="h-6 w-6 text-primary" />
+                  <Edit className={`h-6 w-6 ${getIconColorClass(currentTheme.id)}`} />
                   <div className="text-center">
                     <div className="font-semibold">Meus Dados</div>
                     <div className="text-xs text-muted-foreground">Atualizar informações</div>
@@ -798,10 +1115,10 @@ const MemberHome = () => {
                 {isBirthday() && (
                   <Button
                     variant="outline"
-                    className="h-auto py-4 flex-col gap-2"
+                    className={`h-auto py-4 flex-col gap-2 ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
                     onClick={() => setShowBirthdayAnimation(true)}
                   >
-                    <PartyPopper className="h-6 w-6 text-primary" />
+                    <PartyPopper className={`h-6 w-6 ${getIconColorClass(currentTheme.id)}`} />
                     <div className="text-center">
                       <div className="font-semibold">Animação</div>
                       <div className="text-xs text-muted-foreground">Ver parabéns</div>
@@ -814,11 +1131,11 @@ const MemberHome = () => {
 
           {/* Blessing Message */}
           <div className="flex items-center justify-center gap-2 text-muted-foreground py-4">
-            <Heart className="w-4 h-4 text-primary" />
+            <Heart className={`w-4 h-4 ${getIconColorClass(currentTheme.id)}`} />
             <span className="text-sm text-center">
               Que Deus abençoe sua vida e sua família
             </span>
-            <Heart className="w-4 h-4 text-primary" />
+            <Heart className={`w-4 h-4 ${getIconColorClass(currentTheme.id)}`} />
           </div>
         </div>
       </div>
@@ -1149,12 +1466,12 @@ const MemberHome = () => {
 
             {/* Área de Pré-visualização - Visível apenas no desktop */}
             <div className="hidden lg:flex flex-1 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-3 lg:p-8 items-center justify-center">
-              <div className="w-full">
+              <div className="w-full max-w-[447px] mx-auto">
                 <h3 className="text-xs lg:text-sm font-semibold text-muted-foreground mb-3 lg:mb-4 text-center">
                   Pré-visualização da Carteirinha {showCardBack ? '(Verso)' : '(Frente)'}
                 </h3>
 
-                <div className="relative transition-all duration-500 ease-in-out" style={{
+                <div className="relative transition-all duration-500 ease-in-out max-h-[280px]" style={{
                   transformStyle: 'preserve-3d'
                 }}>
                   {/* FRENTE DA CARTEIRINHA */}
@@ -1337,10 +1654,10 @@ const MemberHome = () => {
                       Pré-visualização da Carteirinha {showCardBack ? '(Verso)' : '(Frente)'}
                     </h3>
                     {/* A carteirinha aqui - mesma estrutura da desktop */}
-                    <div className="relative transition-all duration-500 ease-in-out" style={{transformStyle: 'preserve-3d'}}>
+                    <div className="relative transition-all duration-500 ease-in-out " style={{transformStyle: 'preserve-3d'}}>
                       {/* FRENTE DA CARTEIRINHA */}
                       <div
-                        className="p-3 lg:p-5 text-white relative rounded-2xl shadow-2xl aspect-[16/10] transition-all duration-500 ease-in-out"
+                        className="p-3 lg:p-5 text-white relative rounded-2xl shadow-2xl transition-all duration-500 ease-in-out"
                         style={{
                           background: cardGradients[selectedGradient],
                           overflow: 'hidden',
@@ -1795,6 +2112,170 @@ const MemberHome = () => {
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Informações de Frequência */}
+      <Dialog open={showAttendanceInfoModal} onOpenChange={setShowAttendanceInfoModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-primary" />
+              Níveis de Frequência
+            </DialogTitle>
+            <DialogDescription>
+              Entenda como funciona a classificação de frequência
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* 90-100% */}
+            <div className="flex gap-3 items-start">
+              <div className="mt-0.5">
+                <Award className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-sm mb-1">90-100% - Excelente</div>
+                <p className="text-xs text-muted-foreground">
+                  🏆 Você é um exemplo de dedicação! Participação exemplar nos cultos.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* 70-89% */}
+            <div className="flex gap-3 items-start">
+              <div className="mt-0.5">
+                <Target className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-sm mb-1">70-89% - Assíduo</div>
+                <p className="text-xs text-muted-foreground">
+                  🎯 Parabéns! Você é um membro assíduo e comprometido com a igreja.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* 50-69% */}
+            <div className="flex gap-3 items-start">
+              <div className="mt-0.5">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-sm mb-1">50-69% - Regular</div>
+                <p className="text-xs text-muted-foreground">
+                  📈 Continue assim! Sua presença é importante para a comunidade.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* 30-49% */}
+            <div className="flex gap-3 items-start">
+              <div className="mt-0.5">
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-sm mb-1">30-49% - Atenção</div>
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ Que tal participar mais? Sentimos sua falta nos cultos!
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* < 30% */}
+            <div className="flex gap-3 items-start">
+              <div className="mt-0.5">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-sm mb-1">Abaixo de 30% - Ausente</div>
+                <p className="text-xs text-muted-foreground">
+                  🙏 Estamos com saudades! Volte a participar conosco!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground">
+            <p className="text-center">
+              A frequência é calculada com base nas suas presenças registradas nos cultos ao longo do ano.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Seleção de Tema */}
+      <Dialog open={showThemeModal} onOpenChange={setShowThemeModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5 text-primary" />
+              Personalizar Tema
+            </DialogTitle>
+            <DialogDescription>
+              Escolha um tema para personalizar sua experiência na área de membros
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            {PAGE_THEMES.map((theme) => (
+              <div
+                key={theme.id}
+                onClick={() => setSelectedTheme(theme.id)}
+                className={`relative cursor-pointer rounded-lg border-2 p-4 transition-all hover:scale-105 ${
+                  selectedTheme === theme.id
+                    ? 'border-primary shadow-lg'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                {/* Preview do tema */}
+                <div
+                  className={`h-24 rounded-md mb-3 bg-gradient-to-r ${theme.colors.primary} p-3 flex items-center justify-center`}
+                >
+                  <div className="text-white text-center">
+                    {theme.icon}
+                    <div className="text-xs mt-2 font-semibold">{theme.name}</div>
+                  </div>
+                </div>
+
+                {/* Informações do tema */}
+                <div className="space-y-1">
+                  <h4 className="font-semibold text-sm">{theme.name}</h4>
+                  <p className="text-xs text-muted-foreground">{theme.description}</p>
+                </div>
+
+                {/* Indicador de seleção */}
+                {selectedTheme === theme.id && (
+                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const saved = localStorage.getItem('memberHomeTheme');
+                setSelectedTheme(saved || 'default');
+                setShowThemeModal(false);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={() => setShowThemeModal(false)}>
+              Aplicar Tema
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

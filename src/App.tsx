@@ -23,6 +23,7 @@ import Repertoire from "./pages/Repertoire";
 import WorshipForm from "./pages/WorshipForm";
 import Schedules from "./pages/Schedules";
 import ScheduleForm from "./pages/ScheduleForm";
+import ServiceScheduleManagement from "./pages/ServiceScheduleManagement";
 import CalendarPage from "./pages/CalendarPage";
 import NotFound from "./pages/NotFound";
 
@@ -61,6 +62,7 @@ const App = () => (
           <Route path="/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
           <Route path="/schedules/new" element={<ProtectedRoute><ScheduleForm /></ProtectedRoute>} />
           <Route path="/schedules/edit/:id" element={<ProtectedRoute><ScheduleForm /></ProtectedRoute>} />
+          <Route path="/service-schedule" element={<ProtectedRoute><ServiceScheduleManagement /></ProtectedRoute>} />
           <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
 
           {/* Catch-all Route */}

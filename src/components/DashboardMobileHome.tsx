@@ -13,6 +13,7 @@ import {
   LogOut,
   Heart,
   CreditCard,
+  Church,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -120,6 +121,14 @@ const DashboardMobileHome = () => {
       icon: Settings,
       path: "/users",
       feature: "users",
+    },
+    {
+      id: "service-schedule",
+      title: "Cultos",
+      description: "Cadastrar cultos",
+      icon: Church,
+      path: "/service-schedule",
+      feature: "schedules",
     },
   ];
 

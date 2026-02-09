@@ -43,15 +43,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { attendanceService } from "@/services/attendance";
 import { membersService } from "@/services/members";
+import { serviceScheduleService } from "@/services/serviceSchedule";
 import { Member } from "@/types/member";
 import { Attendance, AttendanceStats, SERVICE_TIMES } from "@/types/attendance";
 import { SCHEDULE_CATEGORIES, CHURCHES, ScheduleCategory, Church as ChurchType } from "@/types/schedule";
+import { ServiceSchedule } from "@/types/serviceSchedule";
 
 // Coordenadas das igrejas
 const CHURCH_COORDINATES: Record<ChurchType, { lat: number; lng: number }> = {
@@ -129,8 +141,13 @@ const AttendanceControl = () => {
   const [selectedTime, setSelectedTime] = useState<string>("19:00");
   const [selectedType, setSelectedType] = useState<ScheduleCategory>(() => getServiceTypeByDay(new Date()));
 
+  // Cultos disponíveis e culto selecionado
+  const [availableServices, setAvailableServices] = useState<ServiceSchedule[]>([]);
+  const [selectedService, setSelectedService] = useState<ServiceSchedule | null>(null);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
+
   // Verificar se configuração está completa
-  const isConfigComplete = selectedChurch !== "";
+  const isConfigComplete = selectedService !== null;
 
   // Verificar se pode executar ações de presença
   // Não-admin só pode marcar/desmarcar presença na data atual
@@ -140,7 +157,9 @@ const AttendanceControl = () => {
   // Filtro de membros
   const [memberChurchFilter, setMemberChurchFilter] = useState<ChurchType | "all">("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"pending" | "present">("pending");
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "present">(
+    isSelectedDateToday ? "all" : "pending"
+  );
 
   // Dados
   const [members, setMembers] = useState<Member[]>([]);
@@ -158,6 +177,7 @@ const AttendanceControl = () => {
   const [visitorName, setVisitorName] = useState("");
   const [visitorPhone, setVisitorPhone] = useState("");
   const [isAddingVisitor, setIsAddingVisitor] = useState(false);
+  const [editingVisitor, setEditingVisitor] = useState<Attendance | null>(null);
 
   // Geolocalização
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
@@ -174,28 +194,101 @@ const AttendanceControl = () => {
   const touchStartRef = useRef<{ x: number; y: number; memberId: number } | null>(null);
   const swipeThreshold = 100; // pixels para confirmar swipe
 
-  // Atualizar tipo de culto quando a data mudar
-  useEffect(() => {
-    setSelectedType(getServiceTypeByDay(selectedDate));
-  }, [selectedDate]);
+  // Dialog de confirmação para ações em datas históricas (admin)
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    action: () => void;
+    memberName?: string;
+    isRemoving?: boolean;
+    isVisitor?: boolean;
+  }>({
+    open: false,
+    action: () => {},
+  });
 
-  // IDs dos membros que já têm presença
-  const presentMemberIds = useMemo(() => {
-    const ids = attendances
-      .filter((a) => a.memberId !== null || a.member?.id !== undefined)
+  // Membros presentes (extraídos das presenças, sem visitantes)
+  const presentMembers = useMemo(() => {
+    return attendances
+      .filter((a) => a.memberId !== null && a.member)
       .map((a) => {
-        const id = a.memberId ?? a.member?.id;
-        return typeof id === 'string' ? parseInt(id, 10) : id;
-      })
-      .filter((id): id is number => id !== null && id !== undefined && !isNaN(id));
+        const member = a.member!;
+        return {
+          ...member,
+          // Garantir que id seja number
+          id: typeof member.id === 'string' ? parseInt(member.id, 10) : member.id,
+        } as Member;
+      });
+  }, [attendances]);
 
-    return new Set(ids);
+  // IDs dos membros presentes (para verificação rápida no modo "all")
+  const presentMemberIds = useMemo(() => {
+    return new Set(attendances
+      .filter((a) => a.memberId !== null)
+      .map((a) => a.memberId!)
+    );
   }, [attendances]);
 
   // Visitantes na lista de presenças
   const visitors = useMemo(() => {
     return attendances.filter((a) => a.visitorName !== null);
   }, [attendances]);
+
+  // Contadores para os botões (considera filtro de igreja)
+  const absentMembersCount = useMemo(() => {
+    return members.filter(m =>
+      !presentMemberIds.has(m.id) &&
+      (memberChurchFilter === "all" || m.church === memberChurchFilter)
+    ).length;
+  }, [members, presentMemberIds, memberChurchFilter]);
+
+  // Função para recarregar dados após mudanças
+  const reloadData = useCallback(async () => {
+    if (!selectedService) return;
+
+    // Recarregar presenças
+    try {
+      const data = await attendanceService.list({
+        serviceScheduleId: selectedService.id,
+      });
+
+      let attendanceList: Attendance[] = [];
+      const responseData = data as unknown;
+      if (Array.isArray(responseData)) {
+        attendanceList = responseData as Attendance[];
+      } else if (data && typeof data === 'object' && 'attendances' in data && Array.isArray(data.attendances)) {
+        attendanceList = data.attendances;
+      }
+
+      setAttendances(attendanceList);
+    } catch {
+      setAttendances([]);
+    }
+
+    // Recarregar todos os membros ativos
+    // NÃO depende do filterStatus - sempre carrega todos
+    try {
+      const data = await membersService.getAll(true); // Usa cache
+      setMembers(data.filter((m) => m.membershipStatus === "Ativo"));
+    } catch {
+      setMembers([]);
+    }
+
+    // Recarregar estatísticas
+    try {
+      const data = await attendanceService.getStats({
+        serviceScheduleId: selectedService.id,
+      });
+      setStats(data);
+    } catch (error) {
+      // Erro ao buscar stats - usar valores padrão
+      setStats({
+        totalMembers: 0,
+        presentMembers: 0,
+        absentMembers: 0,
+        attendanceRate: 0,
+      });
+    }
+  }, [selectedService]);
 
   // Detectar geolocalização ao carregar
   useEffect(() => {
@@ -230,13 +323,76 @@ const AttendanceControl = () => {
     );
   }, []);
 
-  // Carregar membros
+  // Resetar filtro quando mudar entre hoje e outros dias
+  useEffect(() => {
+    if (isSelectedDateToday) {
+      // Modo registro: mostrar "Todos" por padrão
+      setFilterStatus("all");
+    } else {
+      // Modo visualização: mostrar "Ausentes" por padrão
+      setFilterStatus("pending");
+    }
+  }, [isSelectedDateToday]);
+
+  // Carregar cultos disponíveis baseado nos filtros
+  useEffect(() => {
+    const loadServices = async () => {
+      if (!selectedChurch) {
+        setAvailableServices([]);
+        setSelectedService(null);
+        return;
+      }
+
+      setIsLoadingServices(true);
+      try {
+        // Buscar cultos filtrados por mês e igreja
+        const dateStr = format(selectedDate, "yyyy-MM");
+        const allServices = await serviceScheduleService.getAll({
+          month: dateStr,
+          church: selectedChurch
+        });
+
+        // Filtrar cultos pela data selecionada
+        const filtered = allServices.filter(service => {
+          const matchDate = service.date === format(selectedDate, "yyyy-MM-dd");
+          return matchDate;
+        });
+
+        setAvailableServices(filtered);
+
+        // Auto-selecionar o primeiro culto se existir
+        if (filtered.length > 0) {
+          setSelectedService(filtered[0]);
+        } else {
+          setSelectedService(null);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar cultos:", error);
+        setAvailableServices([]);
+        setSelectedService(null);
+      } finally {
+        setIsLoadingServices(false);
+      }
+    };
+
+    loadServices();
+  }, [selectedChurch, selectedDate]);
+
+  // Carregar membros quando o culto selecionado mudar
+  // NÃO recarrega ao trocar de aba (filterStatus)
   useEffect(() => {
     const loadMembers = async () => {
+      // Se não tem culto selecionado, não carrega membros
+      if (!selectedService) {
+        setMembers([]);
+        return;
+      }
+
       setIsLoadingMembers(true);
       try {
-        const data = await membersService.getAll();
-        // Filtrar apenas membros ativos
+        // Sempre busca TODOS os membros ativos
+        // O filtro por presença será feito client-side no filteredMembers
+        const data = await membersService.getAll(true); // Usa cache
         setMembers(data.filter((m) => m.membershipStatus === "Ativo"));
       } catch (error) {
         const message = error instanceof Error ? error.message : "Erro ao carregar membros";
@@ -245,26 +401,28 @@ const AttendanceControl = () => {
           description: message,
           variant: "destructive",
         });
+        setMembers([]);
       } finally {
         setIsLoadingMembers(false);
       }
     };
 
     loadMembers();
-  }, []);
+  }, [selectedService, toast]);
 
-  // Carregar presenças e estatísticas quando os filtros mudarem
+  // Carregar presenças e estatísticas quando o culto selecionado mudar
   useEffect(() => {
-    if (!selectedChurch) return;
+    if (!selectedService) {
+      setAttendances([]);
+      setStats(null);
+      return;
+    }
 
     const loadAttendances = async () => {
       setIsLoadingAttendances(true);
       try {
         const data = await attendanceService.list({
-          serviceDate: format(selectedDate, "yyyy-MM-dd"),
-          church: selectedChurch,
-          serviceType: selectedType,
-          serviceTime: selectedTime,
+          serviceScheduleId: selectedService.id,
         });
 
         // Handle case where API might return array directly or in different structure
@@ -288,21 +446,15 @@ const AttendanceControl = () => {
       setIsLoadingStats(true);
       try {
         const data = await attendanceService.getStats({
-          serviceDate: format(selectedDate, "yyyy-MM-dd"),
-          serviceTime: selectedTime,
-          serviceType: selectedType,
-          church: selectedChurch,
+          serviceScheduleId: selectedService.id,
         });
         setStats(data);
       } catch (error) {
-        // Se não houver estatísticas, calcular localmente
-        const totalMembers = members.filter(
-          (m) => m.church === selectedChurch && m.membershipStatus === "Ativo"
-        ).length;
+        // Se não houver estatísticas, usar valores padrão
         setStats({
-          totalMembers,
+          totalMembers: 0,
           presentMembers: 0,
-          absentMembers: totalMembers,
+          absentMembers: 0,
           attendanceRate: 0,
         });
       } finally {
@@ -312,14 +464,29 @@ const AttendanceControl = () => {
 
     loadAttendances();
     loadStats();
-  }, [selectedChurch, selectedDate, selectedTime, selectedType]);
+  }, [selectedService]);
 
   // Filtrar membros
   const filteredMembers = useMemo(() => {
-    let filtered = members;
+    // Escolher a lista baseada no filtro de status
+    let filtered: Member[];
 
-    // Filtrar por igreja do membro (para facilitar busca)
-    if (memberChurchFilter !== "all") {
+    if (filterStatus === "present") {
+      // Apenas membros presentes
+      filtered = presentMembers;
+    } else if (filterStatus === "all" || filterStatus === "pending") {
+      // "all" = Todos sem presença (modo registro no dia do culto)
+      // "pending" = Ausentes (modo visualização em outros dias)
+      // Ambos mostram apenas quem NÃO tem presença marcada
+      filtered = members.filter(m => !presentMemberIds.has(m.id));
+    } else {
+      // Fallback (não deveria chegar aqui)
+      filtered = members;
+    }
+
+    // Filtrar por igreja do membro APENAS quando não está na aba "present"
+    // Na aba "present", os membros já estão filtrados pelo culto específico
+    if (filterStatus !== "present" && memberChurchFilter !== "all") {
       filtered = filtered.filter((m) => m.church === memberChurchFilter);
     }
 
@@ -334,24 +501,37 @@ const AttendanceControl = () => {
       );
     }
 
-    // Filtrar por status de presença
-    // "pending" mostra membros que ainda NÃO foram marcados como presentes
-    // "present" mostra membros que JÁ foram marcados como presentes
-    if (filterStatus === "pending") {
-      filtered = filtered.filter((m) => !presentMemberIds.has(m.id));
-    } else if (filterStatus === "present") {
-      filtered = filtered.filter((m) => presentMemberIds.has(m.id));
-    }
-
     return filtered;
-  }, [members, memberChurchFilter, searchTerm, filterStatus, presentMemberIds]);
+  }, [members, presentMembers, presentMemberIds, memberChurchFilter, searchTerm, filterStatus]);
+
+  // Helper para confirmar ações em datas históricas (admin)
+  const confirmHistoricalAction = useCallback((
+    action: () => void,
+    memberName?: string,
+    isRemoving?: boolean,
+    isVisitor?: boolean
+  ) => {
+    // Se não é hoje e é admin, pedir confirmação
+    if (!isSelectedDateToday && isAdmin) {
+      setConfirmDialog({
+        open: true,
+        action,
+        memberName,
+        isRemoving,
+        isVisitor,
+      });
+    } else {
+      // Caso contrário, executar ação diretamente
+      action();
+    }
+  }, [isSelectedDateToday, isAdmin]);
 
   // Toggle presença de membro
   const toggleMemberAttendance = async (memberId: number) => {
-    if (!selectedChurch) {
+    if (!selectedService) {
       toast({
-        title: "Selecione uma igreja",
-        description: "É necessário selecionar a igreja do culto primeiro.",
+        title: "Selecione um culto",
+        description: "É necessário selecionar um culto cadastrado primeiro.",
         variant: "destructive",
       });
       return;
@@ -367,129 +547,243 @@ const AttendanceControl = () => {
       return;
     }
 
-    setTogglingMemberId(memberId);
+    // Determinar se está marcando ou desmarcando (baseado se já está presente)
+    const isCurrentlyPresent = presentMemberIds.has(memberId);
+    const member = members.find(m => m.id === memberId);
 
-    try {
-      const result = await attendanceService.toggle({
-        memberId,
-        serviceDate: format(selectedDate, "yyyy-MM-dd"),
-        serviceTime: selectedTime,
-        serviceType: selectedType,
-        church: selectedChurch,
-      });
+    // Usar confirmação se for admin em data histórica
+    confirmHistoricalAction(
+      () => executeToggleMemberAttendance(memberId, isCurrentlyPresent, member),
+      member?.name,
+      isCurrentlyPresent,
+      false
+    );
+  };
 
-      // Usar result.action para decidir se estamos removendo ou adicionando
-      const wasRemoved = result.action === 'removed';
+  // Executar toggle de presença (após confirmação se necessário)
+  const executeToggleMemberAttendance = async (
+    memberId: number,
+    isCurrentlyPresent: boolean,
+    member?: Member
+  ) => {
+    if (!selectedService) return;
 
-      if (wasRemoved) {
-        // Presença foi removida
-        setAttendances((prev) => prev.filter((a) => {
-          const attendanceMemberId = typeof a.memberId === 'string'
-            ? parseInt(a.memberId, 10)
-            : a.memberId;
-          return attendanceMemberId !== memberId;
-        }));
+    // UI OTIMISTA: Atualizar IMEDIATAMENTE antes da API responder
+    if (isCurrentlyPresent) {
+      // Está presente → vai remover
+      // Snapshot para reverter se der erro
+      const previousAttendances = attendances;
+      const previousStats = stats;
+
+      // Remove IMEDIATAMENTE da lista
+      setAttendances(prev => prev.filter(a => a.memberId !== memberId));
+
+      // Atualiza stats IMEDIATAMENTE
+      setStats(prev => prev ? {
+        ...prev,
+        presentMembers: Math.max(0, prev.presentMembers - 1),
+        absentMembers: prev.absentMembers + 1,
+        attendanceRate: Math.round(((prev.presentMembers - 1) / prev.totalMembers) * 100),
+      } : null);
+
+      // Chama API em background
+      try {
+        const result = await attendanceService.toggle({
+          memberId,
+          serviceScheduleId: selectedService.id,
+        });
+
+        console.log('[toggleMemberAttendance REMOVE] API response:', result);
+
+        // Se chegou aqui sem erro, consideramos sucesso - não reverter!
         toast({
           title: "Presença removida",
           description: "A presença foi desmarcada com sucesso.",
         });
-      } else {
-        // Presença foi criada (action === 'created')
-        setAttendances((prev) => [
-          ...prev,
-          {
-            id: result.id ?? Date.now(),
-            memberId: memberId,
-            member: result.member ?? null,
-            visitorName: null,
-            visitorPhone: null,
-            serviceDate: result.serviceDate ?? format(selectedDate, "yyyy-MM-dd"),
-            serviceTime: result.serviceTime ?? selectedTime,
-            serviceType: result.serviceType ?? selectedType,
-            church: result.church ?? selectedChurch,
-            recordedBy: result.recordedBy ?? 0,
-            createdAt: result.createdAt ?? new Date().toISOString(),
-          },
-        ]);
+      } catch (error) {
+        // Erro: reverter mudanças otimistas
+        setAttendances(previousAttendances);
+        setStats(previousStats);
+        const message = error instanceof Error ? error.message : "Erro ao remover presença";
+        toast({
+          title: "Erro",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Não está presente → vai adicionar
+      // Snapshot para reverter se der erro
+      const previousAttendances = attendances;
+      const previousStats = stats;
+
+      // Cria attendance temporário com ID negativo (temporário)
+      const tempId = -Date.now(); // ID temporário único negativo
+      const tempAttendance: Attendance = {
+        id: tempId,
+        memberId: memberId,
+        member: member ? {
+          id: member.id,
+          name: member.name,
+          church: member.church || 'Uberaba',
+          photoUrl: member.photoUrl,
+        } : null,
+        visitorName: null,
+        visitorPhone: null,
+        serviceScheduleId: selectedService.id,
+        serviceDate: selectedService.date,
+        serviceTime: selectedService.time,
+        serviceType: 'Culto de Domingo',
+        church: (member?.church as any) || 'Uberaba',
+        recordedBy: 0,
+        createdAt: new Date().toISOString(),
+      };
+
+      // Adiciona IMEDIATAMENTE à lista
+      setAttendances(prev => [...prev, tempAttendance]);
+
+      // Atualiza stats IMEDIATAMENTE
+      setStats(prev => prev ? {
+        ...prev,
+        presentMembers: prev.presentMembers + 1,
+        absentMembers: Math.max(0, prev.absentMembers - 1),
+        attendanceRate: Math.round(((prev.presentMembers + 1) / prev.totalMembers) * 100),
+      } : null);
+
+      // Chama API em background
+      try {
+        const result = await attendanceService.toggle({
+          memberId,
+          serviceScheduleId: selectedService.id,
+        });
+
+        console.log('[toggleMemberAttendance ADD] API response:', result);
+
+        // Se chegou aqui sem erro, consideramos sucesso
+        // Substituir attendance temporário pelo real (se tiver ID válido)
+        if (result.id !== undefined && result.id !== null) {
+          setAttendances(prev => prev.map(a =>
+            a.id === tempId ? {
+              ...tempAttendance,
+              id: result.id!,
+              serviceDate: result.serviceDate || tempAttendance.serviceDate,
+              serviceTime: result.serviceTime || tempAttendance.serviceTime,
+              serviceType: result.serviceType || tempAttendance.serviceType,
+              church: result.church || tempAttendance.church,
+              recordedBy: result.recordedBy || tempAttendance.recordedBy,
+              createdAt: result.createdAt || tempAttendance.createdAt,
+            } : a
+          ));
+        }
+        // Se chegou aqui, é sucesso - não reverter!
         toast({
           title: "Presença registrada",
           description: "A presença foi marcada com sucesso.",
         });
-      }
-
-      // Atualizar estatísticas
-      if (stats) {
-        const newPresentCount = wasRemoved
-          ? stats.presentMembers - 1
-          : stats.presentMembers + 1;
-        setStats({
-          ...stats,
-          presentMembers: newPresentCount,
-          absentMembers: stats.totalMembers - newPresentCount,
-          attendanceRate: Math.round((newPresentCount / stats.totalMembers) * 100),
+      } catch (error) {
+        // Erro: reverter mudanças otimistas
+        setAttendances(previousAttendances);
+        setStats(previousStats);
+        const message = error instanceof Error ? error.message : "Erro ao registrar presença";
+        toast({
+          title: "Erro",
+          description: message,
+          variant: "destructive",
         });
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao registrar presença";
-      toast({
-        title: "Erro",
-        description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setTogglingMemberId(null);
     }
   };
 
   // Swipe: marcar presença via swipe direita (mobile)
   const handleSwipeMarkPresent = useCallback(async (memberId: number, memberName: string) => {
-    if (!selectedChurch || !canManageAttendance) return;
+    if (!selectedService || !canManageAttendance) return;
     if (pendingSwipes.has(memberId)) return;
+
+    const member = members.find(m => m.id === memberId);
+
+    // Usar confirmação se for admin em data histórica
+    confirmHistoricalAction(
+      () => executeSwipeMarkPresent(memberId, memberName, member),
+      memberName,
+      false,
+      false
+    );
+  }, [selectedService, canManageAttendance, pendingSwipes, members, confirmHistoricalAction]);
+
+  // Executar marcar presença via swipe (após confirmação se necessário)
+  const executeSwipeMarkPresent = useCallback(async (memberId: number, memberName: string, member?: Member) => {
+    if (!selectedService) return;
 
     // Adiciona à lista de pendentes (otimista)
     setPendingSwipes(prev => new Set([...prev, memberId]));
 
+    // UI OTIMISTA: Snapshot para reverter se der erro
+    const previousAttendances = attendances;
+    const previousStats = stats;
+
+    // Cria attendance temporário com ID negativo (temporário)
+    const tempId = -Date.now();
+    const tempAttendance: Attendance = {
+      id: tempId,
+      memberId: memberId,
+      member: member ? {
+        id: member.id,
+        name: member.name,
+        church: member.church || 'Uberaba',
+        photoUrl: member.photoUrl,
+      } : null,
+      visitorName: null,
+      visitorPhone: null,
+      serviceScheduleId: selectedService.id,
+      serviceDate: selectedService.date,
+      serviceTime: selectedService.time,
+      serviceType: 'Culto de Domingo',
+      church: (member?.church as any) || 'Uberaba',
+      recordedBy: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Adiciona IMEDIATAMENTE à lista
+    setAttendances(prev => [...prev, tempAttendance]);
+
+    // Atualiza stats IMEDIATAMENTE
+    setStats(prev => prev ? {
+      ...prev,
+      presentMembers: prev.presentMembers + 1,
+      absentMembers: Math.max(0, prev.absentMembers - 1),
+      attendanceRate: Math.round(((prev.presentMembers + 1) / prev.totalMembers) * 100),
+    } : null);
+
+    // Chama API em background
     try {
       const result = await attendanceService.toggle({
         memberId,
-        serviceDate: format(selectedDate, "yyyy-MM-dd"),
-        serviceTime: selectedTime,
-        serviceType: selectedType,
-        church: selectedChurch,
+        serviceScheduleId: selectedService.id,
       });
 
-      if (result.action === 'created') {
-        // Presença foi criada com sucesso
-        setAttendances((prev) => [
-          ...prev,
-          {
-            id: result.id ?? Date.now(),
-            memberId: memberId,
-            member: result.member ?? null,
-            visitorName: null,
-            visitorPhone: null,
-            serviceDate: result.serviceDate ?? format(selectedDate, "yyyy-MM-dd"),
-            serviceTime: result.serviceTime ?? selectedTime,
-            serviceType: result.serviceType ?? selectedType,
-            church: result.church ?? selectedChurch,
-            recordedBy: result.recordedBy ?? 0,
-            createdAt: result.createdAt ?? new Date().toISOString(),
-          },
-        ]);
+      console.log('[handleSwipeMarkPresent] API response:', result);
 
-        // Atualizar estatísticas
-        if (stats) {
-          const newPresentCount = stats.presentMembers + 1;
-          setStats({
-            ...stats,
-            presentMembers: newPresentCount,
-            absentMembers: stats.totalMembers - newPresentCount,
-            attendanceRate: Math.round((newPresentCount / stats.totalMembers) * 100),
-          });
-        }
+      // Se chegou aqui sem erro, consideramos sucesso
+      // Substituir attendance temporário pelo real (se tiver ID válido)
+      if (result.id !== undefined && result.id !== null) {
+        setAttendances(prev => prev.map(a =>
+          a.id === tempId ? {
+            ...tempAttendance,
+            id: result.id!,
+            serviceDate: result.serviceDate || tempAttendance.serviceDate,
+            serviceTime: result.serviceTime || tempAttendance.serviceTime,
+            serviceType: result.serviceType || tempAttendance.serviceType,
+            church: result.church || tempAttendance.church,
+            recordedBy: result.recordedBy || tempAttendance.recordedBy,
+            createdAt: result.createdAt || tempAttendance.createdAt,
+          } : a
+        ));
       }
+      // Se chegou aqui, é sucesso - não reverter!
     } catch (error) {
-      // Erro: mostrar toast no topo-direita
+      // Erro: reverter mudanças otimistas
+      setAttendances(previousAttendances);
+      setStats(previousStats);
       const message = error instanceof Error ? error.message : "Erro ao registrar presença";
       toast({
         title: `Erro: ${memberName}`,
@@ -504,47 +798,58 @@ const AttendanceControl = () => {
         return newSet;
       });
     }
-  }, [selectedChurch, canManageAttendance, selectedDate, selectedTime, selectedType, stats, toast, pendingSwipes]);
+  }, [selectedService, toast, attendances, stats, setPendingSwipes]);
 
   // Swipe: remover presença via swipe esquerda (mobile)
   const handleSwipeRemovePresent = useCallback(async (memberId: number, memberName: string) => {
-    if (!selectedChurch || !canManageAttendance) return;
+    if (!selectedService || !canManageAttendance) return;
     if (pendingSwipes.has(memberId)) return;
+
+    // Usar confirmação se for admin em data histórica
+    confirmHistoricalAction(
+      () => executeSwipeRemovePresent(memberId, memberName),
+      memberName,
+      true,
+      false
+    );
+  }, [selectedService, canManageAttendance, pendingSwipes, confirmHistoricalAction]);
+
+  // Executar remover presença via swipe (após confirmação se necessário)
+  const executeSwipeRemovePresent = useCallback(async (memberId: number, memberName: string) => {
+    if (!selectedService) return;
 
     // Adiciona à lista de pendentes (otimista)
     setPendingSwipes(prev => new Set([...prev, memberId]));
 
+    // UI OTIMISTA: Snapshot para reverter se der erro
+    const previousAttendances = attendances;
+    const previousStats = stats;
+
+    // Remove IMEDIATAMENTE da lista
+    setAttendances(prev => prev.filter(a => a.memberId !== memberId));
+
+    // Atualiza stats IMEDIATAMENTE
+    setStats(prev => prev ? {
+      ...prev,
+      presentMembers: Math.max(0, prev.presentMembers - 1),
+      absentMembers: prev.absentMembers + 1,
+      attendanceRate: Math.round(((prev.presentMembers - 1) / prev.totalMembers) * 100),
+    } : null);
+
+    // Chama API em background
     try {
       const result = await attendanceService.toggle({
         memberId,
-        serviceDate: format(selectedDate, "yyyy-MM-dd"),
-        serviceTime: selectedTime,
-        serviceType: selectedType,
-        church: selectedChurch,
+        serviceScheduleId: selectedService.id,
       });
 
-      if (result.action === 'removed') {
-        // Presença foi removida com sucesso
-        setAttendances((prev) => prev.filter((a) => {
-          const attendanceMemberId = typeof a.memberId === 'string'
-            ? parseInt(a.memberId, 10)
-            : a.memberId;
-          return attendanceMemberId !== memberId;
-        }));
+      console.log('[handleSwipeRemovePresent] API response:', result);
 
-        // Atualizar estatísticas
-        if (stats) {
-          const newPresentCount = stats.presentMembers - 1;
-          setStats({
-            ...stats,
-            presentMembers: newPresentCount,
-            absentMembers: stats.totalMembers - newPresentCount,
-            attendanceRate: Math.round((newPresentCount / stats.totalMembers) * 100),
-          });
-        }
-      }
+      // Se chegou aqui sem erro, consideramos sucesso - não reverter!
     } catch (error) {
-      // Erro: mostrar toast no topo-direita
+      // Erro: reverter mudanças otimistas
+      setAttendances(previousAttendances);
+      setStats(previousStats);
       const message = error instanceof Error ? error.message : "Erro ao remover presença";
       toast({
         title: `Erro: ${memberName}`,
@@ -559,7 +864,7 @@ const AttendanceControl = () => {
         return newSet;
       });
     }
-  }, [selectedChurch, canManageAttendance, selectedDate, selectedTime, selectedType, stats, toast, pendingSwipes]);
+  }, [selectedService, toast, attendances, stats, setPendingSwipes]);
 
   // Touch handlers para swipe
   const handleTouchStart = useCallback((e: React.TouchEvent, memberId: number) => {
@@ -606,12 +911,28 @@ const AttendanceControl = () => {
     setSwipeOffset(0);
   }, [swipeOffset, swipeThreshold, handleSwipeMarkPresent, handleSwipeRemovePresent]);
 
-  // Adicionar visitante
+  // Abrir modal para editar visitante
+  const openVisitorEditModal = (visitor: Attendance) => {
+    setEditingVisitor(visitor);
+    setVisitorName(visitor.visitorName || "");
+    setVisitorPhone(visitor.visitorPhone || "");
+    setVisitorDialogOpen(true);
+  };
+
+  // Fechar modal e limpar estado de edição
+  const closeVisitorDialog = () => {
+    setVisitorDialogOpen(false);
+    setEditingVisitor(null);
+    setVisitorName("");
+    setVisitorPhone("");
+  };
+
+  // Adicionar ou editar visitante
   const handleAddVisitor = async () => {
-    if (!selectedChurch) {
+    if (!selectedService) {
       toast({
-        title: "Selecione uma igreja",
-        description: "É necessário selecionar a igreja do culto primeiro.",
+        title: "Selecione um culto",
+        description: "É necessário selecionar um culto cadastrado primeiro.",
         variant: "destructive",
       });
       return;
@@ -636,51 +957,213 @@ const AttendanceControl = () => {
       return;
     }
 
+    // Se está editando, chama a função de edição
+    if (editingVisitor) {
+      confirmHistoricalAction(
+        () => executeEditVisitor(),
+        visitorName.trim(),
+        false,
+        true
+      );
+    } else {
+      // Senão, adiciona novo visitante
+      confirmHistoricalAction(
+        () => executeAddVisitor(),
+        visitorName.trim(),
+        false,
+        true
+      );
+    }
+  };
+
+  // Executar adicionar visitante (após confirmação se necessário)
+  const executeAddVisitor = async () => {
+    if (!selectedService) return;
+
     setIsAddingVisitor(true);
 
+    // UI OTIMISTA: Snapshot para reverter se der erro
+    const previousAttendances = attendances;
+    const previousStats = stats;
+
+    // Cria attendance temporário com ID negativo (temporário)
+    const tempId = -Date.now();
+    const tempAttendance: Attendance = {
+      id: tempId,
+      memberId: null,
+      member: null,
+      visitorName: visitorName.trim(),
+      visitorPhone: visitorPhone.trim() || null,
+      serviceScheduleId: selectedService.id,
+      serviceDate: selectedService.date,
+      serviceTime: selectedService.time,
+      serviceType: 'Culto de Domingo',
+      church: 'Uberaba',
+      recordedBy: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Adiciona IMEDIATAMENTE à lista
+    setAttendances(prev => [...prev, tempAttendance]);
+
+    // Atualiza stats IMEDIATAMENTE (visitantes não contam nos stats de membros, mas incrementa o total presente)
+    setStats(prev => prev ? {
+      ...prev,
+      presentMembers: prev.presentMembers + 1,
+      attendanceRate: Math.round(((prev.presentMembers + 1) / prev.totalMembers) * 100),
+    } : null);
+
+    // Limpa campos e fecha dialog IMEDIATAMENTE
+    const savedVisitorName = visitorName.trim();
+    setVisitorName("");
+    setVisitorPhone("");
+    setVisitorDialogOpen(false);
+
+    // Chama API em background
     try {
       const result = await attendanceService.toggle({
-        visitorName: visitorName.trim(),
+        visitorName: savedVisitorName,
         visitorPhone: visitorPhone.trim() || undefined,
-        serviceDate: format(selectedDate, "yyyy-MM-dd"),
-        serviceTime: selectedTime,
-        serviceType: selectedType,
-        church: selectedChurch,
+        serviceScheduleId: selectedService.id,
       });
 
-      // Usar result.action para verificar se foi criado (igual ao toggle de membros)
-      if (result.action === 'created') {
-        const addedVisitorName = visitorName.trim();
-        const addedVisitorPhone = visitorPhone.trim() || null;
+      console.log('[handleAddVisitor] API response:', result);
 
-        setAttendances((prev) => [
-          ...prev,
-          {
-            id: result.id ?? Date.now(),
-            memberId: null,
-            member: null,
-            visitorName: result.visitorName ?? addedVisitorName,
-            visitorPhone: result.visitorPhone ?? addedVisitorPhone,
-            serviceDate: result.serviceDate ?? format(selectedDate, "yyyy-MM-dd"),
-            serviceTime: result.serviceTime ?? selectedTime,
-            serviceType: result.serviceType ?? selectedType,
-            church: result.church ?? selectedChurch,
-            recordedBy: result.recordedBy ?? 0,
-            createdAt: result.createdAt ?? new Date().toISOString(),
-          },
-        ]);
+      // Se chegou aqui sem erro, consideramos sucesso
+      // Substituir attendance temporário pelo real (se tiver ID válido)
+      if (result.id !== undefined && result.id !== null) {
+        setAttendances(prev => prev.map(a =>
+          a.id === tempId ? {
+            ...tempAttendance,
+            id: result.id!,
+            serviceDate: result.serviceDate || tempAttendance.serviceDate,
+            serviceTime: result.serviceTime || tempAttendance.serviceTime,
+            serviceType: result.serviceType || tempAttendance.serviceType,
+            church: result.church || tempAttendance.church,
+            recordedBy: result.recordedBy || tempAttendance.recordedBy,
+            createdAt: result.createdAt || tempAttendance.createdAt,
+          } : a
+        ));
+      }
+      // Se chegou aqui, é sucesso - não reverter!
+      toast({
+        title: "Visitante adicionado",
+        description: `${savedVisitorName} foi adicionado como visitante.`,
+      });
+    } catch (error) {
+      // Erro: reverter mudanças otimistas
+      setAttendances(previousAttendances);
+      setStats(previousStats);
+      const message = error instanceof Error ? error.message : "Erro ao adicionar visitante";
+      toast({
+        title: "Erro",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingVisitor(false);
+    }
+  };
 
-        toast({
-          title: "Visitante adicionado",
-          description: `${addedVisitorName} foi adicionado como visitante.`,
+  // Executar editar visitante (após confirmação se necessário)
+  const executeEditVisitor = async () => {
+    if (!selectedService || !editingVisitor) return;
+
+    setIsAddingVisitor(true);
+
+    // UI OTIMISTA: Snapshot para reverter se der erro
+    const previousAttendances = attendances;
+    const previousStats = stats;
+
+    // Atualiza IMEDIATAMENTE os dados do visitante na lista
+    setAttendances(prev => prev.map(a =>
+      a.id === editingVisitor.id ? {
+        ...a,
+        visitorName: visitorName.trim(),
+        visitorPhone: visitorPhone.trim() || null,
+      } : a
+    ));
+
+    // Limpa campos e fecha dialog IMEDIATAMENTE
+    const savedVisitorName = visitorName.trim();
+    const savedVisitorPhone = visitorPhone.trim() || null;
+    const oldVisitorName = editingVisitor.visitorName!;
+    closeVisitorDialog();
+
+    // Chama API em background (remover antigo + adicionar novo)
+    try {
+      // Se o nome mudou, precisamos remover o antigo e adicionar o novo
+      if (oldVisitorName !== savedVisitorName) {
+        // Remove o visitante antigo
+        await attendanceService.toggle({
+          visitorName: oldVisitorName,
+          serviceScheduleId: selectedService.id,
         });
 
-        setVisitorName("");
-        setVisitorPhone("");
-        setVisitorDialogOpen(false);
+        // Adiciona o visitante com os novos dados
+        const result = await attendanceService.toggle({
+          visitorName: savedVisitorName,
+          visitorPhone: savedVisitorPhone || undefined,
+          serviceScheduleId: selectedService.id,
+        });
+
+        // Atualiza com o ID real retornado pela API
+        if (result.id !== undefined && result.id !== null) {
+          setAttendances(prev => prev.map(a =>
+            a.id === editingVisitor.id ? {
+              ...a,
+              id: result.id!,
+              visitorName: savedVisitorName,
+              visitorPhone: savedVisitorPhone,
+              serviceDate: result.serviceDate || a.serviceDate,
+              serviceTime: result.serviceTime || a.serviceTime,
+              serviceType: result.serviceType || a.serviceType,
+              church: result.church || a.church,
+              recordedBy: result.recordedBy || a.recordedBy,
+              createdAt: result.createdAt || a.createdAt,
+            } : a
+          ));
+        }
+      } else {
+        // Se apenas o telefone mudou, remove e adiciona novamente
+        await attendanceService.toggle({
+          visitorName: oldVisitorName,
+          serviceScheduleId: selectedService.id,
+        });
+
+        const result = await attendanceService.toggle({
+          visitorName: savedVisitorName,
+          visitorPhone: savedVisitorPhone || undefined,
+          serviceScheduleId: selectedService.id,
+        });
+
+        // Atualiza com o ID real
+        if (result.id !== undefined && result.id !== null) {
+          setAttendances(prev => prev.map(a =>
+            a.id === editingVisitor.id ? {
+              ...a,
+              id: result.id!,
+              visitorPhone: savedVisitorPhone,
+              serviceDate: result.serviceDate || a.serviceDate,
+              serviceTime: result.serviceTime || a.serviceTime,
+              serviceType: result.serviceType || a.serviceType,
+              church: result.church || a.church,
+              recordedBy: result.recordedBy || a.recordedBy,
+              createdAt: result.createdAt || a.createdAt,
+            } : a
+          ));
+        }
       }
+
+      toast({
+        title: "Visitante atualizado",
+        description: `${savedVisitorName} foi atualizado com sucesso.`,
+      });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao adicionar visitante";
+      // Erro: reverter mudanças otimistas
+      setAttendances(previousAttendances);
+      setStats(previousStats);
+      const message = error instanceof Error ? error.message : "Erro ao editar visitante";
       toast({
         title: "Erro",
         description: message,
@@ -693,6 +1176,8 @@ const AttendanceControl = () => {
 
   // Remover visitante
   const removeVisitor = async (attendance: Attendance) => {
+    if (!selectedService) return;
+
     // Verificar permissão: não-admin só pode remover visitante na data atual
     if (!canManageAttendance) {
       toast({
@@ -703,22 +1188,54 @@ const AttendanceControl = () => {
       return;
     }
 
+    // SEMPRE pedir confirmação para remover visitante (mesmo no dia atual)
+    setConfirmDialog({
+      open: true,
+      action: () => executeRemoveVisitor(attendance),
+      memberName: attendance.visitorName || undefined,
+      isRemoving: true,
+      isVisitor: true,
+    });
+  };
+
+  // Executar remover visitante (após confirmação se necessário)
+  const executeRemoveVisitor = async (attendance: Attendance) => {
+    if (!selectedService) return;
+
+    // UI OTIMISTA: Snapshot para reverter se der erro
+    const previousAttendances = attendances;
+    const previousStats = stats;
+
+    // Remove IMEDIATAMENTE da lista
+    setAttendances(prev => prev.filter(a => a.id !== attendance.id));
+
+    // Atualiza stats IMEDIATAMENTE
+    setStats(prev => prev ? {
+      ...prev,
+      presentMembers: Math.max(0, prev.presentMembers - 1),
+      attendanceRate: prev.totalMembers > 0
+        ? Math.round(((prev.presentMembers - 1) / prev.totalMembers) * 100)
+        : 0,
+    } : null);
+
+    // Chama API em background
     try {
-      await attendanceService.toggle({
+      const result = await attendanceService.toggle({
         visitorName: attendance.visitorName!,
-        serviceDate: format(selectedDate, "yyyy-MM-dd"),
-        serviceTime: selectedTime,
-        serviceType: selectedType,
-        church: selectedChurch as ChurchType,
+        serviceScheduleId: selectedService.id,
       });
 
-      setAttendances((prev) => prev.filter((a) => a.id !== attendance.id));
+      console.log('[removeVisitor] API response:', result);
 
+      // Se chegou aqui sem erro, consideramos sucesso - não reverter!
       toast({
         title: "Visitante removido",
         description: "O visitante foi removido da lista de presença.",
       });
     } catch (error) {
+      // Erro: reverter mudanças otimistas
+      setAttendances(previousAttendances);
+      setStats(previousStats);
       const message = error instanceof Error ? error.message : "Erro ao remover visitante";
       toast({
         title: "Erro",
@@ -769,12 +1286,12 @@ const AttendanceControl = () => {
               Registre a presenca dos membros e visitantes nos cultos
             </p>
           </div>
-          <Dialog open={visitorDialogOpen} onOpenChange={setVisitorDialogOpen}>
+          <Dialog open={visitorDialogOpen} onOpenChange={(open) => !open && closeVisitorDialog()}>
             <DialogTrigger asChild>
               <Button
                 className="gap-2 hidden md:flex"
-                disabled={!selectedChurch || !canManageAttendance}
-                title={!canManageAttendance ? "Você só pode adicionar visitantes na data de hoje" : undefined}
+                disabled={!selectedService || !canManageAttendance}
+                title={!canManageAttendance ? "Você só pode adicionar visitantes na data de hoje" : !selectedService ? "Selecione um culto primeiro" : undefined}
               >
                 <UserPlus className="h-4 w-4" />
                 Adicionar Visitante
@@ -782,9 +1299,9 @@ const AttendanceControl = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Adicionar Visitante</DialogTitle>
+                <DialogTitle>{editingVisitor ? "Editar Visitante" : "Adicionar Visitante"}</DialogTitle>
                 <DialogDescription>
-                  Registre a presenca de um visitante no culto
+                  {editingVisitor ? "Atualize os dados do visitante" : "Registre a presenca de um visitante no culto"}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -809,17 +1326,17 @@ const AttendanceControl = () => {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setVisitorDialogOpen(false)}>
+                <Button variant="outline" onClick={closeVisitorDialog}>
                   Cancelar
                 </Button>
                 <Button onClick={handleAddVisitor} disabled={isAddingVisitor}>
                   {isAddingVisitor ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adicionando...
+                      {editingVisitor ? "Salvando..." : "Adicionando..."}
                     </>
                   ) : (
-                    "Adicionar"
+                    editingVisitor ? "Salvar" : "Adicionar"
                   )}
                 </Button>
               </DialogFooter>
@@ -851,7 +1368,7 @@ const AttendanceControl = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-3">
                 {/* Igreja do Culto */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
@@ -922,45 +1439,44 @@ const AttendanceControl = () => {
                   </Popover>
                 </div>
 
-                {/* Horário */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    Horário
-                  </label>
-                  <Select value={selectedTime} onValueChange={setSelectedTime}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione o horário" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SERVICE_TIMES.map((time) => (
-                        <SelectItem key={time} value={time}>
-                          {time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Tipo de Culto */}
+                {/* Culto */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    Tipo de Culto
+                    Culto
+                    {isLoadingServices && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Carregando...
+                      </span>
+                    )}
                   </label>
                   <Select
-                    value={selectedType}
-                    onValueChange={(v) => setSelectedType(v as ScheduleCategory)}
+                    value={selectedService?.id ?? ""}
+                    onValueChange={(serviceId) => {
+                      const service = availableServices.find(s => s.id === serviceId);
+                      setSelectedService(service || null);
+                    }}
+                    disabled={!selectedChurch || isLoadingServices || availableServices.length === 0}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione o tipo" />
+                      <SelectValue placeholder={
+                        isLoadingServices
+                          ? "Carregando cultos..."
+                          : availableServices.length === 0
+                            ? "Nenhum culto encontrado"
+                            : "Selecione o culto"
+                      } />
                     </SelectTrigger>
                     <SelectContent>
-                      {SCHEDULE_CATEGORIES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
+                      {availableServices.map((service) => {
+                        const formattedDate = format(new Date(service.date + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR });
+                        return (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.title} - {formattedDate} às {service.time}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -989,8 +1505,10 @@ const AttendanceControl = () => {
                 Configure o culto antes de continuar
               </AlertTitle>
               <AlertDescription className="text-amber-700 dark:text-amber-300">
-                Selecione a <strong>igreja do culto</strong> acima para habilitar o registro de presença.
-                A data, horário e tipo de culto foram pré-selecionados automaticamente.
+                Selecione a <strong>igreja e data</strong> acima para carregar os cultos disponíveis.
+                {availableServices.length === 0 && !isLoadingServices && selectedChurch && (
+                  <span className="block mt-2">Nenhum culto cadastrado foi encontrado com os filtros selecionados.</span>
+                )}
               </AlertDescription>
             </Alert>
           )}
@@ -1032,8 +1550,9 @@ const AttendanceControl = () => {
             <Button
               size="sm"
               className="gap-1"
-              disabled={!selectedChurch || !canManageAttendance}
+              disabled={!selectedService || !canManageAttendance}
               onClick={() => setVisitorDialogOpen(true)}
+              title={!selectedService ? "Selecione um culto primeiro" : !canManageAttendance ? "Você só pode adicionar visitantes na data de hoje" : undefined}
             >
               <UserPlus className="h-4 w-4" />
               Visitante
@@ -1056,10 +1575,12 @@ const AttendanceControl = () => {
                   <CalendarDays className="h-3 w-3" />
                   {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
                 </Badge>
-                <Badge variant="outline" className="gap-1 text-xs">
-                  <Clock className="h-3 w-3" />
-                  {selectedTime}
-                </Badge>
+                {selectedService && (
+                  <Badge variant="outline" className="gap-1 text-xs">
+                    <Users className="h-3 w-3" />
+                    {selectedService.title}
+                  </Badge>
+                )}
               </div>
             </div>
 
@@ -1160,11 +1681,11 @@ const AttendanceControl = () => {
                     className={cn(
                       "gap-2 py-2 px-3 transition-colors",
                       canManageAttendance
-                        ? "cursor-pointer hover:bg-sky-100 hover:text-sky-800 dark:hover:bg-sky-900/30 dark:hover:text-sky-200 [&_svg]:hover:text-sky-700 dark:[&_svg]:hover:text-sky-300"
+                        ? "cursor-pointer hover:bg-sky-100 hover:text-sky-800 dark:hover:bg-sky-900/30 dark:hover:text-sky-200"
                         : "cursor-not-allowed opacity-70"
                     )}
-                    onClick={() => canManageAttendance && removeVisitor(visitor)}
-                    title={!canManageAttendance ? "Você só pode remover visitantes na data de hoje" : undefined}
+                    onClick={() => canManageAttendance && openVisitorEditModal(visitor)}
+                    title={canManageAttendance ? "Clique para editar visitante" : "Você só pode editar visitantes na data de hoje"}
                   >
                     <UserPlus className="h-3 w-3 transition-colors" />
                     {visitor.visitorName}
@@ -1173,7 +1694,16 @@ const AttendanceControl = () => {
                         ({visitor.visitorPhone})
                       </span>
                     )}
-                    {canManageAttendance && <X className="h-3 w-3 ml-1 transition-colors" />}
+                    {canManageAttendance && (
+                      <X
+                        className="h-3 w-3 ml-1 transition-colors hover:text-red-600 dark:hover:text-red-400"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeVisitor(visitor);
+                        }}
+                        title="Remover visitante"
+                      />
+                    )}
                   </Badge>
                 ))}
               </div>
@@ -1260,27 +1790,51 @@ const AttendanceControl = () => {
           <CardContent className="flex-1 flex flex-col overflow-hidden">
             {/* Filtros */}
             <div className="flex gap-2 mb-3 flex-shrink-0">
-              <Button
-                variant={filterStatus === "pending" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterStatus("pending")}
-                className="flex-1 gap-1.5 md:flex-none"
-              >
-                <Users className="h-3.5 w-3.5" />
-                Todos ({members.filter(m =>
-                  (memberChurchFilter === "all" || m.church === memberChurchFilter) &&
-                  !presentMemberIds.has(m.id)
-                ).length})
-              </Button>
-              <Button
-                variant={filterStatus === "present" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterStatus("present")}
-                className="flex-1 gap-1.5 md:flex-none"
-              >
-                <Check className="h-3.5 w-3.5" />
-                Presentes ({membersPresent})
-              </Button>
+              {/* Modo Registro (hoje): mostra "Todos" | "Presentes" */}
+              {/* Modo Visualização (outros dias): mostra "Ausentes" | "Presentes" */}
+              {isSelectedDateToday ? (
+                <>
+                  <Button
+                    variant={filterStatus === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilterStatus("all")}
+                    className="flex-1 gap-1.5 md:flex-none"
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                    Todos ({absentMembersCount})
+                  </Button>
+                  <Button
+                    variant={filterStatus === "present" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilterStatus("present")}
+                    className="flex-1 gap-1.5 md:flex-none"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    Presentes ({membersPresent})
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant={filterStatus === "pending" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilterStatus("pending")}
+                    className="flex-1 gap-1.5 md:flex-none"
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                    Ausentes ({absentMembersCount})
+                  </Button>
+                  <Button
+                    variant={filterStatus === "present" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilterStatus("present")}
+                    className="flex-1 gap-1.5 md:flex-none"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    Presentes ({membersPresent})
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Busca - maior no mobile */}
@@ -1319,9 +1873,12 @@ const AttendanceControl = () => {
                 filteredMembers
                   .filter((member) => !pendingSwipes.has(member.id)) // Esconde membros sendo salvos
                   .map((member) => {
-                  const isPresent = presentMemberIds.has(member.id);
+                  // Determinar se o membro está presente
+                  // No modo "all" e "pending", todos são ausentes
+                  // No modo "present", todos são presentes
+                  const isPresent = filterStatus === "present";
                   const isToggling = togglingMemberId === member.id;
-                  const canToggle = selectedChurch && canManageAttendance;
+                  const canToggle = selectedService && canManageAttendance;
                   const isSwiping = swipingMemberId === member.id;
 
                   return (
@@ -1454,6 +2011,51 @@ const AttendanceControl = () => {
         </Card>
         </div>
       </div>
+
+      {/* Dialog de confirmação para ações em datas históricas (admin) */}
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-600" />
+              Confirmar {confirmDialog.isRemoving ? "remoção" : "registro"} de presença
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Você está prestes a{" "}
+                <strong>
+                  {confirmDialog.isRemoving ? "remover" : "registrar"}{" "}
+                  {confirmDialog.isVisitor ? "visitante" : "presença"}
+                </strong>{" "}
+                em uma data diferente de hoje.
+              </p>
+              {confirmDialog.memberName && (
+                <p className="text-foreground font-medium">
+                  {confirmDialog.isVisitor ? "Visitante" : "Membro"}: {confirmDialog.memberName}
+                </p>
+              )}
+              <p className="text-foreground font-medium">
+                Data do culto: {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+              </p>
+              <p className="text-muted-foreground text-sm mt-2">
+                Esta ação irá modificar dados históricos. Deseja continuar?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                confirmDialog.action();
+                setConfirmDialog({ open: false, action: () => {} });
+              }}
+              className="bg-amber-600 hover:bg-amber-700 focus:ring-amber-600"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

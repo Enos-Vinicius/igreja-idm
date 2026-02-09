@@ -9,8 +9,36 @@ interface CachedData {
   timestamp: number;
 }
 
+interface GetAllMembersOptions {
+  useCache?: boolean;
+  excludeAttendanceScheduleId?: string;
+  churchRoles?: string[];
+  search?: string;
+}
+
 export const membersService = {
-  async getAll(useCache = true): Promise<Member[]> {
+  async getAll(options: GetAllMembersOptions = {}): Promise<Member[]> {
+    const { useCache = true, excludeAttendanceScheduleId, churchRoles, search } = options;
+
+    // Se tem filtros específicos (exclusão, roles ou busca), não usa cache pois o resultado é específico
+    if (excludeAttendanceScheduleId || churchRoles || search) {
+      const params = new URLSearchParams();
+
+      if (excludeAttendanceScheduleId) {
+        params.append('excludeAttendanceScheduleId', excludeAttendanceScheduleId);
+      }
+
+      if (churchRoles && churchRoles.length > 0) {
+        params.append('churchRole', churchRoles.join(','));
+      }
+
+      if (search) {
+        params.append('search', search);
+      }
+
+      return api.get<Member[]>(`/members?${params.toString()}`);
+    }
+
     // Tenta usar cache se habilitado
     if (useCache) {
       const cached = sessionStorage.getItem(CACHE_KEY);
