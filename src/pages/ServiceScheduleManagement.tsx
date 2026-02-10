@@ -35,6 +35,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
+import { MonthPicker } from "@/components/ui/month-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -102,13 +105,33 @@ const ServiceScheduleManagement = () => {
     return `${date}-${cityId}-${titleId}`;
   };
 
+  const getCityDetails = (city: string) => {
+    if (city === "Uberaba") {
+      return {
+        address: "Av. Cel. Joaquim de Oliveira Prata, 1817 - Parque São Geraldo",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Av.+Cel.+Joaquim+de+Oliveira+Prata,+1817+-+Parque+São+Geraldo,+Uberaba+-+MG"
+      };
+    } else if (city === "Conceição das Alagoas") {
+      return {
+        address: "R. Santa Rita, 149 - Centro",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=R.+Santa+Rita,+149+-+Centro,+Concei%C3%A7%C3%A3o+das+Alagoas+-+MG"
+      };
+    }
+    return { address: "", mapsUrl: "" };
+  };
+
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
       const id = generateId(formData.date, formData.city, formData.title);
-      await serviceScheduleService.create({ ...formData, id });
+      const cityDetails = getCityDetails(formData.city);
+      await serviceScheduleService.create({
+        ...formData,
+        id,
+        mapsUrl: cityDetails.mapsUrl
+      });
       toast.success("Culto criado com sucesso!");
       setShowCreateModal(false);
       resetForm();
@@ -127,6 +150,7 @@ const ServiceScheduleManagement = () => {
 
     setIsSubmitting(true);
     try {
+      const cityDetails = getCityDetails(formData.city);
       await serviceScheduleService.update(selectedService.id, {
         title: formData.title,
         city: formData.city,
@@ -135,6 +159,7 @@ const ServiceScheduleManagement = () => {
         date: formData.date,
         time: formData.time,
         hasKidsMinistry: formData.hasKidsMinistry,
+        mapsUrl: cityDetails.mapsUrl,
       });
       toast.success("Culto atualizado com sucesso!");
       setShowEditModal(false);
@@ -255,10 +280,9 @@ const ServiceScheduleManagement = () => {
 
               {/* Month Filter */}
               <div className="w-full md:w-48">
-                <Input
-                  type="month"
+                <MonthPicker
                   value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  onChange={setSelectedMonth}
                   placeholder="Filtrar por mês"
                 />
               </div>
@@ -367,8 +391,8 @@ const ServiceScheduleManagement = () => {
             </DialogHeader>
 
             <form onSubmit={handleCreateSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2 md:col-span-3">
                   <Label htmlFor="title">Título do Culto *</Label>
                   <Input
                     id="title"
@@ -381,23 +405,20 @@ const ServiceScheduleManagement = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="date">Data *</Label>
-                  <Input
+                  <DateInput
                     id="date"
-                    type="date"
                     value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    required
+                    onChangeString={(value) => setFormData({ ...formData, date: value })}
+                    minDate={new Date()}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="time">Horário *</Label>
-                  <Input
-                    id="time"
-                    type="time"
+                  <TimePicker
                     value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    required
+                    onChange={(value) => setFormData({ ...formData, time: value })}
+                    placeholder="Selecione o horário"
                   />
                 </div>
 
@@ -405,7 +426,15 @@ const ServiceScheduleManagement = () => {
                   <Label htmlFor="city">Cidade *</Label>
                   <Select
                     value={formData.city}
-                    onValueChange={(value) => setFormData({ ...formData, city: value })}
+                    onValueChange={(value) => {
+                      const cityDetails = getCityDetails(value);
+                      setFormData({
+                        ...formData,
+                        city: value,
+                        address: cityDetails.address,
+                        state: "MG"
+                      });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a cidade" />
@@ -417,29 +446,7 @@ const ServiceScheduleManagement = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="state">Estado *</Label>
-                  <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    placeholder="MG"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Endereço Completo *</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    placeholder="Ex: Av. Cel. Joaquim de Oliveira Prata, 1817 - Parque São Geraldo"
-                    required
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2 md:col-span-2">
+                <div className="flex items-center space-x-2 md:col-span-3">
                   <Switch
                     id="hasKidsMinistry"
                     checked={formData.hasKidsMinistry}
@@ -485,8 +492,8 @@ const ServiceScheduleManagement = () => {
             </DialogHeader>
 
             <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2 md:col-span-3">
                   <Label htmlFor="edit-title">Título do Culto *</Label>
                   <Input
                     id="edit-title"
@@ -498,23 +505,20 @@ const ServiceScheduleManagement = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="edit-date">Data *</Label>
-                  <Input
+                  <DateInput
                     id="edit-date"
-                    type="date"
                     value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    required
+                    onChangeString={(value) => setFormData({ ...formData, date: value })}
+                    minDate={new Date()}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="edit-time">Horário *</Label>
-                  <Input
-                    id="edit-time"
-                    type="time"
+                  <TimePicker
                     value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    required
+                    onChange={(value) => setFormData({ ...formData, time: value })}
+                    placeholder="Selecione o horário"
                   />
                 </div>
 
@@ -522,7 +526,15 @@ const ServiceScheduleManagement = () => {
                   <Label htmlFor="edit-city">Cidade *</Label>
                   <Select
                     value={formData.city}
-                    onValueChange={(value) => setFormData({ ...formData, city: value })}
+                    onValueChange={(value) => {
+                      const cityDetails = getCityDetails(value);
+                      setFormData({
+                        ...formData,
+                        city: value,
+                        address: cityDetails.address,
+                        state: "MG"
+                      });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -534,27 +546,7 @@ const ServiceScheduleManagement = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="edit-state">Estado *</Label>
-                  <Input
-                    id="edit-state"
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="edit-address">Endereço Completo *</Label>
-                  <Input
-                    id="edit-address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2 md:col-span-2">
+                <div className="flex items-center space-x-2 md:col-span-3">
                   <Switch
                     id="edit-hasKidsMinistry"
                     checked={formData.hasKidsMinistry}

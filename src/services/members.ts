@@ -1,5 +1,6 @@
 import { api } from './api';
-import { Member } from '../types/member';
+import { Member, AttendanceStats } from '../types/member';
+import { Schedule } from '../types/schedule';
 
 const CACHE_KEY = 'members_cache';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
@@ -104,5 +105,20 @@ export const membersService = {
 
   async deletePhoto(memberId: number | string): Promise<{ message: string }> {
     return api.delete<{ message: string }>(`/members/${memberId}/photo`);
+  },
+
+  async getSchedules(memberId: number | string, month?: string): Promise<Schedule[]> {
+    const params = new URLSearchParams();
+    if (month) {
+      params.append('month', month);
+    }
+    const endpoint = params.toString()
+      ? `/members/${memberId}/escalas?${params.toString()}`
+      : `/members/${memberId}/escalas`;
+    return api.get<Schedule[]>(endpoint);
+  },
+
+  async getAttendanceStats(memberId: number | string): Promise<AttendanceStats> {
+    return api.get<AttendanceStats>(`/members/${memberId}/attendance-stats`);
   },
 };

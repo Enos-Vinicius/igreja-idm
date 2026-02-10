@@ -52,8 +52,10 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { schedulesService } from "@/services/schedules";
 import { membersService } from "@/services/members";
+import { serviceScheduleService } from "@/services/serviceSchedule";
 import { Schedule } from "@/types/schedule";
-import { Member } from "@/types/member";
+import { ServiceSchedule } from "@/types/serviceSchedule";
+import { Member, AttendanceStats } from "@/types/member";
 import BirthdayConfetti from "@/components/BirthdayConfetti";
 import heroRoad from "@/assets/hero-road.jpg";
 import logoWhite from "@/assets/logo-white.png";
@@ -261,7 +263,11 @@ const MemberHome = () => {
   const navigate = useNavigate();
   const { logout, user, refreshUser } = useAuth();
   const [upcomingSchedules, setUpcomingSchedules] = useState<Schedule[]>([]);
+  const [nextService, setNextService] = useState<ServiceSchedule | null>(null);
+  const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
   const [isLoadingSchedules, setIsLoadingSchedules] = useState(true);
+  const [isLoadingNextService, setIsLoadingNextService] = useState(true);
+  const [isLoadingAttendanceStats, setIsLoadingAttendanceStats] = useState(true);
   const [showBirthdayAnimation, setShowBirthdayAnimation] = useState(false);
 
   // Modal states
@@ -393,6 +399,8 @@ const MemberHome = () => {
 
   useEffect(() => {
     loadUpcomingSchedules();
+    loadNextService();
+    loadAttendanceStats();
 
     // Mostrar animação de aniversário após 1 segundo
     if (isBirthday()) {
@@ -404,28 +412,25 @@ const MemberHome = () => {
   }, [member]);
 
   const loadUpcomingSchedules = async () => {
-    if (!member) return;
+    if (!member?.id) return;
 
     setIsLoadingSchedules(true);
     try {
-      const schedules = await schedulesService.getAll();
-
-      // Filtrar escalas futuras onde o membro está envolvido
+      // Obter mês atual no formato YYYY-MM
       const today = new Date();
+      const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+      // Buscar escalas do membro para o mês atual
+      const schedules = await membersService.getSchedules(member.id, currentMonth);
+
+      // Filtrar apenas escalas futuras e ordenar
       today.setHours(0, 0, 0, 0);
 
       const memberSchedules = schedules
         .filter(schedule => {
           const scheduleDate = new Date(schedule.date);
           scheduleDate.setHours(0, 0, 0, 0);
-
-          if (scheduleDate < today) return false;
-
-          // Verifica se o membro está na escala (como ministro ou pregador)
-          if (schedule.type === 'Louvor' && schedule.minister?.name === member.name) return true;
-          if (schedule.type === 'Pregação' && schedule.preacher?.name === member.name) return true;
-
-          return false;
+          return scheduleDate >= today;
         })
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 3); // Limitar a 3 próximas escalas
@@ -435,6 +440,68 @@ const MemberHome = () => {
       console.error("Erro ao carregar escalas:", error);
     } finally {
       setIsLoadingSchedules(false);
+    }
+  };
+
+  const loadNextService = async () => {
+    if (!member?.church) return;
+
+    setIsLoadingNextService(true);
+    try {
+      // Obter mês atual no formato YYYY-MM
+      const today = new Date();
+      const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+      // Buscar cultos da igreja do membro para o mês atual
+      let services = await serviceScheduleService.getAll({
+        month: currentMonth,
+        church: member.church
+      });
+
+      // Filtrar apenas cultos futuros
+      today.setHours(0, 0, 0, 0);
+
+      let nextServiceSchedule = services
+        .filter(service => {
+          const serviceDate = new Date(service.date);
+          serviceDate.setHours(0, 0, 0, 0);
+          return serviceDate >= today;
+        })
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+
+      // Se não encontrou, buscar no próximo mês
+      if (!nextServiceSchedule) {
+        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+
+        const nextMonthServices = await serviceScheduleService.getAll({
+          month: nextMonthStr,
+          church: member.church
+        });
+
+        nextServiceSchedule = nextMonthServices
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+      }
+
+      setNextService(nextServiceSchedule || null);
+    } catch (error) {
+      console.error("Erro ao carregar próximo culto:", error);
+    } finally {
+      setIsLoadingNextService(false);
+    }
+  };
+
+  const loadAttendanceStats = async () => {
+    if (!member?.id) return;
+
+    setIsLoadingAttendanceStats(true);
+    try {
+      const stats = await membersService.getAttendanceStats(member.id);
+      setAttendanceStats(stats);
+    } catch (error) {
+      console.error("Erro ao carregar estatísticas de frequência:", error);
+    } finally {
+      setIsLoadingAttendanceStats(false);
     }
   };
 
@@ -541,9 +608,56 @@ const MemberHome = () => {
     try {
       const date = parseDate(dateString);
       if (!date) return "—";
-      return format(date, "EEE, dd/MMM", { locale: ptBR });
+      const fullFormat = format(date, "EEEE, dd/MMM", { locale: ptBR });
+      // Abrevia o dia da semana para 3 letras
+      const [weekday, rest] = fullFormat.split(", ");
+      return `${weekday.substring(0, 3)}, ${rest}`;
     } catch {
       return "—";
+    }
+  };
+
+  const handleCreateReminder = (event: { title: string; date: string; time: string; location: string }) => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const dateStr = event.date.replace(/-/g, '');
+    const timeStart = event.time.split(' - ')[0].replace(':', '');
+
+    if (isMobile) {
+      // Para mobile: criar arquivo .ics
+      const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//IDM//Lembretes//PT
+BEGIN:VEVENT
+UID:${Date.now()}@idm.com
+DTSTAMP:${dateStr}T${timeStart}00
+DTSTART:${dateStr}T${timeStart}00
+SUMMARY:${event.title}
+LOCATION:${event.location}
+DESCRIPTION:Lembrete criado via IDM
+END:VEVENT
+END:VCALENDAR`;
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `lembrete-${event.title.toLowerCase().replace(/\s+/g, '-')}.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      toast.success('Arquivo de lembrete criado! Abra-o para adicionar ao seu calendário.');
+    } else {
+      // Para desktop: abrir Google Calendar
+      const googleCalendarUrl = new URL('https://calendar.google.com/calendar/render');
+      googleCalendarUrl.searchParams.append('action', 'TEMPLATE');
+      googleCalendarUrl.searchParams.append('text', event.title);
+      googleCalendarUrl.searchParams.append('dates', `${dateStr}T${timeStart}00/${dateStr}T${timeStart}00`);
+      googleCalendarUrl.searchParams.append('location', event.location);
+      googleCalendarUrl.searchParams.append('details', 'Lembrete criado via IDM');
+
+      window.open(googleCalendarUrl.toString(), '_blank');
+      toast.success('Abrindo Google Calendar...');
     }
   };
 
@@ -911,75 +1025,127 @@ const MemberHome = () => {
               </CardContent>
             </Card>
 
-            {/* Minhas Escalas */}
+            {/* Próximo Culto e Próximas Escalas */}
             <Card className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
-              <CardHeader>
-                <CardTitle className={`text-lg flex items-center gap-2 ${currentTheme.colors.textPrimary}`}>
-                  <CalendarIcon className={`h-5 w-5 ${currentTheme.colors.accent}`} />
-                  Minhas Próximas Escalas
-                </CardTitle>
-                <CardDescription>
-                  Suas escalas de louvor e pregação
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoadingSchedules ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : upcomingSchedules.length > 0 ? (
-                  <div className="space-y-3">
-                    {upcomingSchedules.map((schedule) => (
-                      <div
-                        key={schedule.id}
-                        className="flex flex-col items-center text-center p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
-                      >
-                        <div className={`p-3 rounded-lg mb-3 ${
-                          schedule.type === 'Louvor'
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-accent/10 text-accent-foreground'
-                        }`}>
-                          {schedule.type === 'Louvor' ? (
-                            <Music className="h-6 w-6" />
-                          ) : (
-                            <BookOpen className="h-6 w-6" />
-                          )}
-                        </div>
-                        <div className="w-full space-y-2">
-                          <p className="text-base font-semibold leading-tight">
-                            {schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Pregação'}
-                          </p>
-                          <p className="text-sm font-medium text-foreground">
-                            {formatScheduleDate(schedule.date)}
-                          </p>
-                          <div className="flex items-center justify-center gap-2 flex-wrap">
-                            <p className="text-sm text-muted-foreground">
-                              {schedule.church}
-                            </p>
-                            <Badge variant="outline" className="text-xs">
-                              {schedule.category}
-                            </Badge>
-                          </div>
-                        </div>
+              <CardContent className="pt-6 space-y-6">
+                {/* Próximo Culto */}
+                <div>
+                  <h3 className={`text-base font-semibold mb-3 flex items-center gap-2 ${currentTheme.colors.textPrimary}`}>
+                    <Church className={`h-5 w-5 ${currentTheme.colors.accent}`} />
+                    Próximo Culto
+                  </h3>
+                  {isLoadingNextService ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : nextService ? (
+                    <div className="relative flex flex-col items-center text-center p-4 rounded-lg border bg-muted/30">
+                      {/* Data no canto superior direito */}
+                      <div className="absolute top-3 right-3 text-xs font-semibold text-foreground">
+                        {formatScheduleDate(nextService.date)}
                       </div>
-                    ))}
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full mt-2"
-                      onClick={() => navigate('/calendar')}
-                    >
-                      Ver todas as escalas
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                    <p className="text-sm text-muted-foreground">
-                      Você não tem escalas programadas no momento
-                    </p>
+                      <div className={`p-3 rounded-lg mb-3 ${getBadgeClasses(currentTheme.id)}`}>
+                        <Church className="h-6 w-6" />
+                      </div>
+                      <div className="w-full space-y-2">
+                        <p className="text-base font-semibold leading-tight">
+                          {nextService.title}
+                        </p>
+                        <p className={`text-sm font-medium ${['dark', 'ocean'].includes(currentTheme.id) ? 'text-foreground/80' : 'text-muted-foreground'}`}>
+                          {nextService.city} • {nextService.time}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`mt-3 w-full ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
+                        onClick={() => handleCreateReminder({
+                          title: nextService.title,
+                          date: nextService.date,
+                          time: nextService.time,
+                          location: `${nextService.address}, ${nextService.city}`
+                        })}
+                      >
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        Criar Lembrete
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-sm text-muted-foreground">
+                        Nenhum culto programado para sua igreja no momento
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Próximas Escalas - Exibir apenas se houver escalas */}
+                {upcomingSchedules.length > 0 && (
+                  <div>
+                    <h3 className={`text-base font-semibold mb-3 flex items-center gap-2 ${currentTheme.colors.textPrimary}`}>
+                      <CalendarIcon className={`h-5 w-5 ${currentTheme.colors.accent}`} />
+                      Próximas Escalas
+                    </h3>
+                    <div className="space-y-3">
+                      {upcomingSchedules.map((schedule) => (
+                        <div
+                          key={schedule.id}
+                          className="relative flex flex-col items-center text-center p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                        >
+                          {/* Data no canto superior direito */}
+                          <div className="absolute top-3 right-3 text-xs font-semibold text-foreground">
+                            {formatScheduleDate(schedule.date)}
+                          </div>
+
+                          <div className={`p-3 rounded-lg mb-3 ${getBadgeClasses(currentTheme.id)}`}>
+                            {schedule.type === 'Louvor' ? (
+                              <Music className="h-6 w-6" />
+                            ) : (
+                              <BookOpen className="h-6 w-6" />
+                            )}
+                          </div>
+                          <div className="w-full space-y-2">
+                            <p className="text-base font-semibold leading-tight">
+                              {schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Pregação'}
+                            </p>
+                            <div className="flex items-center justify-center gap-2 flex-wrap">
+                              <p className={`text-sm font-medium ${['dark', 'ocean'].includes(currentTheme.id) ? 'text-foreground/80' : 'text-muted-foreground'}`}>
+                                {schedule.church}
+                              </p>
+                              <Badge variant="outline" className={`text-xs ${getBadgeClasses(currentTheme.id)}`}>
+                                {schedule.category}
+                              </Badge>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={`mt-3 w-full ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
+                            onClick={() => handleCreateReminder({
+                              title: schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Pregação',
+                              date: schedule.date,
+                              time: '19:00 - 21:00',
+                              location: `${schedule.category} - ${schedule.church}`
+                            })}
+                          >
+                            <CalendarIcon className="h-4 w-4 mr-2" />
+                            Criar Lembrete
+                          </Button>
+                        </div>
+                      ))}
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full mt-2"
+                        onClick={() => navigate('/calendar')}
+                      >
+                        Ver todas as escalas
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -1009,59 +1175,76 @@ const MemberHome = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total de Presenças</span>
-                    <span className="font-semibold">32 cultos</span>
+                {isLoadingAttendanceStats ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
-                  <Progress value={80} className="h-2" indicatorClassName={getProgressBarColor(currentTheme.id)} />
-                  <p className="text-xs text-muted-foreground text-right">80% de frequência</p>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className={`h-4 w-4 ${getIconColorClass(currentTheme.id)}`} />
-                      <span className="text-sm text-muted-foreground">Este mês</span>
-                    </div>
-                    <span className="text-sm font-medium">4/4 cultos</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className={`h-4 w-4 ${getIconColorClass(currentTheme.id)}`} />
-                      <span className="text-sm text-muted-foreground">Mês anterior</span>
-                    </div>
-                    <span className="text-sm font-medium">4/5 cultos</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className={`h-4 w-4 ${getIconColorClass(currentTheme.id)}`} />
-                      <span className="text-sm text-muted-foreground">Última presença</span>
-                    </div>
-                    <span className="text-sm font-medium">Domingo passado</span>
-                  </div>
-                </div>
-
-                {(() => {
-                  const attendancePercentage = 80; // Mock data
-                  const attendanceInfo = getAttendanceMessage(attendancePercentage, currentTheme.id);
-                  const MessageIcon = attendanceInfo.icon;
-
-                  return (
-                    <div className={`mt-4 p-3 rounded-lg border ${attendanceInfo.bgColor} ${attendanceInfo.borderColor}`}>
-                      <div className="flex items-center justify-center gap-2">
-                        <MessageIcon className={`h-4 w-4 ${attendanceInfo.textColor}`} />
-                        <p className={`text-xs text-center font-medium ${attendanceInfo.textColor}`}>
-                          {attendanceInfo.message}
-                        </p>
+                ) : attendanceStats && attendanceStats.totalServices > 0 ? (
+                  <>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Total de Presenças</span>
+                        <span className="font-semibold">{attendanceStats.totalAttendances}/{attendanceStats.totalServices} cultos</span>
                       </div>
+                      <Progress value={attendanceStats.attendanceRate} className="h-2" indicatorClassName={getProgressBarColor(currentTheme.id)} />
+                      <p className="text-xs text-muted-foreground text-right">{attendanceStats.attendanceRate}% de frequência</p>
                     </div>
-                  );
-                })()}
+
+                    <Separator />
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className={`h-4 w-4 ${getIconColorClass(currentTheme.id)}`} />
+                          <span className="text-sm text-muted-foreground">Este mês</span>
+                        </div>
+                        <span className="text-sm font-medium">{attendanceStats.currentMonth.attendances}/{attendanceStats.currentMonth.totalServices} cultos</span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className={`h-4 w-4 ${getIconColorClass(currentTheme.id)}`} />
+                          <span className="text-sm text-muted-foreground">Mês anterior</span>
+                        </div>
+                        <span className="text-sm font-medium">{attendanceStats.previousMonth.attendances}/{attendanceStats.previousMonth.totalServices} cultos</span>
+                      </div>
+
+                      {attendanceStats.lastAttendance && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CalendarIcon className={`h-4 w-4 ${getIconColorClass(currentTheme.id)}`} />
+                            <span className="text-sm text-muted-foreground">Última presença</span>
+                          </div>
+                          <span className="text-sm font-medium">
+                            {format(new Date(attendanceStats.lastAttendance.date), "dd/MM/yyyy", { locale: ptBR })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {(() => {
+                      const attendanceInfo = getAttendanceMessage(attendanceStats.attendanceRate, currentTheme.id);
+
+                      return (
+                        <div className={`mt-4 p-3 rounded-lg border ${attendanceInfo.bgColor} ${attendanceInfo.borderColor}`}>
+                          <div className="flex items-center justify-center">
+                            <p className={`text-xs text-center font-medium ${attendanceInfo.textColor}`}>
+                              {attendanceInfo.message}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-sm font-medium mb-1">Em breve</p>
+                    <p className="text-xs text-muted-foreground">
+                      As informações de frequência estarão disponíveis após os primeiros cultos serem contabilizados
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -2228,7 +2411,10 @@ const MemberHome = () => {
             {PAGE_THEMES.map((theme) => (
               <div
                 key={theme.id}
-                onClick={() => setSelectedTheme(theme.id)}
+                onClick={() => {
+                  setSelectedTheme(theme.id);
+                  setShowThemeModal(false);
+                }}
                 className={`relative cursor-pointer rounded-lg border-2 p-4 transition-all hover:scale-105 ${
                   selectedTheme === theme.id
                     ? 'border-primary shadow-lg'
@@ -2260,22 +2446,6 @@ const MemberHome = () => {
               </div>
             ))}
           </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const saved = localStorage.getItem('memberHomeTheme');
-                setSelectedTheme(saved || 'default');
-                setShowThemeModal(false);
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={() => setShowThemeModal(false)}>
-              Aplicar Tema
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

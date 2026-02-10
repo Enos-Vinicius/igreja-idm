@@ -103,3 +103,24 @@ export const CHURCH_LOCATIONS: ChurchLocation[] = [
   'Uberaba',
   'Conceição das Alagoas',
 ];
+
+export interface AttendanceStats {
+  year: number;
+  church: string;
+  totalAttendances: number;
+  totalServices: number;
+  attendanceRate: number;
+  currentMonth: {
+    attendances: number;
+    totalServices: number;
+  };
+  previousMonth: {
+    attendances: number;
+    totalServices: number;
+  };
+  lastAttendance: {
+    date: string;
+    service: string;
+    time: string;
+  } | null;
+}

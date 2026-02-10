@@ -18,6 +18,7 @@ export interface CreateServiceScheduleDto {
   city: string;
   state: string;
   address: string;
+  mapsUrl?: string;
   date: string;
   time: string;
   hasKidsMinistry?: boolean;
@@ -28,6 +29,7 @@ export interface UpdateServiceScheduleDto {
   city?: string;
   state?: string;
   address?: string;
+  mapsUrl?: string;
   date?: string;
   time?: string;
   hasKidsMinistry?: boolean;
