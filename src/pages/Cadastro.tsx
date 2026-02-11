@@ -474,16 +474,22 @@ const Cadastro = () => {
                     className="hidden"
                     onChange={handlePhotoChange}
                   />
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Escolher foto
                   </Button>
-                  <p className="text-xs text-muted-foreground">Opcional - Máximo 5MB</p>
+                  <div className="text-center space-y-1">
+                    <p className="text-xs text-muted-foreground">Opcional - Máximo 5MB</p>
+                    <p className="text-xs text-primary font-medium max-w-xs">
+                      Por favor, envie uma foto do seu rosto para facilitar sua identificação na igreja.
+                      Evite fotos de corpo inteiro.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Church Selection */}

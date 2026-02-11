@@ -167,9 +167,9 @@ const roleLabels: Record<UserRole, string> = {
 };
 
 const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const initials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
   const displayName = `${user.firstName} ${user.lastName}`;
@@ -215,12 +215,10 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
           className="w-10 h-10 object-contain flex-shrink-0 cursor-pointer"
           onClick={() => navigate("/")}
         />
-        <div
-          className={cn(
-            "ml-3 overflow-hidden transition-all duration-300",
-            isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
-          )}
-        >
+        <div className={cn(
+          "ml-3 overflow-hidden transition-all duration-300",
+          isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+        )}>
           <span className="text-xs text-white/70 whitespace-nowrap">Igreja do Deus de</span>
           <span className="block text-sm font-bold text-gradient-golden whitespace-nowrap">
             Maravilhas
@@ -229,19 +227,17 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
       </div>
 
       {/* User Info */}
-      <div className="flex items-center px-3 py-4 border-b border-white/10">
+      <div className="flex items-center px-2 py-2 border-b border-white/10">
         <Avatar className="h-10 w-10 border-2 border-golden flex-shrink-0">
           <AvatarImage src={user.avatarUrl} alt={displayName} />
           <AvatarFallback className="bg-gradient-to-br from-golden to-golden-light text-secondary font-semibold text-sm">
             {initials}
           </AvatarFallback>
         </Avatar>
-        <div
-          className={cn(
-            "ml-3 overflow-hidden transition-all duration-300",
-            isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
-          )}
-        >
+        <div className={cn(
+          "ml-3 overflow-hidden transition-all duration-300",
+          isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+        )}>
           <p className="text-sm font-medium text-white whitespace-nowrap">{displayName}</p>
           <p className="text-xs text-white/60 whitespace-nowrap">
             {roleLabel}
@@ -250,22 +246,20 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 overflow-y-auto">
-        <div className="space-y-4 px-2">
+      <nav className="flex-1 py-2 overflow-y-auto overflow-x-hidden">
+        <div className="space-y-2 px-2">
           {filteredMenuGroups.map((group, groupIndex) => (
             <div key={group.id}>
               {/* Group separator - not shown for first group */}
               {groupIndex > 0 && (
-                <div className="my-3 border-t border-white/10" />
+                <div className="my-2 border-t border-white/10" />
               )}
               
               {/* Group label */}
-              <div
-                className={cn(
-                  "px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/40 transition-all duration-300",
-                  isExpanded ? "opacity-100" : "opacity-0 h-0 py-0 overflow-hidden"
-                )}
-              >
+              <div className={cn(
+                "px-3 text-[10px] font-semibold uppercase tracking-wider text-white/40 overflow-hidden transition-all duration-300",
+                isExpanded ? "opacity-100 h-auto" : "opacity-0 h-0"
+              )}>
                 {group.label}
               </div>
 
@@ -287,12 +281,10 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
                         )}
                       >
                         <Icon className="h-5 w-5 flex-shrink-0" />
-                        <span
-                          className={cn(
-                            "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
-                            isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
-                          )}
-                        >
+                        <span className={cn(
+                          "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
+                          isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+                        )}>
                           {item.label}
                         </span>
                       </button>
@@ -312,12 +304,10 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
           className="w-full flex items-center px-3 py-3 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200"
         >
           <Home className="h-5 w-5 flex-shrink-0" />
-          <span
-            className={cn(
-              "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
-              isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
-            )}
-          >
+          <span className={cn(
+            "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
+            isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+          )}>
             Página Inicial
           </span>
         </button>
@@ -327,12 +317,10 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
           className="w-full flex items-center px-3 py-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
-          <span
-            className={cn(
-              "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
-              isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
-            )}
-          >
+          <span className={cn(
+            "ml-3 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
+            isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+          )}>
             Sair
           </span>
         </button>

@@ -41,7 +41,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen bg-muted/30">
       <DashboardSidebar user={userData} onLogout={handleLogout} />
-      <main className="md:ml-16 min-h-screen transition-all duration-300">
+      <main className="md:ml-16 min-h-screen">
         {children}
       </main>
     </div>

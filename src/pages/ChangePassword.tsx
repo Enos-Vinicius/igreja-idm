@@ -106,8 +106,8 @@ const ChangePassword = () => {
       // Completa o fluxo de troca de senha e carrega dados do usuário
       await completePasswordChange();
 
-      // Redireciona para o dashboard
-      navigate("/dashboard");
+      // Redireciona para a área de membro
+      navigate("/member-home");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao alterar senha";
       toast.error(message);

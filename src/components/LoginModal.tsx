@@ -30,6 +30,7 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess, isFirstAccess = false 
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { login } = useAuth();
 
   const handleOpenForgotPassword = () => {
@@ -45,6 +46,7 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess, isFirstAccess = false 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(""); // Limpa erro anterior
 
     try {
       const result = await login({ email, password });
@@ -62,10 +64,11 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess, isFirstAccess = false 
       onLoginSuccess?.();
       setEmail("");
       setPassword("");
+      setErrorMessage("");
       onOpenChange(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao fazer login";
-      toast.error(message);
+      setErrorMessage(message);
     } finally {
       setIsLoading(false);
     }
@@ -188,7 +191,28 @@ const LoginModal = ({ open, onOpenChange, onLoginSuccess, isFirstAccess = false 
                   "ENTRAR"
                 )}
               </Button>
+
+              {errorMessage && (
+                <div className="mt-3 p-3 bg-destructive/10 border border-destructive/30 rounded-md">
+                  <p className="text-sm text-destructive font-medium">{errorMessage}</p>
+                </div>
+              )}
             </form>
+
+            {/* Solicitar Acesso Button */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  onOpenChange(false);
+                  navigate('/cadastro');
+                }}
+              >
+                Solicitar Acesso
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
