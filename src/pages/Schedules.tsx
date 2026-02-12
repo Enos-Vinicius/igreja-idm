@@ -320,8 +320,8 @@ const Schedules = () => {
                         </TableCell>
                         <TableCell>
                           {schedule.type === "Louvor"
-                            ? schedule.minister.name
-                            : schedule.preacher.name}
+                            ? (schedule.minister?.name || "-")
+                            : (schedule.preacher?.name || "-")}
                         </TableCell>
                         <TableCell>
                           {schedule.type === "Louvor" ? (
