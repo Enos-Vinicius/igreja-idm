@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, startOfWeek, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, addWeeks, subWeeks, addYears, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Plus, Music, BookOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Music, BookOpen, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,11 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import DashboardLayout from "@/components/DashboardLayout";
 import MobileBackButton from "@/components/MobileBackButton";
-import { mockSchedules } from "@/data/mockSchedules";
 import { Schedule } from "@/types/schedule";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/config/permissions";
+import { schedulesService } from "@/services/schedules";
+import { useToast } from "@/hooks/use-toast";
 
 type ViewType = "day" | "week" | "month" | "year";
 
@@ -21,16 +22,16 @@ type ViewType = "day" | "week" | "month" | "year";
 const scheduleToEvents = (schedules: Schedule[]) => {
   return schedules.map(schedule => ({
     id: schedule.id,
-    title: schedule.type === "worship" 
-      ? `Louvor - ${schedule.minister}` 
-      : `Pregação - ${schedule.preacher}`,
-    date: schedule.date,
-    time: "09:00", // Default time
-    color: schedule.type === "worship" ? "bg-primary" : "bg-accent",
+    title: schedule.type === "Louvor"
+      ? `Louvor - ${schedule.minister.name}`
+      : `Palavra - ${schedule.preacher.name}`,
+    date: new Date(schedule.date),
+    time: "19:00", // Default time for worship services
+    color: schedule.type === "Louvor" ? "bg-primary" : "bg-accent",
     type: schedule.type,
     category: schedule.category,
     church: schedule.church,
-    responsible: schedule.type === "worship" ? schedule.minister : schedule.preacher,
+    responsible: schedule.type === "Louvor" ? schedule.minister.name : schedule.preacher.name,
   }));
 };
 
@@ -39,10 +40,35 @@ const hours = Array.from({ length: 24 }, (_, i) => i);
 export default function CalendarPage() {
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>("month");
-  
-  const events = scheduleToEvents(mockSchedules);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load schedules from backend
+  useEffect(() => {
+    const loadSchedules = async () => {
+      setIsLoading(true);
+      try {
+        const data = await schedulesService.getAll();
+        setSchedules(data);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erro ao carregar escalas";
+        toast({
+          title: "Erro",
+          description: message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSchedules();
+  }, [toast]);
+
+  const events = scheduleToEvents(schedules);
 
   const navigatePrev = () => {
     switch (view) {
@@ -121,7 +147,7 @@ export default function CalendarPage() {
                   )}
                 >
                   <div className="flex items-center gap-1 mb-1">
-                    {event.type === "worship" ? (
+                    {event.type === "Louvor" ? (
                       <Music className="h-3 w-3" />
                     ) : (
                       <BookOpen className="h-3 w-3" />
@@ -198,7 +224,7 @@ export default function CalendarPage() {
                       )}
                       title={`${event.category} • ${event.church}`}
                     >
-                      {event.type === "worship" ? (
+                      {event.type === "Louvor" ? (
                         <Music className="h-2.5 w-2.5 flex-shrink-0" />
                       ) : (
                         <BookOpen className="h-2.5 w-2.5 flex-shrink-0" />
@@ -270,7 +296,7 @@ export default function CalendarPage() {
                         title={`${event.responsible} - ${event.category}`}
                       >
                         <div className="flex items-center gap-1">
-                          {event.type === "worship" ? (
+                          {event.type === "Louvor" ? (
                             <Music className="h-2.5 w-2.5 flex-shrink-0" />
                           ) : (
                             <BookOpen className="h-2.5 w-2.5 flex-shrink-0" />
@@ -417,10 +443,21 @@ export default function CalendarPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {view === "day" && <DayView />}
-            {view === "week" && <WeekView />}
-            {view === "month" && <MonthView />}
-            {view === "year" && <YearView />}
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">Carregando escalas...</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {view === "day" && <DayView />}
+                {view === "week" && <WeekView />}
+                {view === "month" && <MonthView />}
+                {view === "year" && <YearView />}
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

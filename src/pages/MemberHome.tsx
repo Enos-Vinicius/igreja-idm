@@ -27,7 +27,10 @@ import {
   Target,
   Award,
   Settings,
-  Palette
+  Palette,
+  Medal,
+  Star,
+  Trophy
 } from "lucide-react";
 import { format, differenceInYears, isSameDay, getMonth, getDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -37,6 +40,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import {
   Dialog,
   DialogContent,
@@ -256,6 +260,41 @@ const getProgressBarColor = (themeId: string): string => {
       return 'bg-orange-600';
     default:
       return 'bg-primary';
+  }
+};
+
+// Helper para obter o ícone de mérito baseado na frequência
+const getMeritBadge = (attendanceRate: number): { icon: React.ReactNode; colorClass: string } => {
+  if (attendanceRate >= 90) {
+    // 90-100% - Excelente
+    return {
+      icon: <Award className="h-16 w-16" />,
+      colorClass: 'text-yellow-600'
+    };
+  } else if (attendanceRate >= 70) {
+    // 70-89% - Assíduo
+    return {
+      icon: <Target className="h-16 w-16" />,
+      colorClass: 'text-primary'
+    };
+  } else if (attendanceRate >= 50) {
+    // 50-69% - Regular
+    return {
+      icon: <TrendingUp className="h-16 w-16" />,
+      colorClass: 'text-blue-600'
+    };
+  } else if (attendanceRate >= 30) {
+    // 30-49% - Atenção
+    return {
+      icon: <AlertCircle className="h-16 w-16" />,
+      colorClass: 'text-orange-600'
+    };
+  } else {
+    // < 30% - Ausente
+    return {
+      icon: <AlertCircle className="h-16 w-16" />,
+      colorClass: 'text-red-600'
+    };
   }
 };
 
@@ -1088,19 +1127,19 @@ END:VCALENDAR`;
                       <CalendarIcon className={`h-5 w-5 ${currentTheme.colors.accent}`} />
                       Próximas Escalas
                     </h3>
-                    <div className="space-y-3">
-                      {upcomingSchedules.map((schedule) => (
+
+                    {upcomingSchedules.length === 1 ? (
+                      <div className="space-y-3">
                         <div
-                          key={schedule.id}
                           className="relative flex flex-col items-center text-center p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
                         >
                           {/* Data no canto superior direito */}
                           <div className="absolute top-3 right-3 text-xs font-semibold text-foreground">
-                            {formatScheduleDate(schedule.date)}
+                            {formatScheduleDate(upcomingSchedules[0].date)}
                           </div>
 
                           <div className={`p-3 rounded-lg mb-3 ${getBadgeClasses(currentTheme.id)}`}>
-                            {schedule.type === 'Louvor' ? (
+                            {upcomingSchedules[0].type === 'Louvor' ? (
                               <Music className="h-6 w-6" />
                             ) : (
                               <BookOpen className="h-6 w-6" />
@@ -1108,14 +1147,14 @@ END:VCALENDAR`;
                           </div>
                           <div className="w-full space-y-2">
                             <p className="text-base font-semibold leading-tight">
-                              {schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Pregação'}
+                              {upcomingSchedules[0].type === 'Louvor' ? 'Ministração de Louvor' : 'Palavra'}
                             </p>
                             <div className="flex items-center justify-center gap-2 flex-wrap">
                               <p className={`text-sm font-medium ${['dark', 'ocean'].includes(currentTheme.id) ? 'text-foreground/80' : 'text-muted-foreground'}`}>
-                                {schedule.church}
+                                {upcomingSchedules[0].church}
                               </p>
                               <Badge variant="outline" className={`text-xs ${getBadgeClasses(currentTheme.id)}`}>
-                                {schedule.category}
+                                {upcomingSchedules[0].category}
                               </Badge>
                             </div>
                           </div>
@@ -1124,54 +1163,105 @@ END:VCALENDAR`;
                             size="sm"
                             className={`mt-3 w-full ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
                             onClick={() => handleCreateReminder({
-                              title: schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Pregação',
-                              date: schedule.date,
+                              title: upcomingSchedules[0].type === 'Louvor' ? 'Ministração de Louvor' : 'Palavra',
+                              date: upcomingSchedules[0].date,
                               time: '19:00 - 21:00',
-                              location: `${schedule.category} - ${schedule.church}`
+                              location: `${upcomingSchedules[0].category} - ${upcomingSchedules[0].church}`
                             })}
                           >
                             <CalendarIcon className="h-4 w-4 mr-2" />
                             Criar Lembrete
                           </Button>
                         </div>
-                      ))}
+                      </div>
+                    ) : (
+                      <Carousel className="w-full">
+                        <CarouselContent>
+                          {upcomingSchedules.map((schedule) => (
+                            <CarouselItem key={schedule.id}>
+                              <div className="relative flex flex-col items-center text-center p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                                {/* Data no canto superior direito */}
+                                <div className="absolute top-3 right-3 text-xs font-semibold text-foreground">
+                                  {formatScheduleDate(schedule.date)}
+                                </div>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full mt-2"
-                        onClick={() => navigate('/calendar')}
-                      >
-                        Ver todas as escalas
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </div>
+                                <div className={`p-3 rounded-lg mb-3 ${getBadgeClasses(currentTheme.id)}`}>
+                                  {schedule.type === 'Louvor' ? (
+                                    <Music className="h-6 w-6" />
+                                  ) : (
+                                    <BookOpen className="h-6 w-6" />
+                                  )}
+                                </div>
+                                <div className="w-full space-y-2">
+                                  <p className="text-base font-semibold leading-tight">
+                                    {schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Palavra'}
+                                  </p>
+                                  <div className="flex items-center justify-center gap-2 flex-wrap">
+                                    <p className={`text-sm font-medium ${['dark', 'ocean'].includes(currentTheme.id) ? 'text-foreground/80' : 'text-muted-foreground'}`}>
+                                      {schedule.church}
+                                    </p>
+                                    <Badge variant="outline" className={`text-xs ${getBadgeClasses(currentTheme.id)}`}>
+                                      {schedule.category}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className={`mt-3 w-full ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
+                                  onClick={() => handleCreateReminder({
+                                    title: schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Palavra',
+                                    date: schedule.date,
+                                    time: '19:00 - 21:00',
+                                    location: `${schedule.category} - ${schedule.church}`
+                                  })}
+                                >
+                                  <CalendarIcon className="h-4 w-4 mr-2" />
+                                  Criar Lembrete
+                                </Button>
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                      </Carousel>
+                    )}
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full mt-3"
+                      onClick={() => navigate('/calendar')}
+                    >
+                      Ver todas as escalas
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
 
             {/* Frequência nos Cultos */}
-            <Card className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <TrendingUp className={`h-5 w-5 ${getIconColorClass(currentTheme.id)}`} />
-                      Frequência nos Cultos
-                    </CardTitle>
-                    <CardDescription>
-                      Sua participação este ano
-                    </CardDescription>
+            <Card className={`relative ${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
+              {/* Ícone de mérito */}
+              {attendanceStats && attendanceStats.totalServices > 0 && (() => {
+                const meritBadge = getMeritBadge(attendanceStats.attendanceRate);
+                return (
+                  <div className={`absolute top-5 right-5 ${meritBadge.colorClass} opacity-20 pointer-events-none`}>
+                    {meritBadge.icon}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-full"
-                    onClick={() => setShowAttendanceInfoModal(true)}
-                  >
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </Button>
+                );
+              })()}
+              <CardHeader>
+                <div className="max-w-[210px]">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className={`h-5 w-5 ${getIconColorClass(currentTheme.id)}`} />
+                    Frequência nos Cultos
+                  </CardTitle>
+                  <CardDescription>
+                    Sua participação este ano
+                  </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1187,7 +1277,17 @@ END:VCALENDAR`;
                         <span className="font-semibold">{attendanceStats.totalAttendances}/{attendanceStats.totalServices} cultos</span>
                       </div>
                       <Progress value={attendanceStats.attendanceRate} className="h-2" indicatorClassName={getProgressBarColor(currentTheme.id)} />
-                      <p className="text-xs text-muted-foreground text-right">{attendanceStats.attendanceRate}% de frequência</p>
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 rounded-full"
+                          onClick={() => setShowAttendanceInfoModal(true)}
+                        >
+                          <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                        <p className="text-xs text-muted-foreground">{attendanceStats.attendanceRate}% de frequência</p>
+                      </div>
                     </div>
 
                     <Separator />

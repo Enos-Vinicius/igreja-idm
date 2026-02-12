@@ -79,3 +79,20 @@ export interface ScheduleInput {
   preacherId?: number;
   notes?: string;
 }
+
+// Helper para traduzir termos do backend para o frontend
+export const SCHEDULE_TYPE_LABELS: Record<ScheduleType, string> = {
+  "Louvor": "Louvor",
+  "Pregação": "Palavra"
+};
+
+// Função para obter o label de exibição
+export function getScheduleTypeLabel(type: ScheduleType): string {
+  return SCHEDULE_TYPE_LABELS[type];
+}
+
+// Função para obter o tipo do backend a partir do label (se necessário no futuro)
+export function getScheduleTypeFromLabel(label: string): ScheduleType {
+  const entry = Object.entries(SCHEDULE_TYPE_LABELS).find(([_, value]) => value === label);
+  return (entry?.[0] as ScheduleType) || "Louvor";
+}

@@ -31,7 +31,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { schedulesService } from "@/services/schedules";
-import { Schedule, ScheduleStats } from "@/types/schedule";
+import { Schedule, ScheduleStats, getScheduleTypeLabel } from "@/types/schedule";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/config/permissions";
 
@@ -206,7 +206,7 @@ const Schedules = () => {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
-                Escalas de Pregação
+                Escalas de Palavra
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -235,7 +235,7 @@ const Schedules = () => {
                   </TabsTrigger>
                   <TabsTrigger value="Pregação" className="gap-2">
                     <BookOpen className="h-4 w-4" />
-                    Pregação
+                    Palavra
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -299,7 +299,7 @@ const Schedules = () => {
                             ) : (
                               <>
                                 <BookOpen className="h-3 w-3" />
-                                Pregação
+                                Palavra
                               </>
                             )}
                           </Badge>

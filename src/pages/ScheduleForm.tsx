@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +29,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -48,7 +56,7 @@ import { useToast } from "@/hooks/use-toast";
 import { schedulesService } from "@/services/schedules";
 import { songsService } from "@/services/songs";
 import { membersService } from "@/services/members";
-import { ScheduleType, SCHEDULE_CATEGORIES, CHURCHES } from "@/types/schedule";
+import { ScheduleType, SCHEDULE_CATEGORIES, CHURCHES, getScheduleTypeLabel } from "@/types/schedule";
 import { Song } from "@/types/worship";
 import { Member } from "@/types/member";
 import { cn } from "@/lib/utils";
@@ -107,6 +115,11 @@ const ScheduleForm = () => {
   const [isLoadingSongs, setIsLoadingSongs] = useState(false);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedMinister, setSelectedMinister] = useState<Member | null>(null);
+  const [selectedPreacher, setSelectedPreacher] = useState<Member | null>(null);
+  const [openSearchPopover, setOpenSearchPopover] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const worshipForm = useForm<z.infer<typeof worshipScheduleSchema>>({
     resolver: zodResolver(worshipScheduleSchema),
@@ -127,6 +140,15 @@ const ScheduleForm = () => {
       notes: "",
     },
   });
+
+  // Cleanup search timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Load ministers and songs initially (Louvor is the default tab)
   useEffect(() => {
@@ -202,6 +224,7 @@ const ScheduleForm = () => {
               notes: schedule.notes || "",
             });
             setSelectedSongs(schedule.songs.map(s => s.id));
+            setSelectedMinister(schedule.minister);
           } else {
             preachingForm.reset({
               date: new Date(schedule.date),
@@ -210,6 +233,7 @@ const ScheduleForm = () => {
               church: schedule.church,
               notes: schedule.notes || "",
             });
+            setSelectedPreacher(schedule.preacher);
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : "Erro ao carregar escala";
@@ -225,6 +249,24 @@ const ScheduleForm = () => {
       loadSchedule();
     }
   }, [id]);
+
+  // Combine ministers list with selected minister to ensure it's always available
+  const availableMinisters = useMemo(() => {
+    const ministersList = [...ministers];
+    if (selectedMinister && !ministersList.find(m => m.id === selectedMinister.id)) {
+      ministersList.unshift(selectedMinister);
+    }
+    return ministersList;
+  }, [ministers, selectedMinister]);
+
+  // Combine preachers list with selected preacher to ensure it's always available
+  const availablePreachers = useMemo(() => {
+    const preachersList = [...preachers];
+    if (selectedPreacher && !preachersList.find(p => p.id === selectedPreacher.id)) {
+      preachersList.unshift(selectedPreacher);
+    }
+    return preachersList;
+  }, [preachers, selectedPreacher]);
 
   const filteredSongs = songs.filter((song) => {
     if (!searchTerm) return false;
@@ -245,27 +287,20 @@ const ScheduleForm = () => {
     );
   };
 
-  const searchMemberByName = async () => {
-    if (!memberSearchTerm.trim()) {
-      toast({
-        title: "Digite um nome",
-        description: "Informe o nome do membro para buscar",
-        variant: "destructive",
-      });
+  const searchMemberByName = async (searchTerm?: string) => {
+    const term = searchTerm || memberSearchTerm;
+    if (!term.trim() || term.trim().length < 3) {
+      setSearchResults([]);
+      setHasSearched(false);
       return;
     }
 
     setIsSearching(true);
     try {
-      const results = await membersService.getAll({ search: memberSearchTerm.trim() });
+      const results = await membersService.getAll({ search: term.trim() });
       setSearchResults(results);
-
-      if (results.length === 0) {
-        toast({
-          title: "Nenhum resultado",
-          description: "Nenhum membro encontrado com esse nome",
-        });
-      }
+      setHasSearched(true);
+      setOpenSearchPopover(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao buscar membro";
       toast({
@@ -273,9 +308,44 @@ const ScheduleForm = () => {
         description: message,
         variant: "destructive",
       });
+      setHasSearched(false);
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleSearchChange = (value: string) => {
+    setMemberSearchTerm(value);
+
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Search automatically after 800ms if more than 3 characters
+    if (value.length >= 3) {
+      searchTimeoutRef.current = setTimeout(() => {
+        searchMemberByName(value);
+      }, 800);
+    } else {
+      setSearchResults([]);
+      setOpenSearchPopover(false);
+      setHasSearched(false);
+    }
+  };
+
+  const selectMemberFromSearch = (member: Member) => {
+    if (scheduleType === "Louvor") {
+      worshipForm.setValue("ministerId", member.id.toString());
+      setSelectedMinister(member);
+    } else {
+      preachingForm.setValue("preacherId", member.id.toString());
+      setSelectedPreacher(member);
+    }
+    setMemberSearchTerm("");
+    setSearchResults([]);
+    setOpenSearchPopover(false);
+    setHasSearched(false);
   };
 
   const onSubmitWorship = async (data: z.infer<typeof worshipScheduleSchema>) => {
@@ -437,7 +507,7 @@ const ScheduleForm = () => {
             <CardHeader>
               <CardTitle>Tipo de Escala</CardTitle>
               <CardDescription>
-                Escolha se a escala é para louvor ou pregação
+                Escolha se a escala é para louvor ou palavra
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -452,7 +522,7 @@ const ScheduleForm = () => {
                   </TabsTrigger>
                   <TabsTrigger value="Pregação" className="gap-2">
                     <BookOpen className="h-4 w-4" />
-                    Pregação
+                    Palavra
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -527,7 +597,7 @@ const ScheduleForm = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {ministers.map((minister) => (
+                              {availableMinisters.map((minister) => (
                                 <SelectItem key={minister.id} value={minister.id.toString()}>
                                   {minister.name}
                                 </SelectItem>
@@ -546,32 +616,56 @@ const ScheduleForm = () => {
                   </div>
 
                   {/* Search by name */}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Não encontrou? Busque por nome..."
-                      value={memberSearchTerm}
-                      onChange={(e) => setMemberSearchTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), searchMemberByName())}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={searchMemberByName}
-                      disabled={isSearching}
-                      className="gap-2 whitespace-nowrap"
-                    >
-                      {isSearching ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Buscando...
-                        </>
-                      ) : (
-                        <>
-                          <Search className="h-4 w-4" />
-                          Buscar
-                        </>
-                      )}
-                    </Button>
+                  <div className="relative">
+                    <Popover open={openSearchPopover} onOpenChange={setOpenSearchPopover}>
+                      <PopoverTrigger asChild>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Não encontrou? Digite pelo menos 3 letras para buscar..."
+                            value={memberSearchTerm}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="pl-10"
+                          />
+                          {isSearching && (
+                            <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                          )}
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-[--radix-popover-trigger-width] p-0"
+                        align="start"
+                        onOpenAutoFocus={(e) => e.preventDefault()}
+                      >
+                        <Command>
+                          <CommandList className="max-h-[300px]">
+                            {hasSearched && searchResults.length === 0 ? (
+                              <div className="py-6 text-center text-sm text-muted-foreground">
+                                Nenhum membro encontrado.
+                              </div>
+                            ) : (
+                              <CommandGroup className="p-2">
+                                {searchResults.map((member) => (
+                                  <CommandItem
+                                    key={member.id}
+                                    value={member.name}
+                                    onSelect={() => selectMemberFromSearch(member)}
+                                    className="cursor-pointer rounded-md px-3 py-2 mb-1 hover:bg-accent aria-selected:bg-transparent"
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{member.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {member.churchRole || 'Sem função'} • {member.church || 'Sem igreja'}
+                                      </span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {/* Category and Church */}
@@ -738,7 +832,7 @@ const ScheduleForm = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5" />
-                    Escala de Pregação
+                    Escala de Palavra
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -797,7 +891,7 @@ const ScheduleForm = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {preachers.map((preacher) => (
+                              {availablePreachers.map((preacher) => (
                                 <SelectItem key={preacher.id} value={preacher.id.toString()}>
                                   {preacher.name}
                                 </SelectItem>
@@ -816,32 +910,56 @@ const ScheduleForm = () => {
                   </div>
 
                   {/* Search by name */}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Não encontrou? Busque por nome..."
-                      value={memberSearchTerm}
-                      onChange={(e) => setMemberSearchTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), searchMemberByName())}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={searchMemberByName}
-                      disabled={isSearching}
-                      className="gap-2 whitespace-nowrap"
-                    >
-                      {isSearching ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Buscando...
-                        </>
-                      ) : (
-                        <>
-                          <Search className="h-4 w-4" />
-                          Buscar
-                        </>
-                      )}
-                    </Button>
+                  <div className="relative">
+                    <Popover open={openSearchPopover} onOpenChange={setOpenSearchPopover}>
+                      <PopoverTrigger asChild>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Não encontrou? Digite pelo menos 3 letras para buscar..."
+                            value={memberSearchTerm}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="pl-10"
+                          />
+                          {isSearching && (
+                            <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                          )}
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-[--radix-popover-trigger-width] p-0"
+                        align="start"
+                        onOpenAutoFocus={(e) => e.preventDefault()}
+                      >
+                        <Command>
+                          <CommandList className="max-h-[300px]">
+                            {hasSearched && searchResults.length === 0 ? (
+                              <div className="py-6 text-center text-sm text-muted-foreground">
+                                Nenhum membro encontrado.
+                              </div>
+                            ) : (
+                              <CommandGroup className="p-2">
+                                {searchResults.map((member) => (
+                                  <CommandItem
+                                    key={member.id}
+                                    value={member.name}
+                                    onSelect={() => selectMemberFromSearch(member)}
+                                    className="cursor-pointer rounded-md px-3 py-2 mb-1 hover:bg-accent aria-selected:bg-transparent"
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{member.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {member.churchRole || 'Sem função'} • {member.church || 'Sem igreja'}
+                                      </span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {/* Category and Church */}
