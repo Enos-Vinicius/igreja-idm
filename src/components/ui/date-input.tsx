@@ -174,10 +174,6 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       return isValid(value) ? value : undefined;
     }, [value]);
 
-    // Set default maxDate to today if not specified and this is a birth date
-    const effectiveMaxDate = maxDate || new Date();
-    const effectiveMinDate = minDate || new Date("1900-01-01");
-
     return (
       <div className={cn("relative flex", className)} data-field={name}>
         <Input
@@ -201,7 +197,7 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           className="pr-10"
           maxLength={10}
         />
-        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+        <Popover modal={false} open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
               type="button"
@@ -214,14 +210,17 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
+          <PopoverContent className="w-auto p-0 z-50" align="start" sideOffset={5}>
             <Calendar
               mode="single"
               selected={calendarValue}
               onSelect={handleCalendarSelect}
-              disabled={(date) =>
-                date > effectiveMaxDate || date < effectiveMinDate
-              }
+              disabled={(date) => {
+                // Only disable if constraints are provided
+                const isTooLate = maxDate ? date > maxDate : false;
+                const isTooEarly = minDate ? date < minDate : false;
+                return isTooLate || isTooEarly;
+              }}
               initialFocus
               locale={ptBR}
               captionLayout="dropdown-buttons"

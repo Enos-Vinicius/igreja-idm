@@ -7,6 +7,7 @@ export interface ServiceSchedule {
   mapsUrl?: string;
   date: string; // ISO format: YYYY-MM-DD
   time: string; // HH:MM format
+  endTime?: string; // HH:MM format (optional)
   hasKidsMinistry?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -21,6 +22,7 @@ export interface CreateServiceScheduleDto {
   mapsUrl?: string;
   date: string;
   time: string;
+  endTime?: string;
   hasKidsMinistry?: boolean;
 }
 
@@ -32,6 +34,7 @@ export interface UpdateServiceScheduleDto {
   mapsUrl?: string;
   date?: string;
   time?: string;
+  endTime?: string;
   hasKidsMinistry?: boolean;
 }
 

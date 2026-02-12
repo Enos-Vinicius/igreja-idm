@@ -51,8 +51,10 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { serviceScheduleService } from "@/services/serviceSchedule";
 import { ServiceSchedule, CreateServiceScheduleDto } from "@/types/serviceSchedule";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ServiceScheduleManagement = () => {
+  const { user } = useAuth();
   const [services, setServices] = useState<ServiceSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +65,9 @@ const ServiceScheduleManagement = () => {
     return `${year}-${month}`;
   });
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Check if user can delete
+  const canDelete = user?.role && ['admin', 'admin2', 'secretary', 'receptionist'].includes(user.role);
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -79,6 +84,7 @@ const ServiceScheduleManagement = () => {
     address: "",
     date: "",
     time: "19:00",
+    endTime: "",
   });
 
   useEffect(() => {
@@ -127,11 +133,19 @@ const ServiceScheduleManagement = () => {
     try {
       const id = generateId(formData.date, formData.city, formData.title);
       const cityDetails = getCityDetails(formData.city);
-      await serviceScheduleService.create({
+
+      const payload: CreateServiceScheduleDto = {
         ...formData,
         id,
         mapsUrl: cityDetails.mapsUrl
-      });
+      };
+
+      // Remove endTime if empty
+      if (!payload.endTime) {
+        delete payload.endTime;
+      }
+
+      await serviceScheduleService.create(payload);
       toast.success("Culto criado com sucesso!");
       setShowCreateModal(false);
       resetForm();
@@ -151,16 +165,20 @@ const ServiceScheduleManagement = () => {
     setIsSubmitting(true);
     try {
       const cityDetails = getCityDetails(formData.city);
-      await serviceScheduleService.update(selectedService.id, {
+
+      const payload: any = {
         title: formData.title,
         city: formData.city,
         state: formData.state,
         address: formData.address,
         date: formData.date,
         time: formData.time,
+        endTime: formData.endTime || undefined,
         hasKidsMinistry: formData.hasKidsMinistry,
         mapsUrl: cityDetails.mapsUrl,
-      });
+      };
+
+      await serviceScheduleService.update(selectedService.id, payload);
       toast.success("Culto atualizado com sucesso!");
       setShowEditModal(false);
       resetForm();
@@ -201,6 +219,7 @@ const ServiceScheduleManagement = () => {
       address: service.address,
       date: service.date,
       time: service.time,
+      endTime: service.endTime || "",
       hasKidsMinistry: service.hasKidsMinistry || false,
     });
     setShowEditModal(true);
@@ -220,6 +239,7 @@ const ServiceScheduleManagement = () => {
       address: "",
       date: "",
       time: "19:00",
+      endTime: "",
     });
     setSelectedService(null);
   };
@@ -344,7 +364,7 @@ const ServiceScheduleManagement = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4" />
-                            {service.time}
+                            {service.time}{service.endTime ? ` - ${service.endTime}` : ""}
                           </div>
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4" />
@@ -363,14 +383,16 @@ const ServiceScheduleManagement = () => {
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => openDeleteDialog(service)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canDelete && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => openDeleteDialog(service)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -382,17 +404,20 @@ const ServiceScheduleManagement = () => {
 
         {/* Create Modal */}
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Criar Novo Culto</DialogTitle>
-              <DialogDescription>
-                Preencha os dados do culto que será realizado
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="max-w-2xl max-h-[90vh]">
+            <form onSubmit={handleCreateSubmit}>
+              <div className="overflow-y-auto max-h-[calc(90vh-8rem)] pr-2">
+                <DialogHeader>
+                  <DialogTitle>Criar Novo Culto</DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados do culto que será realizado
+                  </DialogDescription>
+                </DialogHeader>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2 md:col-span-3">
+                <div className="space-y-4">
+              {/* Linha 1: Título 70% | Igreja 30% */}
+              <div className="grid grid-cols-10 gap-4">
+                <div className="space-y-2 col-span-7">
                   <Label htmlFor="title">Título do Culto *</Label>
                   <Input
                     id="title"
@@ -403,27 +428,8 @@ const ServiceScheduleManagement = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="date">Data *</Label>
-                  <DateInput
-                    id="date"
-                    value={formData.date}
-                    onChangeString={(value) => setFormData({ ...formData, date: value })}
-                    minDate={new Date()}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="time">Horário *</Label>
-                  <TimePicker
-                    value={formData.time}
-                    onChange={(value) => setFormData({ ...formData, time: value })}
-                    placeholder="Selecione o horário"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="city">Cidade *</Label>
+                <div className="space-y-2 col-span-3">
+                  <Label htmlFor="city">Igreja *</Label>
                   <Select
                     value={formData.city}
                     onValueChange={(value) => {
@@ -437,7 +443,7 @@ const ServiceScheduleManagement = () => {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione a cidade" />
+                      <SelectValue placeholder="Selecione a igreja" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Uberaba">Uberaba</SelectItem>
@@ -445,8 +451,40 @@ const ServiceScheduleManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-                <div className="flex items-center space-x-2 md:col-span-3">
+              {/* Linha 2: Data | Início | Término (proporções iguais) */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Data *</Label>
+                  <DateInput
+                    id="date"
+                    value={formData.date}
+                    onChangeString={(value) => setFormData({ ...formData, date: value })}
+                    minDate={new Date()}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="time" className="text-sm">Início *</Label>
+                  <TimePicker
+                    value={formData.time}
+                    onChange={(value) => setFormData({ ...formData, time: value })}
+                    placeholder="HH:MM"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="endTime" className="text-sm">Término</Label>
+                  <TimePicker
+                    value={formData.endTime || ""}
+                    onChange={(value) => setFormData({ ...formData, endTime: value })}
+                    placeholder="HH:MM"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
                   <Switch
                     id="hasKidsMinistry"
                     checked={formData.hasKidsMinistry}
@@ -457,6 +495,7 @@ const ServiceScheduleManagement = () => {
                   <Label htmlFor="hasKidsMinistry" className="cursor-pointer">
                     Possui Ministério Infantil
                   </Label>
+                </div>
                 </div>
               </div>
 
@@ -483,17 +522,20 @@ const ServiceScheduleManagement = () => {
 
         {/* Edit Modal */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Editar Culto</DialogTitle>
-              <DialogDescription>
-                Atualize as informações do culto
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="max-w-2xl max-h-[90vh]">
+            <form onSubmit={handleEditSubmit}>
+              <div className="overflow-y-auto max-h-[calc(90vh-8rem)] pr-2">
+                <DialogHeader>
+                  <DialogTitle>Editar Culto</DialogTitle>
+                  <DialogDescription>
+                    Atualize as informações do culto
+                  </DialogDescription>
+                </DialogHeader>
 
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2 md:col-span-3">
+                <div className="space-y-4">
+              {/* Linha 1: Título 70% | Igreja 30% */}
+              <div className="grid grid-cols-10 gap-4">
+                <div className="space-y-2 col-span-7">
                   <Label htmlFor="edit-title">Título do Culto *</Label>
                   <Input
                     id="edit-title"
@@ -503,27 +545,8 @@ const ServiceScheduleManagement = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="edit-date">Data *</Label>
-                  <DateInput
-                    id="edit-date"
-                    value={formData.date}
-                    onChangeString={(value) => setFormData({ ...formData, date: value })}
-                    minDate={new Date()}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="edit-time">Horário *</Label>
-                  <TimePicker
-                    value={formData.time}
-                    onChange={(value) => setFormData({ ...formData, time: value })}
-                    placeholder="Selecione o horário"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="edit-city">Cidade *</Label>
+                <div className="space-y-2 col-span-3">
+                  <Label htmlFor="edit-city">Igreja *</Label>
                   <Select
                     value={formData.city}
                     onValueChange={(value) => {
@@ -545,8 +568,40 @@ const ServiceScheduleManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-                <div className="flex items-center space-x-2 md:col-span-3">
+              {/* Linha 2: Data | Início | Término (proporções iguais) */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-date">Data *</Label>
+                  <DateInput
+                    id="edit-date"
+                    value={formData.date}
+                    onChangeString={(value) => setFormData({ ...formData, date: value })}
+                    minDate={new Date()}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-time" className="text-sm">Início *</Label>
+                  <TimePicker
+                    value={formData.time}
+                    onChange={(value) => setFormData({ ...formData, time: value })}
+                    placeholder="HH:MM"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-endTime" className="text-sm">Término</Label>
+                  <TimePicker
+                    value={formData.endTime || ""}
+                    onChange={(value) => setFormData({ ...formData, endTime: value })}
+                    placeholder="HH:MM"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
                   <Switch
                     id="edit-hasKidsMinistry"
                     checked={formData.hasKidsMinistry}
@@ -557,6 +612,7 @@ const ServiceScheduleManagement = () => {
                   <Label htmlFor="edit-hasKidsMinistry" className="cursor-pointer">
                     Possui Ministério Infantil
                   </Label>
+                </div>
                 </div>
               </div>
 
