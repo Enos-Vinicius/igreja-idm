@@ -52,18 +52,18 @@ const menuGroups: MenuGroup[] = [
     label: "Principal",
     items: [
       {
-        id: "member-area",
-        label: "Área de Membro",
-        icon: CreditCard,
-        path: "/member-home",
-        // Member area for non-admin users
-      },
-      {
         id: "dashboard",
         label: "Dashboard",
         icon: LayoutDashboard,
         path: "/dashboard",
         // Dashboard is always visible
+      },
+      {
+        id: "member-area",
+        label: "Área de Membro",
+        icon: CreditCard,
+        path: "/member-home",
+        // Member area visible for all users
       },
     ],
   },
@@ -186,8 +186,8 @@ const DashboardSidebar = ({ user, onLogout }: DashboardSidebarProps) => {
       .map((group) => ({
         ...group,
         items: group.items.filter((item) => {
-          // Hide "Área de Membro" for admin and admin2
-          if (item.id === "member-area" && isAdmin) return false;
+          // Show Dashboard only for admin and admin2
+          if (item.id === "dashboard" && !isAdmin) return false;
 
           // If item has no feature requirement, show it to everyone
           if (!item.feature) return true;
