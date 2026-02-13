@@ -101,17 +101,19 @@ const ChangePassword = () => {
 
     try {
       await authService.changePassword(data.currentPassword, data.newPassword);
-      toast.success("Senha alterada com sucesso!");
 
       // Completa o fluxo de troca de senha e carrega dados do usuário
       await completePasswordChange();
 
-      // Redireciona para a área de membro
-      navigate("/member-home");
+      toast.success("Senha alterada com sucesso!");
+
+      // Aguarda um momento para garantir que o estado foi atualizado
+      setTimeout(() => {
+        navigate("/member-home", { replace: true });
+      }, 100);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao alterar senha";
       toast.error(message);
-    } finally {
       setIsLoading(false);
     }
   };

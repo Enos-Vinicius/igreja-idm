@@ -483,9 +483,13 @@ const MemberHome = () => {
   };
 
   const loadNextService = async () => {
-    if (!member?.church) return;
-
     setIsLoadingNextService(true);
+
+    if (!member?.church) {
+      setIsLoadingNextService(false);
+      return;
+    }
+
     try {
       // Obter mês atual no formato YYYY-MM
       const today = new Date();
@@ -531,9 +535,13 @@ const MemberHome = () => {
   };
 
   const loadAttendanceStats = async () => {
-    if (!member?.id) return;
-
     setIsLoadingAttendanceStats(true);
+
+    if (!member?.id) {
+      setIsLoadingAttendanceStats(false);
+      return;
+    }
+
     try {
       const stats = await membersService.getAttendanceStats(member.id);
       setAttendanceStats(stats);
