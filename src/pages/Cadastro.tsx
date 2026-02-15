@@ -648,9 +648,8 @@ const Cadastro = () => {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="masculino">Masculino</SelectItem>
-                                <SelectItem value="feminino">Feminino</SelectItem>
-                                <SelectItem value="outro">Outro</SelectItem>
+                                <SelectItem value="Masculino">Masculino</SelectItem>
+                                <SelectItem value="Feminino">Feminino</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -671,11 +670,11 @@ const Cadastro = () => {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="solteiro">Solteiro(a)</SelectItem>
-                                <SelectItem value="casado">Casado(a)</SelectItem>
-                                <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                                <SelectItem value="viuvo">Viúvo(a)</SelectItem>
-                                <SelectItem value="outro">Outro</SelectItem>
+                                <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
+                                <SelectItem value="Casado(a)">Casado(a)</SelectItem>
+                                <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
+                                <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
+                                <SelectItem value="Outro">Outro</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />

@@ -107,10 +107,18 @@ const ChangePassword = () => {
 
       toast.success("Senha alterada com sucesso!");
 
-      // Aguarda um momento para garantir que o estado foi atualizado
+      // Aguarda um momento e força navegação completa
       setTimeout(() => {
-        navigate("/member-home", { replace: true });
-      }, 100);
+        // Redireciona baseado no role do usuário
+        const userRole = user?.role?.toLowerCase();
+        const isAdmin = userRole === 'admin' || userRole === 'admin2';
+
+        // Admin e admin2 vão para dashboard, outros para member-home
+        const redirectPath = isAdmin ? "/dashboard" : "/member-home";
+
+        // Usa window.location para forçar reload completo e garantir estado atualizado
+        window.location.href = redirectPath;
+      }, 300);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao alterar senha";
       toast.error(message);
