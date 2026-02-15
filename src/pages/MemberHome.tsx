@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from "react-joyride";
 import {
   LogOut,
   Calendar as CalendarIcon,
@@ -61,6 +62,7 @@ import { Schedule } from "@/types/schedule";
 import { ServiceSchedule } from "@/types/serviceSchedule";
 import { Member, AttendanceStats } from "@/types/member";
 import BirthdayConfetti from "@/components/BirthdayConfetti";
+import TourCompleteConfetti from "@/components/TourCompleteConfetti";
 import heroRoad from "@/assets/hero-road.jpg";
 import logoWhite from "@/assets/logo-white.png";
 import logoClean from "@/assets/logo-clean.png";
@@ -298,6 +300,95 @@ const getMeritBadge = (attendanceRate: number): { icon: React.ReactNode; colorCl
   }
 };
 
+// Componente de tooltip customizado para traduzir textos
+const CustomTooltip = ({
+  continuous,
+  index,
+  step,
+  backProps,
+  closeProps,
+  primaryProps,
+  skipProps,
+  tooltipProps,
+  size,
+}: TooltipRenderProps) => (
+  <div
+    {...tooltipProps}
+    style={{
+      backgroundColor: 'white',
+      borderRadius: '0.5rem',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      maxWidth: '400px',
+      padding: '1rem',
+    }}
+  >
+    <div style={{ marginBottom: '1rem' }}>
+      {step.title && (
+        <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+          {step.title}
+        </div>
+      )}
+      <div style={{ fontSize: '0.875rem', color: '#4B5563', lineHeight: '1.5' }}>
+        {step.content}
+      </div>
+    </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+      <div style={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: '500' }}>
+        Passo {index + 1} de {size}
+      </div>
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        {index > 0 && (
+          <button
+            {...backProps}
+            style={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: '#6B7280',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              padding: '0.5rem 1rem',
+            }}
+          >
+            Voltar
+          </button>
+        )}
+        {continuous && (
+          <button
+            {...skipProps}
+            style={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: '#6B7280',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              padding: '0.5rem 1rem',
+            }}
+          >
+            Pular
+          </button>
+        )}
+        <button
+          {...primaryProps}
+          style={{
+            backgroundColor: '#E8A317',
+            border: 'none',
+            borderRadius: '0.375rem',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+            fontWeight: '600',
+            padding: '0.5rem 1rem',
+          }}
+        >
+          {continuous ? (index === size - 1 ? 'Finalizar' : 'Próximo') : 'Fechar'}
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const MemberHome = () => {
   const navigate = useNavigate();
   const { logout, user, refreshUser } = useAuth();
@@ -308,6 +399,7 @@ const MemberHome = () => {
   const [isLoadingNextService, setIsLoadingNextService] = useState(true);
   const [isLoadingAttendanceStats, setIsLoadingAttendanceStats] = useState(true);
   const [showBirthdayAnimation, setShowBirthdayAnimation] = useState(false);
+  const [showTourCompleteAnimation, setShowTourCompleteAnimation] = useState(false);
 
   // Modal states
   const [showDatesModal, setShowDatesModal] = useState(false);
@@ -335,6 +427,96 @@ const MemberHome = () => {
   });
 
   const currentTheme = PAGE_THEMES.find(t => t.id === selectedTheme) || PAGE_THEMES[0];
+
+  // Derive member from user
+  const member = user?.member as Member | undefined;
+
+  // Tour state
+  const [runTour, setRunTour] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Tour steps - dinâmico baseado no role do usuário
+  const tourSteps = useMemo<Step[]>(() => {
+    const steps: Step[] = [
+      {
+        target: '[data-tour="member-card"]',
+        content: 'Este é o seu perfil de membro! Aqui você encontra sua foto, tempo como membro, status, código de membro e sua função na igreja.',
+        disableBeacon: true,
+      },
+      {
+        target: '[data-tour="personal-info"]',
+        content: 'Nesta seção você visualiza suas informações pessoais cadastradas no sistema.',
+      },
+    ];
+
+    // Adiciona step do painel gerencial apenas para admin/admin2
+    if (user?.role && user.role !== 'member') {
+      steps.push({
+        target: '[data-tour="admin-panel-button"]',
+        content: 'Acesse o painel gerencial para administrar a igreja, gerenciar membros, cultos e muito mais.',
+      });
+    }
+
+    // Continua com os demais steps
+    steps.push(
+      {
+        target: '[data-tour="member-card-button"]',
+        content: 'Esta é sua carteirinha digital de membro! Você pode personalizá-la, imprimi-la ou salvá-la como imagem.',
+      },
+      {
+        target: '[data-tour="next-service"]',
+        content: 'Aqui você vê informações sobre o próximo culto da sua igreja.',
+      },
+      {
+        target: '[data-tour="attendance"]',
+        content: 'Acompanhe sua frequência nos cultos e veja seu histórico de presença.',
+      },
+      {
+        target: '[data-tour="quick-actions"]',
+        content: 'Acesso rápido às principais funcionalidades do sistema.',
+      },
+      {
+        target: '[data-tour="header-actions"]',
+        content: 'Aqui você pode personalizar o tema da página e sair do sistema quando precisar.',
+      }
+    );
+
+    return steps;
+  }, [user?.role]);
+
+  // Check if user has seen the tour - show welcome modal
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('memberHomeTourCompleted');
+    if (!hasSeenTour && member) {
+      // Wait a bit for the page to load completely
+      setTimeout(() => setShowWelcomeModal(true), 1000);
+    }
+  }, [member]);
+
+  const handleTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
+
+    if (finishedStatuses.includes(status)) {
+      setRunTour(false);
+      localStorage.setItem('memberHomeTourCompleted', 'true');
+
+      // Mostra animação de confete apenas quando o tour é concluído (não pulado)
+      if (status === STATUS.FINISHED) {
+        setTimeout(() => setShowTourCompleteAnimation(true), 500);
+      }
+    }
+  };
+
+  // Handlers do modal de boas-vindas
+  const handleStartTour = () => {
+    setShowWelcomeModal(false);
+    setTimeout(() => setRunTour(true), 300);
+  };
+
+  const handleSkipTour = () => {
+    setShowWelcomeModal(false);
+  };
 
   // Salva a escolha do gradiente no localStorage
   useEffect(() => {
@@ -424,8 +606,6 @@ const MemberHome = () => {
     baptismDate: "",
     joinDate: "",
   });
-
-  const member = user?.member as Member | undefined;
 
   // Verificar se é aniversário
   const isBirthday = (): boolean => {
@@ -837,6 +1017,75 @@ END:VCALENDAR`;
 
   return (
     <div className={`min-h-screen flex flex-col ${currentTheme.colors.secondary}`}>
+      {/* Tour Guide */}
+      <Joyride
+        steps={tourSteps}
+        run={runTour}
+        continuous
+        showSkipButton
+        callback={handleTourCallback}
+        tooltipComponent={CustomTooltip}
+        locale={{
+          open: 'Abrir guia',
+        }}
+        styles={{
+          options: {
+            primaryColor: '#E8A317',
+            zIndex: 10000,
+          },
+        }}
+      />
+
+      {/* Modal de Boas-vindas do Tour */}
+      <Dialog open={showWelcomeModal} onOpenChange={setShowWelcomeModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="space-y-4">
+            <div className="flex justify-center">
+              <img
+                src={logoClean}
+                alt="Igreja do Deus de Maravilhas"
+                className="w-24 h-24 object-contain"
+              />
+            </div>
+            <DialogTitle className="text-2xl text-center">
+              Bem-vindo(a) à Área do Membro!
+            </DialogTitle>
+            <DialogDescription className="text-center text-base">
+              Esta é sua primeira vez aqui! Preparamos um tour rápido para você conhecer todas as funcionalidades disponíveis na sua área de membro.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-6">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+              <p className="text-sm text-muted-foreground text-center">
+                O tour levará apenas alguns minutos e mostrará como acessar sua carteirinha digital, ver seus horários de ministração, acompanhar sua frequência e muito mais!
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={handleStartTour}
+                className="w-full bg-gradient-to-r from-golden to-golden-light text-secondary font-semibold hover:opacity-90 transition-opacity"
+              >
+                <PartyPopper className="w-4 h-4 mr-2" />
+                Conhecer Área de Membro
+              </Button>
+              <Button
+                onClick={handleSkipTour}
+                variant="outline"
+                className="w-full"
+              >
+                Pular por enquanto
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Você pode fazer o tour a qualquer momento. Caso pule, esta opção aparecerá novamente no próximo acesso.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Header with background image */}
       <div className="relative h-48 md:h-64 flex flex-col">
         {/* Background Image - Sempre visível */}
@@ -855,7 +1104,7 @@ END:VCALENDAR`;
             alt="Igreja do Deus de Maravilhas"
             className="w-10 h-10 object-contain"
           />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-tour="header-actions">
             <Button
               variant="ghost"
               size="sm"
@@ -892,7 +1141,7 @@ END:VCALENDAR`;
       <div className="relative z-10 flex-1 mt-4 md:-mt-8 px-4 pb-8">
         <div className="max-w-4xl mx-auto space-y-4">
           {/* Profile Card */}
-          <Card className={`border-2 ${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
+          <Card data-tour="member-card" className={`border-2 ${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
             <CardContent className="pt-6 relative">
               {/* Anos como membro - fixo no topo direito */}
               {yearsAsMember !== null && (
@@ -978,7 +1227,7 @@ END:VCALENDAR`;
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Informações Pessoais */}
-            <Card className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
+            <Card data-tour="personal-info" className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
               <CardHeader>
                 <CardTitle className={`text-lg flex items-center gap-2 ${currentTheme.colors.textPrimary}`}>
                   <User className={`h-5 w-5 ${currentTheme.colors.accent}`} />
@@ -1048,6 +1297,7 @@ END:VCALENDAR`;
                 {user?.role && user.role !== 'member' && (
                   <div className="pt-2">
                     <Button
+                      data-tour="admin-panel-button"
                       variant="default"
                       className={`w-full px-4 py-3 md:px-8 md:py-4 gap-2 md:gap-3 text-[0.8rem] ${currentTheme.colors.buttonPrimary} ${currentTheme.colors.buttonHover} text-white`}
                       onClick={() => navigate('/dashboard')}
@@ -1061,6 +1311,7 @@ END:VCALENDAR`;
                 {/* Botão Carteira de Membro */}
                 <div className="pt-2">
                   <Button
+                    data-tour="member-card-button"
                     variant="outline"
                     className={`w-full px-4 py-3 md:px-8 md:py-4 gap-2 md:gap-3 text-[0.8rem] ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
                     onClick={() => setShowMemberCardModal(true)}
@@ -1076,7 +1327,7 @@ END:VCALENDAR`;
             <Card className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
               <CardContent className="pt-6 space-y-6">
                 {/* Próximo Culto */}
-                <div>
+                <div data-tour="next-service">
                   <h3 className={`text-base font-semibold mb-3 flex items-center gap-2 ${currentTheme.colors.textPrimary}`}>
                     <Church className={`h-5 w-5 ${currentTheme.colors.accent}`} />
                     Próximo Culto
@@ -1130,7 +1381,7 @@ END:VCALENDAR`;
 
                 {/* Próximas Escalas - Exibir apenas se houver escalas */}
                 {upcomingSchedules.length > 0 && (
-                  <div>
+                  <div data-tour="schedules">
                     <h3 className={`text-base font-semibold mb-3 flex items-center gap-2 ${currentTheme.colors.textPrimary}`}>
                       <CalendarIcon className={`h-5 w-5 ${currentTheme.colors.accent}`} />
                       Próximas Escalas
@@ -1251,7 +1502,7 @@ END:VCALENDAR`;
             </Card>
 
             {/* Frequência nos Cultos */}
-            <Card className={`relative ${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
+            <Card data-tour="attendance" className={`relative ${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
               {/* Ícone de mérito */}
               {attendanceStats && attendanceStats.totalServices > 0 && (() => {
                 const meritBadge = getMeritBadge(attendanceStats.attendanceRate);
@@ -1358,7 +1609,7 @@ END:VCALENDAR`;
           </div>
 
           {/* Ações Rápidas */}
-          <Card className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
+          <Card data-tour="quick-actions" className={`${currentTheme.colors.cardBg} ${currentTheme.colors.border} ${currentTheme.colors.textPrimary}`}>
             <CardHeader>
               <CardTitle className={`text-lg ${currentTheme.colors.textPrimary}`}>Ações Rápidas</CardTitle>
               <CardDescription>
@@ -1436,6 +1687,13 @@ END:VCALENDAR`;
         show={showBirthdayAnimation}
         memberName={member?.name || "Membro"}
         onComplete={() => setShowBirthdayAnimation(false)}
+      />
+
+      {/* Animação de Conclusão do Tour */}
+      <TourCompleteConfetti
+        show={showTourCompleteAnimation}
+        memberName={member?.name || "Membro"}
+        onComplete={() => setShowTourCompleteAnimation(false)}
       />
 
       {/* Modal de Atualização de Datas */}
