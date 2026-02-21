@@ -122,7 +122,7 @@ const SetPassword = () => {
       try {
         await authService.login({ email: data.email, password: data.newPassword });
         toast.success("Senha criada com sucesso! Redirecionando...");
-        navigate("/dashboard");
+        navigate("/member-home");
       } catch (loginError) {
         // Se o login falhar, mostra tela de sucesso e pede login manual
         toast.success("Senha criada com sucesso!");
@@ -313,7 +313,7 @@ const SetPassword = () => {
                                 placeholder="Digite a senha novamente"
                                 autoComplete="new-password"
                                 {...field}
-                                onBlur={(e) => {
+                                onBlur={() => {
                                   field.onBlur();
                                   handleConfirmPasswordBlur();
                                 }}
