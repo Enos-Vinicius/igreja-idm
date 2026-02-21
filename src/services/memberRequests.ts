@@ -100,4 +100,9 @@ export const memberRequestsService = {
   async getPendingCount(): Promise<{ count: number }> {
     return api.get<{ count: number }>('/member-requests/pending/count');
   },
+
+  // Admin - Reenviar email de ativação
+  async resendActivation(id: number): Promise<{ message: string }> {
+    return api.post<{ message: string }>(`/member-requests/${id}/resend-activation`, {});
+  },
 };

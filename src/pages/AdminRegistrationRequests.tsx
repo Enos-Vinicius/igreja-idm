@@ -14,6 +14,8 @@ import {
   XCircle,
   Users,
   Loader2,
+  MailCheck,
+  MailWarning,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -80,6 +82,7 @@ const AdminRegistrationRequests = () => {
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isApproveOpen, setIsApproveOpen] = useState(false);
+  const [isResendEmailOpen, setIsResendEmailOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -262,6 +265,33 @@ const AdminRegistrationRequests = () => {
     } finally {
       setIsSubmitting(false);
       setIsDeleteOpen(false);
+      setSelectedRequest(null);
+    }
+  };
+
+  const handleResendEmailClick = (request: RegistrationRequest) => {
+    setSelectedRequest(request);
+    setIsResendEmailOpen(true);
+  };
+
+  const handleResendEmail = async () => {
+    if (!selectedRequest) return;
+
+    setIsSubmitting(true);
+    try {
+      await memberRequestsService.resendActivation(selectedRequest.id);
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === selectedRequest.id ? { ...r, activationEmailSent: true } : r
+        )
+      );
+      toast.success(`Email de ativação reenviado para ${selectedRequest.name}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao reenviar email';
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+      setIsResendEmailOpen(false);
       setSelectedRequest(null);
     }
   };
@@ -482,6 +512,22 @@ const AdminRegistrationRequests = () => {
                                   <X className="h-4 w-4" />
                                 </Button>
                               </>
+                            )}
+                            {request.status === 'approved' && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleResendEmailClick(request)}
+                                title={request.activationEmailSent ? 'Email enviado — clique para reenviar' : 'Email não enviado — clique para enviar'}
+                                className={request.activationEmailSent
+                                  ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                                  : 'text-amber-500 hover:text-amber-600 hover:bg-amber-50'}
+                                disabled={isRowProcessing}
+                              >
+                                {request.activationEmailSent
+                                  ? <MailCheck className="h-4 w-4" />
+                                  : <MailWarning className="h-4 w-4" />}
+                              </Button>
                             )}
                             {currentUser && hasPermission(currentUser.role, 'registration-requests', 'delete') && (
                               <Button
@@ -771,6 +817,40 @@ const AdminRegistrationRequests = () => {
                   </>
                 ) : (
                   'Aprovar e Criar Membro'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Resend Activation Email */}
+        <AlertDialog open={isResendEmailOpen} onOpenChange={setIsResendEmailOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reenviar Email de Ativação</AlertDialogTitle>
+              <AlertDialogDescription>
+                Deseja reenviar o email de ativação para{' '}
+                <span className="font-semibold">{selectedRequest?.name}</span>?
+                {selectedRequest?.activationEmailSent && (
+                  <span className="block mt-1 text-amber-600">
+                    Um email já foi enviado anteriormente para este usuário.
+                  </span>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isSubmitting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleResendEmail}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar Email'
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

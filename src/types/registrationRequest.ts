@@ -23,6 +23,7 @@ export interface RegistrationRequest {
   emailConsentGiven: boolean;
   whatsappConsentGiven: boolean;
   status: RegistrationStatus;
+  activationEmailSent?: boolean;
   rejectionReason?: string;
   requestedAt: string;
   createdAt?: string;
