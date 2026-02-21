@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { authService } from "@/services/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import logoWhite from "@/assets/logo-white.png";
 
 const setPasswordSchema = z.object({
@@ -61,6 +62,7 @@ const getStrengthLevel = (criteria: PasswordCriteria): { level: number; label: s
 
 const SetPassword = () => {
   const navigate = useNavigate();
+  const { syncUserAfterPasswordReset } = useAuth();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const emailParam = searchParams.get("email");
@@ -121,6 +123,7 @@ const SetPassword = () => {
       // Após criar a senha, faz login automático
       try {
         await authService.login({ email: data.email, password: data.newPassword });
+        syncUserAfterPasswordReset();
         toast.success("Senha criada com sucesso! Redirecionando...");
         navigate("/member-home");
       } catch (loginError) {
