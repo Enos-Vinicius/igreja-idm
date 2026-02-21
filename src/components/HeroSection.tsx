@@ -1,9 +1,10 @@
 
+import { Pointer } from "lucide-react";
 import heroImage from "@/assets/hero-road.jpg";
 
 const HeroSection = () => {
   return (
-    <section id="inicio" className="relative min-h-[70vh] md:min-h-screen flex items-center justify-center overflow-hidden">
+    <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
@@ -53,11 +54,16 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-float" style={{ marginLeft: '-20px' }}>
+      {/* Scroll Indicator - Desktop (mouse) */}
+      <div className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-float" style={{ marginLeft: '-20px' }}>
         <div className="w-6 h-10 border-2 border-white/40 rounded-full flex justify-center pt-2">
           <div className="w-1.5 h-3 bg-white/60 rounded-full animate-bounce" />
         </div>
+      </div>
+
+      {/* Scroll Indicator - Mobile (swipe up) */}
+      <div className="flex md:hidden absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-float" style={{ marginLeft: '-15px' }}>
+        <Pointer className="w-7 h-7 text-white/60 animate-bounce" />
       </div>
     </section>
   );
