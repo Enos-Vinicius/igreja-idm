@@ -53,7 +53,7 @@ const worshipSchema = z.object({
     ),
   key: z.string().min(1, "Tonalidade é obrigatória"),
   singer: z.string().max(100, "Nome do cantor muito longo").optional(),
-  notes: z.string().max(500, "Observações muito longas").optional(),
+  lyrics: z.string().optional(),
 });
 
 type WorshipFormData = z.infer<typeof worshipSchema>;
@@ -252,7 +252,7 @@ const WorshipForm = () => {
       youtubeUrl: "",
       key: "",
       singer: "",
-      notes: "",
+      lyrics: "",
     },
   });
 
@@ -404,7 +404,7 @@ const WorshipForm = () => {
           youtubeUrl: song.youtubeUrl,
           key: song.key,
           singer: song.singer || "",
-          notes: song.notes || "",
+          lyrics: song.lyrics || "",
         });
         setSelectedMinisterIds(song.ministers.map((m) => m.id));
         setTags(song.tags || []);
@@ -505,7 +505,7 @@ const WorshipForm = () => {
         key: data.key,
         singer: data.singer,
         tags,
-        notes: data.notes,
+        lyrics: data.lyrics,
         ministerIds: selectedMinisterIds,
       };
 
@@ -1001,16 +1001,16 @@ const WorshipForm = () => {
                     )}
                   </div>
 
-                  {/* Notes */}
+                  {/* Lyrics */}
                   <FormField
                     control={form.control}
-                    name="notes"
+                    name="lyrics"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Observações</FormLabel>
+                        <FormLabel>Letra</FormLabel>
                         <FormControl className="flex-1">
                           <Textarea
-                            placeholder="Anotações sobre o louvor, versões alternativas, etc."
+                            placeholder="Cole aqui a letra da música..."
                             className="min-h-[100px] h-full resize-none"
                             {...field}
                           />

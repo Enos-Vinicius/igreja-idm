@@ -8,7 +8,7 @@ export interface Song {
   singer?: string;
   tags: string[];
   sheetMusicUrl?: string;
-  notes?: string;
+  lyrics?: string;
   ministers: Member[];
   createdAt?: string;
   updatedAt?: string;
@@ -33,7 +33,7 @@ export interface SongInput {
   key: string;
   singer?: string;
   tags: string[];
-  notes?: string;
+  lyrics?: string;
   ministerIds: string[];
 }
 
@@ -48,7 +48,7 @@ export interface Worship {
   tags?: string[];
   fileUrl?: string;
   fileName?: string;
-  notes?: string;
+  lyrics?: string;
   createdAt: Date;
   updatedAt: Date;
 }

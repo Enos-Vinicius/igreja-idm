@@ -60,7 +60,7 @@ const formSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   church: z.enum(['Uberaba', 'Conceição das Alagoas']).optional().nullable(),
-  churchRole: z.enum(['Membro', 'Ministro de Louvor', 'Líder', 'Diácono', 'Presbítero', 'Pastor(a)', 'Secretária', 'Tesoureiro', 'Recepcionista']).optional(),
+  churchRole: z.enum(['Membro', 'Ministro de Louvor', 'Músico', 'Mídia Digital', 'Líder', 'Diácono', 'Presbítero', 'Pastor(a)', 'Secretária', 'Tesoureiro', 'Recepcionista']).optional(),
   membershipStatus: z.enum(['Ativo', 'Inativo', 'Visitante', 'Congregado', 'Transferido']).optional(),
   baptismDate: z.string().optional(),
   joinDate: z.string().optional(),

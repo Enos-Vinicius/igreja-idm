@@ -158,7 +158,7 @@ const ScheduleForm = () => {
 
       try {
         const [ministersData, songsData] = await Promise.all([
-          membersService.getAll({ churchRoles: ["Ministro de Louvor", "Líder"] }),
+          membersService.getAll({ churchRoles: ["Ministro de Louvor", "Músico", "Mídia Digital", "Líder"] }),
           songsService.getAll(),
         ]);
         setMinisters(ministersData);

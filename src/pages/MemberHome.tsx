@@ -229,19 +229,19 @@ const getIconColorClass = (themeId: string): string => {
 const getBadgeClasses = (themeId: string): string => {
   switch (themeId) {
     case 'default':
-      return 'bg-primary/10 text-primary';
+      return 'bg-primary/10 text-primary hover:bg-primary/20';
     case 'dark':
-      return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+      return 'bg-amber-500/20 text-amber-300 border-amber-500/30 hover:bg-amber-500/30';
     case 'rose':
-      return 'bg-rose-500/20 text-rose-600 border-rose-500/30';
+      return 'bg-rose-500/20 text-rose-600 border-rose-500/30 hover:bg-rose-500/30';
     case 'ocean':
-      return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+      return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/30';
     case 'nature':
-      return 'bg-green-500/20 text-green-700 border-green-500/30';
+      return 'bg-green-500/20 text-green-700 border-green-500/30 hover:bg-green-500/30';
     case 'sunset':
-      return 'bg-orange-500/20 text-orange-600 border-orange-500/30';
+      return 'bg-orange-500/20 text-orange-600 border-orange-500/30 hover:bg-orange-500/30';
     default:
-      return 'bg-primary/10 text-primary';
+      return 'bg-primary/10 text-primary hover:bg-primary/20';
   }
 };
 
@@ -2206,7 +2206,7 @@ END:VCALENDAR`;
                     <div className="relative transition-all duration-500 ease-in-out " style={{transformStyle: 'preserve-3d'}}>
                       {/* FRENTE DA CARTEIRINHA */}
                       <div
-                        className="p-3 lg:p-5 text-white relative rounded-2xl shadow-2xl transition-all duration-500 ease-in-out"
+                        className="p-3 lg:p-5 text-white relative rounded-2xl shadow-2xl aspect-[16/10] transition-all duration-500 ease-in-out"
                         style={{
                           background: cardGradients[selectedGradient],
                           overflow: 'hidden',

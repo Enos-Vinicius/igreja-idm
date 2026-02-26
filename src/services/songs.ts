@@ -76,8 +76,8 @@ export const songsService = {
       formData.append('singer', song.singer);
     }
 
-    if (song.notes) {
-      formData.append('notes', song.notes);
+    if (song.lyrics) {
+      formData.append('lyrics', song.lyrics);
     }
 
     // Tags como JSON array
@@ -121,8 +121,8 @@ export const songsService = {
       formData.append('singer', song.singer);
     }
 
-    if (song.notes !== undefined) {
-      formData.append('notes', song.notes);
+    if (song.lyrics !== undefined) {
+      formData.append('lyrics', song.lyrics);
     }
 
     if (song.tags !== undefined) {

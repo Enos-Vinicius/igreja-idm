@@ -5,6 +5,8 @@ export type MaritalStatus = 'Solteiro(a)' | 'Casado(a)' | 'Divorciado(a)' | 'Vi�
 export type ChurchRole =
   | 'Membro'
   | 'Ministro de Louvor'
+  | 'Músico'
+  | 'Mídia Digital'
   | 'Líder'
   | 'Diácono'
   | 'Presbítero'
@@ -82,6 +84,8 @@ export const MARITAL_STATUSES: MaritalStatus[] = [
 export const CHURCH_ROLES: ChurchRole[] = [
   'Membro',
   'Ministro de Louvor',
+  'Músico',
+  'Mídia Digital',
   'Líder',
   'Diácono',
   'Presbítero',
