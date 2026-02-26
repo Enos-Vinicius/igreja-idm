@@ -2007,7 +2007,8 @@ END:VCALENDAR`;
             {/* Botão fechar */}
             <button
               onClick={() => setShowMemberCardModal(false)}
-              className="absolute top-4 right-4 z-50 bg-background hover:bg-accent rounded-full p-2 shadow-lg transition-colors duration-200"
+              className="absolute right-4 z-50 bg-background hover:bg-accent rounded-full p-2 shadow-lg transition-colors duration-200"
+              style={{ top: 'calc(env(safe-area-inset-top) + 1rem)' }}
               aria-label="Fechar"
             >
               <X className="h-4 w-4" />
@@ -2188,7 +2189,13 @@ END:VCALENDAR`;
 
             {/* Painel de Ferramentas de Customização */}
             <div className="w-full lg:w-80 bg-background lg:border-l">
-              <div className="p-6 space-y-6">
+              <div
+                className="px-6 pb-6 space-y-6"
+                style={{
+                  paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)',
+                  paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)',
+                }}
+              >
                 <div>
                   <h3 className="text-lg font-semibold mb-1">Customização</h3>
                   <p className="text-xs text-muted-foreground">
