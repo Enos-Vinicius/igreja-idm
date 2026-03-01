@@ -31,32 +31,26 @@ import DashboardMobileHome from "@/components/DashboardMobileHome";
 import MobileBackButton from "@/components/MobileBackButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockMembers } from "@/data/mockMembers";
-import { mockRegistrationRequests } from "@/data/mockRegistrationRequests";
+import { membersService } from "@/services/members";
+import { memberRequestsService } from "@/services/memberRequests";
+import { serviceScheduleService } from "@/services/serviceSchedule";
+import { Member } from "@/types/member";
+import { RegistrationRequest } from "@/types/registrationRequest";
+import { ServiceSchedule } from "@/types/serviceSchedule";
 
-// Mock data for charts
-const memberGrowthData = [
-  { month: "Jan", membros: 45 },
-  { month: "Fev", membros: 52 },
-  { month: "Mar", membros: 61 },
-  { month: "Abr", membros: 67 },
-  { month: "Mai", membros: 75 },
-  { month: "Jun", membros: 82 },
-  { month: "Jul", membros: 89 },
-  { month: "Ago", membros: 95 },
-  { month: "Set", membros: 102 },
-  { month: "Out", membros: 108 },
-  { month: "Nov", membros: 115 },
-  { month: "Dez", membros: 120 },
-];
-
-const membersByRoleData = [
-  { name: "Membros", value: 85, color: "hsl(var(--primary))" },
-  { name: "Líderes", value: 12, color: "hsl(var(--golden))" },
-  { name: "Pastores", value: 3, color: "hsl(var(--secondary))" },
-  { name: "Ministros", value: 8, color: "#22c55e" },
-  { name: "Visitantes", value: 15, color: "#8b5cf6" },
-];
+const ROLE_COLORS: Record<string, string> = {
+  'Membro': 'hsl(var(--primary))',
+  'Líder': 'hsl(var(--golden))',
+  'Pastor(a)': 'hsl(var(--secondary))',
+  'Ministro de Louvor': '#22c55e',
+  'Músico': '#06b6d4',
+  'Mídia Digital': '#f59e0b',
+  'Diácono': '#8b5cf6',
+  'Presbítero': '#ec4899',
+  'Secretária': '#f97316',
+  'Tesoureiro': '#14b8a6',
+  'Recepcionista': '#6366f1',
+};
 
 const weeklyAttendanceDataByUnit = {
   todos: [
@@ -104,13 +98,6 @@ const recentActivities = [
     icon: UserCheck,
   },
   {
-    id: 3,
-    type: "event",
-    description: "Culto de Domingo programado para 09:00",
-    time: "Amanhã",
-    icon: Calendar,
-  },
-  {
     id: 4,
     type: "prayer",
     description: "15 novos pedidos de oração recebidos",
@@ -125,6 +112,52 @@ const Dashboard = () => {
   const { isAdmin, canAccessDashboard, isLoading, isAuthenticated } = useAuth();
   const [selectedUnit, setSelectedUnit] = useState<"todos" | "uberaba" | "conceicao">("todos");
   const [isMobile, setIsMobile] = useState(false);
+  const [upcomingServices, setUpcomingServices] = useState<ServiceSchedule[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [requests, setRequests] = useState<RegistrationRequest[]>([]);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const today = new Date();
+        const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+
+        const [current, next] = await Promise.all([
+          serviceScheduleService.getAll({ month: currentMonth }),
+          serviceScheduleService.getAll({ month: nextMonthStr }),
+        ]);
+
+        const all = [...current, ...next]
+          .filter(s => new Date(`${s.date}T${s.time}`) >= today)
+          .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())
+          .slice(0, 3);
+
+        setUpcomingServices(all);
+      } catch {
+        // silently fail — dashboard continua funcionando sem cultos
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [membersData, requestsData] = await Promise.all([
+          membersService.getAll(),
+          memberRequestsService.getAll(),
+        ]);
+        setMembers(membersData);
+        setRequests(requestsData);
+      } catch {
+        // silently fail
+      }
+    };
+    fetchData();
+  }, []);
 
   // Redireciona membros comuns (sem acesso ao painel) para a área do membro
   useEffect(() => {
@@ -148,25 +181,54 @@ const Dashboard = () => {
   }, []);
 
   const weeklyAttendanceData = weeklyAttendanceDataByUnit[selectedUnit];
-  const stats = useMemo(() => {
-    const totalMembers = mockMembers.length;
-    const activeMembers = mockMembers.filter((m) => m.membershipStatus === "active").length;
-    const pendingRequests = mockRegistrationRequests.filter((r) => r.status === "pending").length;
-    const approvedThisMonth = mockRegistrationRequests.filter((r) => r.status === "approved").length;
 
-    return {
-      totalMembers,
-      activeMembers,
-      pendingRequests,
-      approvedThisMonth,
-    };
-  }, []);
+  const stats = useMemo(() => {
+    const now = new Date();
+    const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthStr = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
+
+    const totalMembers = members.length;
+    const lastMonthMembers = members.filter(m => m.createdAt && m.createdAt.slice(0, 7) <= lastMonthStr).length;
+    const activeMembers = members.filter(m => m.membershipStatus === 'Ativo').length;
+    const pendingRequests = requests.filter(r => r.status === 'pending').length;
+    const approvedThisMonth = requests.filter(r => r.status === 'approved' && r.requestedAt?.slice(0, 7) === currentMonthStr).length;
+    const memberGrowthPercent = lastMonthMembers > 0
+      ? Math.round(((totalMembers - lastMonthMembers) / lastMonthMembers) * 100)
+      : 0;
+
+    return { totalMembers, activeMembers, pendingRequests, approvedThisMonth, memberGrowthPercent };
+  }, [members, requests]);
+
+  const memberGrowthData = useMemo(() => {
+    const now = new Date();
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+      const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+      const count = members.filter(m => m.createdAt && m.createdAt.slice(0, 7) <= monthStr).length;
+      return { month: label.charAt(0).toUpperCase() + label.slice(1), membros: count };
+    });
+  }, [members]);
+
+  const membersByRoleData = useMemo(() => {
+    const roleCounts: Record<string, number> = {};
+    members.forEach(m => {
+      const role = m.churchRole ?? 'Membro';
+      roleCounts[role] = (roleCounts[role] ?? 0) + 1;
+    });
+    return Object.entries(roleCounts).map(([name, value]) => ({
+      name,
+      value,
+      color: ROLE_COLORS[name] ?? 'hsl(var(--muted-foreground))',
+    }));
+  }, [members]);
 
   const summaryCards = [
     {
       title: "Total de Membros",
       value: stats.totalMembers,
-      description: "+12% desde o último mês",
+      description: stats.memberGrowthPercent >= 0 ? `+${stats.memberGrowthPercent}% desde o último mês` : `${stats.memberGrowthPercent}% desde o último mês`,
       icon: Users,
       trend: "up",
       bgGradient: "from-blue-500 to-blue-600",
@@ -174,7 +236,7 @@ const Dashboard = () => {
     {
       title: "Membros Ativos",
       value: stats.activeMembers,
-      description: `${Math.round((stats.activeMembers / stats.totalMembers) * 100)}% do total`,
+      description: `${stats.totalMembers > 0 ? Math.round((stats.activeMembers / stats.totalMembers) * 100) : 0}% do total`,
       icon: UserCheck,
       trend: "up",
       bgGradient: "from-green-500 to-green-600",
@@ -190,7 +252,7 @@ const Dashboard = () => {
     {
       title: "Aprovados este Mês",
       value: stats.approvedThisMonth,
-      description: "+3 desde a semana passada",
+      description: "Aprovações no mês atual",
       icon: TrendingUp,
       trend: "up",
       bgGradient: "from-purple-500 to-purple-600",
@@ -400,6 +462,25 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {upcomingServices.map((service) => {
+                  const date = new Date(`${service.date}T${service.time}`);
+                  const formatted = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                  const time = service.time.slice(0, 5);
+                  return (
+                    <div
+                      key={service.id}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    >
+                      <div className="p-2 rounded-full bg-primary/10">
+                        <Calendar className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground line-clamp-2">{service.title}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{formatted} às {time}</p>
+                      </div>
+                    </div>
+                  );
+                })}
                 {recentActivities.map((activity) => {
                   const Icon = activity.icon;
                   return (
