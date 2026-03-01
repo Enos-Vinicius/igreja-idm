@@ -192,7 +192,7 @@ const Dashboard = () => {
     const lastMonthMembers = members.filter(m => m.createdAt && m.createdAt.slice(0, 7) <= lastMonthStr).length;
     const activeMembers = members.filter(m => m.membershipStatus === 'Ativo').length;
     const pendingRequests = requests.filter(r => r.status === 'pending').length;
-    const approvedThisMonth = requests.filter(r => r.status === 'approved' && r.requestedAt?.slice(0, 7) === currentMonthStr).length;
+    const approvedThisMonth = requests.filter(r => r.status === 'approved' && r.activationEmailSent === true && r.updatedAt?.slice(0, 7) === currentMonthStr).length;
     const memberGrowthPercent = lastMonthMembers > 0
       ? Math.round(((totalMembers - lastMonthMembers) / lastMonthMembers) * 100)
       : 0;
