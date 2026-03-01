@@ -24,8 +24,10 @@ export interface RegistrationRequest {
   whatsappConsentGiven: boolean;
   status: RegistrationStatus;
   activationEmailSent?: boolean;
+  activationEmailSentAt?: string;
   rejectionReason?: string;
   requestedAt: string;
+  reviewedAt?: string;
   createdAt?: string;
   updatedAt?: string;
 }
