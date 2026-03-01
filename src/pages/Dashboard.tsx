@@ -113,6 +113,10 @@ const Dashboard = () => {
   const [selectedUnit, setSelectedUnit] = useState<"todos" | "uberaba" | "conceicao">("todos");
   const [isMobile, setIsMobile] = useState(false);
   const [upcomingServices, setUpcomingServices] = useState<ServiceSchedule[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [members, setMembers] = useState<Member[]>([]);
   const [requests, setRequests] = useState<RegistrationRequest[]>([]);
 
@@ -192,13 +196,13 @@ const Dashboard = () => {
     const lastMonthMembers = members.filter(m => m.createdAt && m.createdAt.slice(0, 7) <= lastMonthStr).length;
     const activeMembers = members.filter(m => m.membershipStatus === 'Ativo').length;
     const pendingRequests = requests.filter(r => r.status === 'pending').length;
-    const approvedThisMonth = requests.filter(r => r.status === 'approved' && r.activationEmailSent === true && r.activationEmailSentAt?.slice(0, 7) === currentMonthStr).length;
+    const approvedThisMonth = requests.filter(r => r.status === 'approved' && r.activationEmailSent === true && r.activationEmailSentAt?.slice(0, 7) === selectedMonth).length;
     const memberGrowthPercent = lastMonthMembers > 0
       ? Math.round(((totalMembers - lastMonthMembers) / lastMonthMembers) * 100)
       : 0;
 
     return { totalMembers, activeMembers, pendingRequests, approvedThisMonth, memberGrowthPercent };
-  }, [members, requests]);
+  }, [members, requests, selectedMonth]);
 
   const memberGrowthData = useMemo(() => {
     const now = new Date();
@@ -210,6 +214,18 @@ const Dashboard = () => {
       return { month: label.charAt(0).toUpperCase() + label.slice(1), membros: count };
     });
   }, [members]);
+
+  const monthOptions = useMemo(() => {
+    const now = new Date();
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      return { value, label: label.charAt(0).toUpperCase() + label.slice(1) };
+    });
+  }, []);
+
+  const selectedMonthLabel = new Date(selectedMonth + '-02').toLocaleDateString('pt-BR', { month: 'long' });
 
   const membersByRoleData = useMemo(() => {
     const roleCounts: Record<string, number> = {};
@@ -250,9 +266,9 @@ const Dashboard = () => {
       bgGradient: "from-amber-500 to-amber-600",
     },
     {
-      title: "Aprovados este Mês",
+      title: `Aprovados em ${selectedMonthLabel.charAt(0).toUpperCase() + selectedMonthLabel.slice(1)}`,
       value: stats.approvedThisMonth,
-      description: "Aprovações no mês atual",
+      description: "Aprovações no mês selecionado",
       icon: TrendingUp,
       trend: "up",
       bgGradient: "from-purple-500 to-purple-600",
@@ -272,7 +288,19 @@ const Dashboard = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {monthOptions.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <p className="text-muted-foreground mt-1">
             Bem-vindo de volta! Aqui está um resumo da sua igreja.
           </p>
