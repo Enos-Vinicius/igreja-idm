@@ -2,17 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import { MapPin, Clock, Calendar, ChevronLeft, ChevronRight, Bell, Baby, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroWorship from "@/assets/hero-worship.jpg";
+import { serviceScheduleService } from "@/services/serviceSchedule";
+import { ServiceSchedule } from "@/types/serviceSchedule";
 
-interface ScheduleEvent {
-  id: string;
-  title: string;
-  city: string;
-  state: string;
-  address: string;
-  mapsUrl: string;
-  date: string; // Format: YYYY-MM-DD
-  time: string;
-}
+type ScheduleEvent = ServiceSchedule & { eventDate: Date };
 
 const getDayOfWeek = (dateString: string): string => {
   const days = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
@@ -20,7 +13,7 @@ const getDayOfWeek = (dateString: string): string => {
   return days[date.getDay()];
 };
 
-const scheduleEvents: ScheduleEvent[] = [
+const scheduleEventsStatic: ServiceSchedule[] = [
   // JANEIRO 2026 - Domingos
   { id: "2026-01-05-uberaba", title: "Culto de Celebração", city: "Uberaba", state: "MG", address: "Av. Cel. Joaquim de Oliveira Prata, 1817 - Parque São Geraldo", mapsUrl: "https://www.google.com/maps/search/?api=1&query=Av.+Cel.+Joaquim+de+Oliveira+Prata,+1817+-+Parque+São+Geraldo,+Uberaba+-+MG", date: "2026-01-05", time: "19:00" },
   { id: "2026-01-05-conceicao", title: "Culto de Celebração", city: "Conceição das Alagoas", state: "MG", address: "R. Santa Rita, 149 - Centro", mapsUrl: "https://www.google.com/maps/search/?api=1&query=R.+Santa+Rita,+149+-+Centro,+Conceição+das+Alagoas+-+MG", date: "2026-01-05", time: "19:00" },
@@ -83,7 +76,7 @@ const scheduleEvents: ScheduleEvent[] = [
   { id: "2026-02-27-conceicao", title: "Culto de Homens", city: "Conceição das Alagoas", state: "MG", address: "R. Santa Rita, 149 - Centro", mapsUrl: "https://www.google.com/maps/search/?api=1&query=R.+Santa+Rita,+149+-+Centro,+Conceição+das+Alagoas+-+MG", date: "2026-02-27", time: "19:30" },
 ];
 
-const getEventDate = (event: ScheduleEvent): Date => {
+const getEventDate = (event: ServiceSchedule): Date => {
   return new Date(event.date + 'T' + event.time.split(' - ')[0] + ':00');
 };
 
@@ -96,17 +89,41 @@ const formatDate = (date: Date): string => {
 const ScheduleSection = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [autoPlayEnabled, setAutoPlayEnabled] = useState(true);
+  const [rawEvents, setRawEvents] = useState<ServiceSchedule[]>([]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const today = new Date();
+        const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+
+        const [current, next] = await Promise.all([
+          serviceScheduleService.getAll({ month: currentMonth }),
+          serviceScheduleService.getAll({ month: nextMonthStr }),
+        ]);
+
+        const merged = [...current, ...next];
+        setRawEvents(merged.length > 0 ? merged : scheduleEventsStatic);
+      } catch {
+        setRawEvents(scheduleEventsStatic);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const sortedEvents = useMemo(() => {
     const now = new Date();
-    return [...scheduleEvents]
+    return rawEvents
       .map((event) => ({
         ...event,
         eventDate: getEventDate(event),
       }))
-      .filter((event) => event.eventDate >= now) // Only show future/current events
+      .filter((event) => event.eventDate >= now)
       .sort((a, b) => a.eventDate.getTime() - b.eventDate.getTime());
-  }, []);
+  }, [rawEvents]);
 
   // Get all events on the same day as current event
   const sameDayEvents = useMemo(() => {
@@ -318,7 +335,7 @@ END:VCALENDAR`;
           />
 
           {/* Cards Container */}
-          <div className="flex items-center justify-center py-8 h-[500px] md:h-[550px]">
+          <div className="flex items-center justify-center py-8 min-h-[500px] md:min-h-[550px]">
             {sortedEvents.map((event, index) => {
               const style = getCardStyle(index);
               if (!style) return null;
@@ -336,7 +353,7 @@ END:VCALENDAR`;
                   <div
                     className={`bg-background rounded-xl shadow-xl overflow-hidden transition-shadow duration-300 flex flex-col ${
                       style.isCenter
-                        ? 'w-72 md:w-80 h-[440px] shadow-2xl'
+                        ? 'w-72 md:w-80 h-auto shadow-2xl'
                         : 'w-72 md:w-80 h-[440px]'
                     }`}
                   >
