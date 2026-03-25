@@ -75,6 +75,7 @@ const AdminRegistrationRequests = () => {
   const [requests, setRequests] = useState<RegistrationRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [churchFilter, setChurchFilter] = useState<string>(() => currentUser?.member?.church ?? 'all');
   const [searchTerm, setSearchTerm] = useState('');
 
   const [selectedRequest, setSelectedRequest] = useState<RegistrationRequest | null>(null);
@@ -103,9 +104,15 @@ const AdminRegistrationRequests = () => {
     }
   };
 
+  const churchOptions = useMemo(() => {
+    const churches = new Set(requests.map(r => r.church).filter(Boolean));
+    return Array.from(churches).sort();
+  }, [requests]);
+
   const filteredRequests = useMemo(() => {
     return requests.filter((request) => {
       const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
+      const matchesChurch = churchFilter === 'all' || request.church === churchFilter;
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
         searchTerm === '' ||
@@ -113,9 +120,9 @@ const AdminRegistrationRequests = () => {
         request.email.toLowerCase().includes(searchLower) ||
         request.primaryPhone.includes(searchTerm);
 
-      return matchesStatus && matchesSearch;
+      return matchesStatus && matchesChurch && matchesSearch;
     });
-  }, [requests, statusFilter, searchTerm]);
+  }, [requests, statusFilter, churchFilter, searchTerm]);
 
   const statusCounts = useMemo(() => {
     return {
@@ -390,6 +397,19 @@ const AdminRegistrationRequests = () => {
                     </button>
                   )}
                 </div>
+              </div>
+              <div className="w-full sm:w-48">
+                <Select value={churchFilter} onValueChange={setChurchFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Igreja" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as Igrejas</SelectItem>
+                    {churchOptions.map(church => (
+                      <SelectItem key={church} value={church!}>{church}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="w-full sm:w-48">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>

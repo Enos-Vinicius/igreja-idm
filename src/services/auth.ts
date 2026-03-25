@@ -32,6 +32,7 @@ export interface CurrentUser {
     id: number;
     name: string;
     photoUrl?: string;
+    church?: string;
   };
 }
 

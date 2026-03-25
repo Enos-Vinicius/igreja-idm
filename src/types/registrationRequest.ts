@@ -19,6 +19,7 @@ export interface RegistrationRequest {
   city?: string;
   state?: string;
   photoUrl?: string;
+  church?: string;
   imageConsentGiven: boolean;
   emailConsentGiven: boolean;
   whatsappConsentGiven: boolean;
