@@ -35,6 +35,7 @@ import { membersService } from '@/services/members';
 import {
   Member,
   CHURCH_ROLES,
+  CHURCH_LOCATIONS,
   MEMBERSHIP_STATUSES,
   MembershipStatus,
   ChurchRole,
@@ -52,6 +53,7 @@ const MembersList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [churchFilter, setChurchFilter] = useState<string>(() => currentUser?.member?.church ?? 'all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
@@ -103,12 +105,15 @@ const MembersList = () => {
       const matchesStatus =
         statusFilter === 'all' || member.membershipStatus === statusFilter;
 
+      const matchesChurch =
+        churchFilter === 'all' || member.church === churchFilter;
+
       const matchesRole =
         roleFilter === 'all' || member.churchRole === roleFilter;
 
-      return matchesSearch && matchesStatus && matchesRole;
+      return matchesSearch && matchesStatus && matchesChurch && matchesRole;
     });
-  }, [members, searchTerm, statusFilter, roleFilter]);
+  }, [members, searchTerm, statusFilter, churchFilter, roleFilter]);
 
   const handleDelete = (member: Member) => {
     setMemberToDelete(member);
@@ -181,7 +186,7 @@ const MembersList = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -191,6 +196,19 @@ const MembersList = () => {
                     className="pl-10"
                   />
                 </div>
+                <Select value={churchFilter} onValueChange={setChurchFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Igreja" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as Igrejas</SelectItem>
+                    {CHURCH_LOCATIONS.map((church) => (
+                      <SelectItem key={church} value={church}>
+                        {church}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Status" />
