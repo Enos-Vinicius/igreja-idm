@@ -125,13 +125,14 @@ const AdminRegistrationRequests = () => {
   }, [requests, statusFilter, churchFilter, searchTerm]);
 
   const statusCounts = useMemo(() => {
+    const filtered = churchFilter === 'all' ? requests : requests.filter(r => r.church === churchFilter);
     return {
-      pending: requests.filter((r) => r.status === 'pending').length,
-      approved: requests.filter((r) => r.status === 'approved').length,
-      rejected: requests.filter((r) => r.status === 'rejected').length,
-      total: requests.length,
+      pending: filtered.filter((r) => r.status === 'pending').length,
+      approved: filtered.filter((r) => r.status === 'approved').length,
+      rejected: filtered.filter((r) => r.status === 'rejected').length,
+      total: filtered.length,
     };
-  }, [requests]);
+  }, [requests, churchFilter]);
 
   const summaryCards = [
     {
