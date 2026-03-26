@@ -1934,6 +1934,7 @@ const AttendanceControl = () => {
                         )}
                         style={{
                           transform: isSwiping ? `translateX(${swipeOffset}px)` : undefined,
+                          touchAction: 'pan-y',
                         }}
                       >
                         {/* Checkbox: esconde no mobile quando não está presente */}
