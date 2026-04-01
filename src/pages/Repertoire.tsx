@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Plus, Search, Edit, Trash2, ExternalLink, FileText, Music, Loader2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, ExternalLink, FileText, Music, Loader2, Filter } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import MobileBackButton from "@/components/MobileBackButton";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +50,7 @@ const Repertoire = () => {
   const [isLoadingSongs, setIsLoadingSongs] = useState(true);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [ministerFilter, setMinisterFilter] = useState<string>("pending");
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -107,6 +115,35 @@ const Repertoire = () => {
       setIsLoadingStats(false);
     }
   };
+
+  // Extrair lista única de ministros das músicas carregadas
+  const ministerOptions = useMemo(() => {
+    const map = new Map<number, string>();
+    songs.forEach((song) => {
+      song.ministers.forEach((m) => map.set(m.id, m.name));
+    });
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [songs]);
+
+  // Setar filtro automático quando os ministros carregam pela primeira vez
+  useEffect(() => {
+    if (ministerFilter !== "pending") return;
+    const memberId = currentUser?.member?.id;
+    if (memberId && ministerOptions.some((m) => m.id === memberId)) {
+      setMinisterFilter(String(memberId));
+    } else {
+      setMinisterFilter("all");
+    }
+  }, [ministerOptions, currentUser, ministerFilter]);
+
+  // Filtrar músicas por ministro selecionado
+  const filteredSongs = useMemo(() => {
+    if (ministerFilter === "all" || ministerFilter === "pending") return songs;
+    const filterId = Number(ministerFilter);
+    return songs.filter((song) => song.ministers.some((m) => m.id === filterId));
+  }, [songs, ministerFilter]);
 
   const handleSearch = async (term: string) => {
     setSearchTerm(term);
@@ -241,6 +278,21 @@ const Repertoire = () => {
                   className="pl-10"
                 />
               </div>
+              <div className="w-full sm:w-56">
+                <Select value={ministerFilter} onValueChange={setMinisterFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Ministro" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Ministros</SelectItem>
+                    {ministerOptions.map((minister) => (
+                      <SelectItem key={minister.id} value={String(minister.id)}>
+                        {minister.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -269,7 +321,7 @@ const Repertoire = () => {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ) : songs.length === 0 ? (
+                  ) : filteredSongs.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={6}
@@ -279,7 +331,7 @@ const Repertoire = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    songs.map((song) => (
+                    filteredSongs.map((song) => (
                       <TableRow key={song.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
