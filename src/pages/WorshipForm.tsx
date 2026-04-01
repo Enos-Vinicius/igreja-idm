@@ -51,7 +51,7 @@ const worshipSchema = z.object({
       (url) => url.includes("youtube.com") || url.includes("youtu.be"),
       "Deve ser um link do YouTube"
     ),
-  key: z.string().min(1, "Tonalidade é obrigatória"),
+  key: z.string().optional(),
   singer: z.string().max(100, "Nome do cantor muito longo").optional(),
   lyrics: z.string().optional(),
 });
@@ -689,7 +689,7 @@ const WorshipForm = () => {
                         name="key"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Tonalidade *</FormLabel>
+                            <FormLabel>Tonalidade</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
