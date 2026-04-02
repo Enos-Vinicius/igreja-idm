@@ -248,4 +248,13 @@
     top: calc(1rem + env(safe-area-inset-top)) !important;
     right: calc(1rem + env(safe-area-inset-right)) !important;
   }
+
+  /* Sheet music viewer: zero padding, safe areas handled internally */
+  .sheet-music-dialog.dialog-mobile-fullscreen {
+    padding: 0 !important;
+    padding-top: env(safe-area-inset-top) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    padding-left: env(safe-area-inset-left) !important;
+    padding-right: env(safe-area-inset-right) !important;
+  }
 }

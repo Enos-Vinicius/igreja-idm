@@ -291,7 +291,7 @@ const SheetMusicViewer = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-w-4xl w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0 dialog-mobile-fullscreen [&>button[type=button]:last-of-type]:hidden"
+        className="max-w-4xl w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden dialog-mobile-fullscreen sheet-music-dialog [&>button[type=button]:last-of-type]:hidden"
         onKeyDown={handleKeyDown}
         ref={containerRef}
         onFocus={() => {
@@ -370,7 +370,7 @@ const SheetMusicViewer = ({
             <iframe
               key={current.url}
               src={current.url}
-              className="w-full h-full border-0"
+              className="w-full h-full border-0 max-w-full"
               title={current.title || "Cifra"}
             />
           ) : (
