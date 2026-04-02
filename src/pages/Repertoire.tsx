@@ -38,6 +38,7 @@ import { songsService } from "@/services/songs";
 import { Song, SongStats } from "@/types/worship";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/config/permissions";
+import SheetMusicViewer from "@/components/SheetMusicViewer";
 
 const Repertoire = () => {
   const { user: currentUser } = useAuth();
@@ -51,6 +52,7 @@ const Repertoire = () => {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [ministerFilter, setMinisterFilter] = useState<string>("pending");
+  const [viewerSong, setViewerSong] = useState<Song | null>(null);
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -365,15 +367,13 @@ const Repertoire = () => {
                         </TableCell>
                         <TableCell>
                           {song.sheetMusicUrl ? (
-                            <a
-                              href={song.sheetMusicUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-sm text-primary hover:underline"
+                            <button
+                              onClick={() => setViewerSong(song)}
+                              className="flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer"
                             >
                               <FileText className="h-4 w-4" />
                               <span>Ver cifra</span>
-                            </a>
+                            </button>
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
@@ -432,6 +432,15 @@ const Repertoire = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Sheet Music Viewer */}
+        <SheetMusicViewer
+          open={!!viewerSong}
+          onOpenChange={(open) => !open && setViewerSong(null)}
+          url={viewerSong?.sheetMusicUrl}
+          title={viewerSong?.title}
+          musicalKey={viewerSong?.key}
+        />
       </div>
     </DashboardLayout>
   );

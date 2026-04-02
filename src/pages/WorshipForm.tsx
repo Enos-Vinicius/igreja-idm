@@ -456,15 +456,10 @@ const WorshipForm = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const validTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-      if (!validTypes.includes(file.type)) {
+      if (file.type !== "application/pdf") {
         toast({
           title: "Arquivo inválido",
-          description: "Apenas arquivos PDF ou DOC/DOCX são permitidos.",
+          description: "Apenas arquivos PDF são permitidos.",
           variant: "destructive",
         });
         return;
@@ -943,7 +938,7 @@ const WorshipForm = () => {
                         </p>
                         <Input
                           type="file"
-                          accept=".pdf,.doc,.docx"
+                          accept=".pdf"
                           className="hidden"
                           id="file-upload"
                           onChange={handleFileChange}
@@ -959,7 +954,7 @@ const WorshipForm = () => {
                           Selecionar Arquivo
                         </Button>
                         <p className="text-xs text-muted-foreground mt-2">
-                          PDF ou DOC/DOCX até 5MB
+                          PDF até 5MB
                         </p>
                       </div>
                     ) : (
