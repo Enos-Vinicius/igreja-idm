@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Plus, Search, Edit, Trash2, Calendar, Music, BookOpen, Loader2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Calendar, Music, BookOpen, Loader2, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -34,6 +34,7 @@ import { schedulesService } from "@/services/schedules";
 import { Schedule, ScheduleStats, getScheduleTypeLabel } from "@/types/schedule";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/config/permissions";
+import SheetMusicViewer, { SheetMusicItem } from "@/components/SheetMusicViewer";
 
 const Schedules = () => {
   const { user: currentUser } = useAuth();
@@ -47,6 +48,8 @@ const Schedules = () => {
   const [isLoadingSchedules, setIsLoadingSchedules] = useState(true);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [viewerPlaylist, setViewerPlaylist] = useState<SheetMusicItem[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -135,6 +138,14 @@ const Schedules = () => {
     } finally {
       setIsDeleting(null);
     }
+  };
+
+  const openSheetViewer = (schedule: Schedule) => {
+    if (schedule.type !== "Louvor" || schedule.songs.length === 0) return;
+    const items: SheetMusicItem[] = schedule.songs
+      .map(s => ({ title: s.title, url: s.sheetMusicUrl, key: s.key }));
+    setViewerPlaylist(items);
+    setViewerOpen(true);
   };
 
   const filteredSchedules = schedules.filter((schedule) => {
@@ -320,13 +331,26 @@ const Schedules = () => {
                         </TableCell>
                         <TableCell>
                           {schedule.type === "Louvor"
-                            ? (schedule.minister?.name || "-")
+                            ? (schedule.ministers?.map(m => m.name).join(", ") || "-")
                             : (schedule.preacher?.name || "-")}
                         </TableCell>
                         <TableCell>
                           {schedule.type === "Louvor" ? (
-                            <div className="text-sm text-muted-foreground max-w-[200px] truncate">
-                              {schedule.songs.map(s => s.title).join(", ") || "Nenhum louvor selecionado"}
+                            <div className="flex items-center gap-2">
+                              <div className="text-sm text-muted-foreground max-w-[150px] truncate">
+                                {schedule.songs.map(s => s.title).join(", ") || "Nenhum louvor"}
+                              </div>
+                              {schedule.songs.length > 0 && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="gap-1 text-primary h-7 px-2"
+                                  onClick={() => openSheetViewer(schedule)}
+                                >
+                                  <FileText className="h-3.5 w-3.5" />
+                                  <span className="hidden sm:inline text-xs">Cifras</span>
+                                </Button>
+                              )}
                             </div>
                           ) : (
                             <div className="text-sm text-muted-foreground">
@@ -389,6 +413,13 @@ const Schedules = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Sheet Music Viewer - Playlist Mode */}
+        <SheetMusicViewer
+          open={viewerOpen}
+          onOpenChange={setViewerOpen}
+          playlist={viewerPlaylist}
+        />
       </div>
     </DashboardLayout>
   );

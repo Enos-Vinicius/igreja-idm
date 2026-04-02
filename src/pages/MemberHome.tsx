@@ -31,7 +31,8 @@ import {
   Palette,
   Medal,
   Star,
-  Trophy
+  Trophy,
+  FileText,
 } from "lucide-react";
 import { format, differenceInYears, isSameDay, getMonth, getDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -62,6 +63,7 @@ import { Schedule } from "@/types/schedule";
 import { ServiceSchedule } from "@/types/serviceSchedule";
 import { Member, AttendanceStats } from "@/types/member";
 import BirthdayConfetti from "@/components/BirthdayConfetti";
+import SheetMusicViewer, { SheetMusicItem } from "@/components/SheetMusicViewer";
 import TourCompleteConfetti from "@/components/TourCompleteConfetti";
 import heroRoad from "@/assets/hero-road.jpg";
 import logoWhite from "@/assets/logo-white.png";
@@ -398,6 +400,8 @@ const MemberHome = () => {
   const [isLoadingSchedules, setIsLoadingSchedules] = useState(true);
   const [isLoadingNextService, setIsLoadingNextService] = useState(true);
   const [isLoadingAttendanceStats, setIsLoadingAttendanceStats] = useState(true);
+  const [viewerPlaylist, setViewerPlaylist] = useState<SheetMusicItem[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [showBirthdayAnimation, setShowBirthdayAnimation] = useState(false);
   const [showTourCompleteAnimation, setShowTourCompleteAnimation] = useState(false);
 
@@ -1417,20 +1421,38 @@ END:VCALENDAR`;
                               </Badge>
                             </div>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className={`mt-3 w-full ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
-                            onClick={() => handleCreateReminder({
-                              title: upcomingSchedules[0].type === 'Louvor' ? 'Ministração de Louvor' : 'Palavra',
-                              date: upcomingSchedules[0].date,
-                              time: '19:00 - 21:00',
-                              location: `${upcomingSchedules[0].category} - ${upcomingSchedules[0].church}`
-                            })}
-                          >
-                            <CalendarIcon className="h-4 w-4 mr-2" />
-                            Criar Lembrete
-                          </Button>
+                          <div className="flex gap-2 mt-3 w-full">
+                            {upcomingSchedules[0].type === 'Louvor' && upcomingSchedules[0].songs?.length > 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className={`flex-1 ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
+                                onClick={() => {
+                                  const items: SheetMusicItem[] = upcomingSchedules[0].songs
+                                    .map(s => ({ title: s.title, url: s.sheetMusicUrl, key: s.key }));
+                                  setViewerPlaylist(items);
+                                  setViewerOpen(true);
+                                }}
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Cifras
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={`flex-1 ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
+                              onClick={() => handleCreateReminder({
+                                title: upcomingSchedules[0].type === 'Louvor' ? 'Ministração de Louvor' : 'Palavra',
+                                date: upcomingSchedules[0].date,
+                                time: '19:00 - 21:00',
+                                location: `${upcomingSchedules[0].category} - ${upcomingSchedules[0].church}`
+                              })}
+                            >
+                              <CalendarIcon className="h-4 w-4 mr-2" />
+                              Lembrete
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -1464,20 +1486,38 @@ END:VCALENDAR`;
                                     </Badge>
                                   </div>
                                 </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className={`mt-3 w-full ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
-                                  onClick={() => handleCreateReminder({
-                                    title: schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Palavra',
-                                    date: schedule.date,
-                                    time: '19:00 - 21:00',
-                                    location: `${schedule.category} - ${schedule.church}`
-                                  })}
-                                >
-                                  <CalendarIcon className="h-4 w-4 mr-2" />
-                                  Criar Lembrete
-                                </Button>
+                                <div className="flex gap-2 mt-3 w-full">
+                                  {schedule.type === 'Louvor' && schedule.songs?.length > 0 && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className={`flex-1 ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
+                                      onClick={() => {
+                                        const items: SheetMusicItem[] = schedule.songs
+                                          .map(s => ({ title: s.title, url: s.sheetMusicUrl, key: s.key }));
+                                        setViewerPlaylist(items);
+                                        setViewerOpen(true);
+                                      }}
+                                    >
+                                      <FileText className="h-4 w-4 mr-2" />
+                                      Cifras
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`flex-1 ${['dark', 'ocean'].includes(currentTheme.id) ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600' : ''}`}
+                                    onClick={() => handleCreateReminder({
+                                      title: schedule.type === 'Louvor' ? 'Ministração de Louvor' : 'Palavra',
+                                      date: schedule.date,
+                                      time: '19:00 - 21:00',
+                                      location: `${schedule.category} - ${schedule.church}`
+                                    })}
+                                  >
+                                    <CalendarIcon className="h-4 w-4 mr-2" />
+                                    Lembrete
+                                  </Button>
+                                </div>
                               </div>
                             </CarouselItem>
                           ))}
@@ -2821,6 +2861,13 @@ END:VCALENDAR`;
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Sheet Music Viewer - Playlist Mode */}
+      <SheetMusicViewer
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        playlist={viewerPlaylist}
+      />
     </div>
   );
 };

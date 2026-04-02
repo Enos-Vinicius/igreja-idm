@@ -13,6 +13,10 @@ import {
   Search,
   Check,
   Loader2,
+  ChevronUp,
+  ChevronDown,
+  X,
+  GripVertical,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -65,7 +69,7 @@ import { hasPermission } from "@/config/permissions";
 
 const worshipScheduleSchema = z.object({
   date: z.date({ required_error: "Selecione a data do culto" }),
-  ministerId: z.string().min(1, "Selecione o ministro"),
+  ministerIds: z.array(z.number()).min(1, "Selecione pelo menos um ministro"),
   category: z.string().min(1, "Selecione a categoria do culto"),
   church: z.string().min(1, "Selecione a igreja"),
   notes: z.string().optional(),
@@ -115,7 +119,7 @@ const ScheduleForm = () => {
   const [isLoadingSongs, setIsLoadingSongs] = useState(false);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedMinister, setSelectedMinister] = useState<Member | null>(null);
+  const [selectedMinisters, setSelectedMinisters] = useState<Member[]>([]);
   const [selectedPreacher, setSelectedPreacher] = useState<Member | null>(null);
   const [openSearchPopover, setOpenSearchPopover] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -124,7 +128,7 @@ const ScheduleForm = () => {
   const worshipForm = useForm<z.infer<typeof worshipScheduleSchema>>({
     resolver: zodResolver(worshipScheduleSchema),
     defaultValues: {
-      ministerId: "",
+      ministerIds: [],
       category: "",
       church: "",
       notes: "",
@@ -218,13 +222,13 @@ const ScheduleForm = () => {
           if (schedule.type === "Louvor") {
             worshipForm.reset({
               date: new Date(schedule.date),
-              ministerId: schedule.minister.id.toString(),
+              ministerIds: schedule.ministers.map(m => m.id),
               category: schedule.category,
               church: schedule.church,
               notes: schedule.notes || "",
             });
             setSelectedSongs(schedule.songs.map(s => s.id));
-            setSelectedMinister(schedule.minister);
+            setSelectedMinisters(schedule.ministers as Member[]);
           } else {
             preachingForm.reset({
               date: new Date(schedule.date),
@@ -250,14 +254,16 @@ const ScheduleForm = () => {
     }
   }, [id]);
 
-  // Combine ministers list with selected minister to ensure it's always available
+  // Combine ministers list with selected ministers to ensure they're always available
   const availableMinisters = useMemo(() => {
     const ministersList = [...ministers];
-    if (selectedMinister && !ministersList.find(m => m.id === selectedMinister.id)) {
-      ministersList.unshift(selectedMinister);
-    }
+    selectedMinisters.forEach(sm => {
+      if (!ministersList.find(m => m.id === sm.id)) {
+        ministersList.unshift(sm);
+      }
+    });
     return ministersList;
-  }, [ministers, selectedMinister]);
+  }, [ministers, selectedMinisters]);
 
   // Combine preachers list with selected preacher to ensure it's always available
   const availablePreachers = useMemo(() => {
@@ -285,6 +291,16 @@ const ScheduleForm = () => {
         ? prev.filter((id) => id !== songId)
         : [...prev, songId]
     );
+  };
+
+  const moveSong = (index: number, direction: "up" | "down") => {
+    setSelectedSongs((prev) => {
+      const newList = [...prev];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= newList.length) return prev;
+      [newList[index], newList[targetIndex]] = [newList[targetIndex], newList[index]];
+      return newList;
+    });
   };
 
   const searchMemberByName = async (searchTerm?: string) => {
@@ -336,8 +352,11 @@ const ScheduleForm = () => {
 
   const selectMemberFromSearch = (member: Member) => {
     if (scheduleType === "Louvor") {
-      worshipForm.setValue("ministerId", member.id.toString());
-      setSelectedMinister(member);
+      const currentIds = worshipForm.getValues("ministerIds");
+      if (!currentIds.includes(member.id)) {
+        worshipForm.setValue("ministerIds", [...currentIds, member.id], { shouldValidate: true });
+        setSelectedMinisters(prev => [...prev, member]);
+      }
     } else {
       preachingForm.setValue("preacherId", member.id.toString());
       setSelectedPreacher(member);
@@ -366,7 +385,7 @@ const ScheduleForm = () => {
         date: data.date.toISOString(),
         church: data.church,
         category: data.category,
-        ministerId: parseInt(data.ministerId),
+        ministerIds: data.ministerIds,
         songIds: selectedSongs,
         notes: data.notes,
       };
@@ -586,29 +605,80 @@ const ScheduleForm = () => {
 
                     <FormField
                       control={worshipForm.control}
-                      name="ministerId"
+                      name="ministerIds"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Ministro</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={isLoadingMembers ? "Carregando..." : "Selecione o ministro"} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {availableMinisters.map((minister) => (
-                                <SelectItem key={minister.id} value={minister.id.toString()}>
-                                  {minister.name}
-                                </SelectItem>
-                              ))}
-                              {searchResults.length > 0 && searchResults.map((member) => (
-                                <SelectItem key={`search-${member.id}`} value={member.id.toString()}>
-                                  {member.name} (Busca)
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Ministro(s)</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className={cn(
+                                    "w-full justify-between font-normal",
+                                    field.value.length === 0 && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value.length === 0
+                                    ? (isLoadingMembers ? "Carregando..." : "Selecione os ministros")
+                                    : `${field.value.length} ministro(s) selecionado(s)`}
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                              <Command>
+                                <CommandInput placeholder="Buscar ministro..." />
+                                <CommandList className="max-h-[200px]">
+                                  <CommandEmpty>Nenhum ministro encontrado.</CommandEmpty>
+                                  <CommandGroup>
+                                    {availableMinisters.map((minister) => {
+                                      const isSelected = field.value.includes(minister.id);
+                                      return (
+                                        <CommandItem
+                                          key={minister.id}
+                                          value={minister.name}
+                                          onSelect={() => {
+                                            const newIds = isSelected
+                                              ? field.value.filter((id: number) => id !== minister.id)
+                                              : [...field.value, minister.id];
+                                            field.onChange(newIds);
+                                            if (!isSelected) {
+                                              setSelectedMinisters(prev =>
+                                                prev.find(m => m.id === minister.id) ? prev : [...prev, minister]
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          <Checkbox checked={isSelected} className="mr-2" />
+                                          {minister.name}
+                                        </CommandItem>
+                                      );
+                                    })}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          {field.value.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {field.value.map((id: number) => {
+                                const minister = availableMinisters.find(m => m.id === id) || selectedMinisters.find(m => m.id === id);
+                                return minister ? (
+                                  <Badge key={id} variant="secondary" className="gap-1">
+                                    {minister.name}
+                                    <button
+                                      type="button"
+                                      className="ml-1 hover:text-destructive"
+                                      onClick={() => field.onChange(field.value.filter((v: number) => v !== id))}
+                                    >
+                                      ×
+                                    </button>
+                                  </Badge>
+                                ) : null;
+                              })}
+                            </div>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -757,26 +827,63 @@ const ScheduleForm = () => {
                     ) : null}
                   </div>
 
-                  {/* Selected Songs */}
+                  {/* Selected Songs - Ordered List */}
                   {selectedSongs.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Label className="text-base font-medium">
-                        Louvores Selecionados ({selectedSongs.length})
+                        Ordem dos Louvores ({selectedSongs.length})
                       </Label>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedSongs.map((songId) => {
+                      <div className="space-y-1">
+                        {selectedSongs.map((songId, index) => {
                           const song = songs.find((s) => s.id === songId);
                           if (!song) return null;
                           return (
-                            <Badge
+                            <div
                               key={songId}
-                              variant="default"
-                              className="gap-2 pr-1 cursor-pointer"
-                              onClick={() => toggleSongSelection(songId)}
+                              className="flex items-center gap-2 p-2 rounded-lg border bg-card"
                             >
-                              {song.title}
-                              <span className="text-primary-foreground/70">×</span>
-                            </Badge>
+                              <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="text-sm font-medium text-muted-foreground w-6 text-center flex-shrink-0">
+                                {index + 1}.
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm font-medium truncate block">{song.title}</span>
+                                {song.key && (
+                                  <span className="text-xs text-muted-foreground">Tom: {song.key}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-0.5 flex-shrink-0">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  disabled={index === 0}
+                                  onClick={() => moveSong(index, "up")}
+                                >
+                                  <ChevronUp className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  disabled={index === selectedSongs.length - 1}
+                                  onClick={() => moveSong(index, "down")}
+                                >
+                                  <ChevronDown className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-destructive hover:text-destructive"
+                                  onClick={() => toggleSongSelection(songId)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
                           );
                         })}
                       </div>

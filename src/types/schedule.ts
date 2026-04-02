@@ -8,7 +8,8 @@ export type ScheduleCategory =
   | "Culto de Homens"
   | "Culto de Jovens"
   | "Culto de Crianças"
-  | "Culto da Virada";
+  | "Culto da Virada"
+  | "Manhã da Redenção";
 
 export type Church = "Uberaba" | "Conceição das Alagoas";
 
@@ -21,6 +22,7 @@ export const SCHEDULE_CATEGORIES: ScheduleCategory[] = [
   "Culto de Jovens",
   "Culto de Crianças",
   "Culto da Virada",
+  "Manhã da Redenção",
 ];
 
 export const CHURCHES: Church[] = ["Uberaba", "Conceição das Alagoas"];
@@ -34,6 +36,7 @@ export interface ScheduleSong {
   id: number;
   title: string;
   key: string;
+  sheetMusicUrl?: string;
 }
 
 export interface WorshipSchedule {
@@ -42,7 +45,7 @@ export interface WorshipSchedule {
   date: string;
   church: Church;
   category: ScheduleCategory;
-  minister: ScheduleMember;
+  ministers: ScheduleMember[];
   songs: ScheduleSong[];
   notes?: string;
   createdAt: string;
@@ -74,7 +77,7 @@ export interface ScheduleInput {
   date: string;
   church: Church;
   category: ScheduleCategory;
-  ministerId?: number;
+  ministerIds?: number[];
   songIds?: number[];
   preacherId?: number;
   notes?: string;

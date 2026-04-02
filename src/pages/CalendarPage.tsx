@@ -23,7 +23,7 @@ const scheduleToEvents = (schedules: Schedule[]) => {
   return schedules.map(schedule => ({
     id: schedule.id,
     title: schedule.type === "Louvor"
-      ? `Louvor - ${schedule.minister?.name || "Não definido"}`
+      ? `Louvor - ${schedule.ministers?.map(m => m.name).join(", ") || "Não definido"}`
       : `Palavra - ${schedule.preacher?.name || "Não definido"}`,
     date: new Date(schedule.date),
     time: "19:00", // Default time for worship services
@@ -31,7 +31,7 @@ const scheduleToEvents = (schedules: Schedule[]) => {
     type: schedule.type,
     category: schedule.category,
     church: schedule.church,
-    responsible: schedule.type === "Louvor" ? (schedule.minister?.name || "Não definido") : (schedule.preacher?.name || "Não definido"),
+    responsible: schedule.type === "Louvor" ? (schedule.ministers?.map(m => m.name).join(", ") || "Não definido") : (schedule.preacher?.name || "Não definido"),
   }));
 };
 
