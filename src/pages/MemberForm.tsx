@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Upload, X, Save, Loader2, ArrowLeft, Check } from 'lucide-react';
+import { Upload, X, Save, Loader2, ArrowLeft, Check, Plus, Users, Baby } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,9 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { membersService } from '@/services/members';
+import { membersService, CreateMemberInput, UpdateMemberInput } from '@/services/members';
+import { familiesService } from '@/services/families';
 import { viaCepService } from '@/services/viaCep';
 import {
   GENDERS,
@@ -34,40 +36,105 @@ import {
   CHURCH_ROLES,
   MEMBERSHIP_STATUSES,
   CHURCH_LOCATIONS,
+  PARENTESCO_ROLES,
+  MemberType,
+  FamilyMembershipInput,
 } from '@/types/member';
+import { Family } from '@/types/family';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { hasPermission } from '@/config/permissions';
 import { useEffect as useEffectPermission } from 'react';
 
+const familyMembershipFormSchema = z.object({
+  mode: z.enum(['existing', 'new']),
+  familyId: z.number().optional(),
+  familyName: z.string().optional(),
+  role: z.enum([
+    'Pai', 'Mãe', 'Filho', 'Filha', 'Irmão', 'Irmã', 'Avô', 'Avó',
+    'Neto', 'Neta', 'Tio', 'Tia', 'Sobrinho', 'Sobrinha', 'Primo', 'Prima',
+    'Cônjuge', 'Responsável', 'Outro',
+  ], { required_error: 'Grau de parentesco é obrigatório' }),
+});
+
 const formSchema = z.object({
+  memberType: z.enum(['Adulto', 'Criança']),
   name: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome deve ter no máximo 100 caracteres'),
-  email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
+  email: z.string().optional().or(z.literal('')),
   birthDate: z.string().min(1, 'Data de nascimento é obrigatória'),
   gender: z.enum(['Masculino', 'Feminino'], { required_error: 'Gênero é obrigatório' }),
-  maritalStatus: z.enum(['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)', 'Outro'], {
-    required_error: 'Estado civil é obrigatório',
-  }),
-  occupation: z.string().min(1, 'Profissão é obrigatória').max(100, 'Profissão deve ter no máximo 100 caracteres'),
-  primaryPhone: z.string().min(1, 'Telefone principal é obrigatório'),
-  secondaryPhone: z.string().optional(),
-  emergencyContact: z.string().optional(),
-  zipCode: z.string().optional(),
-  street: z.string().optional(),
-  number: z.string().optional(),
-  complement: z.string().optional(),
-  neighborhood: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
+  maritalStatus: z.enum(['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)', 'Outro']).optional().nullable(),
+  occupation: z.string().optional().nullable(),
+  primaryPhone: z.string().optional().nullable(),
+  secondaryPhone: z.string().optional().nullable(),
+  emergencyContact: z.string().optional().nullable(),
+  zipCode: z.string().optional().nullable(),
+  street: z.string().optional().nullable(),
+  number: z.string().optional().nullable(),
+  complement: z.string().optional().nullable(),
+  neighborhood: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
   church: z.enum(['Uberaba', 'Conceição das Alagoas']).optional().nullable(),
-  churchRole: z.enum(['Membro', 'Ministro de Louvor', 'Músico', 'Mídia Digital', 'Líder', 'Diácono', 'Presbítero', 'Pastor(a)', 'Secretária', 'Tesoureiro', 'Recepcionista']).optional(),
-  membershipStatus: z.enum(['Ativo', 'Inativo', 'Visitante', 'Congregado', 'Transferido']).optional(),
-  baptismDate: z.string().optional(),
-  joinDate: z.string().optional(),
+  churchRole: z.enum(['Membro', 'Ministro de Louvor', 'Músico', 'Mídia Digital', 'Líder', 'Diácono', 'Presbítero', 'Pastor(a)', 'Secretária', 'Tesoureiro', 'Recepcionista']).optional().nullable(),
+  membershipStatus: z.enum(['Ativo', 'Inativo', 'Visitante', 'Congregado', 'Transferido']).optional().nullable(),
+  baptismDate: z.string().optional().nullable(),
+  joinDate: z.string().optional().nullable(),
   imageConsentGiven: z.boolean().optional(),
   emailConsentGiven: z.boolean().optional(),
   whatsappConsentGiven: z.boolean().optional(),
   notes: z.string().optional(),
+  familyMemberships: z.array(familyMembershipFormSchema).optional(),
+}).superRefine((data, ctx) => {
+  if (data.memberType === 'Adulto') {
+    if (!data.email || data.email.trim().length === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Email é obrigatório', path: ['email'] });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Email inválido', path: ['email'] });
+    }
+    if (!data.maritalStatus) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Estado civil é obrigatório', path: ['maritalStatus'] });
+    }
+    if (!data.occupation || data.occupation.trim().length === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Profissão é obrigatória', path: ['occupation'] });
+    }
+    if (!data.primaryPhone || data.primaryPhone.trim().length === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Telefone principal é obrigatório', path: ['primaryPhone'] });
+    }
+  }
+  if (data.memberType === 'Criança') {
+    if (!data.church) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Igreja é obrigatória',
+        path: ['church'],
+      });
+    }
+    if (!data.familyMemberships || data.familyMemberships.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Cadastro de criança exige ao menos 1 vínculo familiar',
+        path: ['familyMemberships'],
+      });
+    }
+  }
+  // Valida cada família
+  data.familyMemberships?.forEach((fm, index) => {
+    if (fm.mode === 'existing' && !fm.familyId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Selecione uma família',
+        path: ['familyMemberships', index, 'familyId'],
+      });
+    }
+    if (fm.mode === 'new' && (!fm.familyName || fm.familyName.trim().length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Informe o nome da nova família',
+        path: ['familyMemberships', index, 'familyName'],
+      });
+    }
+  });
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -127,11 +194,14 @@ const MemberForm = () => {
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMember, setIsLoadingMember] = useState(isEditing);
+  const [families, setFamilies] = useState<Family[]>([]);
+  const [isLoadingFamilies, setIsLoadingFamilies] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: 'onBlur',
     defaultValues: {
+      memberType: 'Adulto',
       name: '',
       email: '',
       birthDate: '',
@@ -157,8 +227,33 @@ const MemberForm = () => {
       emailConsentGiven: false,
       whatsappConsentGiven: false,
       notes: '',
+      familyMemberships: [],
     },
   });
+
+  const memberType = form.watch('memberType');
+  const isChild = memberType === 'Criança';
+
+  const familyMembershipsArray = useFieldArray({
+    control: form.control,
+    name: 'familyMemberships',
+  });
+
+  // Carrega lista de famílias para o dropdown
+  useEffect(() => {
+    const loadFamilies = async () => {
+      setIsLoadingFamilies(true);
+      try {
+        const data = await familiesService.getAll();
+        setFamilies(data);
+      } catch {
+        // Silently fail - usuário pode criar família nova
+      } finally {
+        setIsLoadingFamilies(false);
+      }
+    };
+    loadFamilies();
+  }, []);
 
   // Load member data when editing
   useEffect(() => {
@@ -172,6 +267,7 @@ const MemberForm = () => {
     try {
       const member = await membersService.getById(memberId);
       form.reset({
+        memberType: member.memberType || 'Adulto',
         name: member.name || '',
         email: member.email || '',
         birthDate: formatDateForInput(member.birthDate),
@@ -197,6 +293,12 @@ const MemberForm = () => {
         emailConsentGiven: member.emailConsentGiven || false,
         whatsappConsentGiven: member.whatsappConsentGiven || false,
         notes: member.notes || '',
+        familyMemberships: (member.familyMemberships || []).map(fm => ({
+          mode: 'existing' as const,
+          familyId: fm.familyId,
+          familyName: fm.familyName || '',
+          role: fm.role,
+        })),
       });
       if (member.photoUrl) {
         setPhotoPreview(member.photoUrl);
@@ -252,27 +354,63 @@ const MemberForm = () => {
     }
   };
 
+  // Quando a validação falha, mostra a primeira mensagem de erro no toast
+  // (útil quando o erro está em um campo escondido pelo modo Criança)
+  const onSubmitError = (errors: Record<string, unknown>) => {
+    const collectMessages = (obj: unknown): string[] => {
+      if (!obj || typeof obj !== 'object') return [];
+      const messages: string[] = [];
+      const candidate = obj as { message?: string };
+      if (typeof candidate.message === 'string') messages.push(candidate.message);
+      Object.values(obj as Record<string, unknown>).forEach((value) => {
+        if (value && typeof value === 'object') {
+          messages.push(...collectMessages(value));
+        }
+      });
+      return messages;
+    };
+    const messages = collectMessages(errors);
+    if (messages.length > 0) {
+      toast.error(messages[0]);
+    } else {
+      toast.error('Erro de validação no formulário');
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
+      // Transforma os vínculos familiares do formato do form para o payload da API
+      const familyMembershipsPayload: FamilyMembershipInput[] | undefined = data.familyMemberships && data.familyMemberships.length > 0
+        ? data.familyMemberships.map(fm => ({
+            role: fm.role,
+            ...(fm.mode === 'existing' ? { familyId: fm.familyId } : { familyName: fm.familyName?.trim() }),
+          }))
+        : undefined;
+
+      const payload = {
+        ...data,
+        familyMemberships: familyMembershipsPayload,
+      };
+
       if (isEditing && id) {
-        await membersService.update(id, data);
+        await membersService.update(id, payload as UpdateMemberInput);
 
         // Upload photo if changed
         if (photoFile) {
           await membersService.uploadPhoto(id, photoFile);
         }
 
-        toast.success('Membro atualizado com sucesso!');
+        toast.success(data.memberType === 'Criança' ? 'Criança atualizada com sucesso!' : 'Membro atualizado com sucesso!');
       } else {
-        const newMember = await membersService.create(data as any);
+        const newMember = await membersService.create(payload as CreateMemberInput);
 
         // Upload photo if provided
         if (photoFile && newMember.id) {
           await membersService.uploadPhoto(String(newMember.id), photoFile);
         }
 
-        toast.success('Membro cadastrado com sucesso!');
+        toast.success(data.memberType === 'Criança' ? 'Criança cadastrada com sucesso!' : 'Membro cadastrado com sucesso!');
       }
       // Navega de volta com flag de refresh para recarregar os dados
       navigate('/members', { state: { refresh: true } });
@@ -311,18 +449,57 @@ const MemberForm = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              {isEditing ? 'Editar Membro' : 'Novo Membro'}
+              {isEditing
+                ? (isChild ? 'Editar Criança' : 'Editar Membro')
+                : (isChild ? 'Nova Criança' : 'Novo Membro')}
             </h1>
             <p className="text-muted-foreground text-sm">
               {isEditing
-                ? 'Atualize as informações do membro'
-                : 'Adicione um novo membro à igreja'}
+                ? (isChild ? 'Atualize as informações da criança' : 'Atualize as informações do membro')
+                : (isChild ? 'Cadastre uma criança com vínculo familiar' : 'Adicione um novo membro à igreja')}
             </p>
           </div>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit, onSubmitError)} className="space-y-8">
+            {/* Tipo de Cadastro */}
+            {!isEditing && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tipo de Cadastro</CardTitle>
+                  <CardDescription>
+                    Selecione se é um adulto ou uma criança
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="memberType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Tabs
+                          value={field.value}
+                          onValueChange={(v) => field.onChange(v as MemberType)}
+                        >
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="Adulto" className="gap-2">
+                              <Users className="h-4 w-4" />
+                              Adulto
+                            </TabsTrigger>
+                            <TabsTrigger value="Criança" className="gap-2">
+                              <Baby className="h-4 w-4" />
+                              Criança
+                            </TabsTrigger>
+                          </TabsList>
+                        </Tabs>
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
             {/* Foto */}
             <Card>
               <CardHeader>
@@ -387,19 +564,21 @@ const MemberForm = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-6">
-                      <FormLabel>Email *</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="email@exemplo.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {!isChild && (
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-6">
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="email@exemplo.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
@@ -423,7 +602,7 @@ const MemberForm = () => {
                   control={form.control}
                   name="gender"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-4">
+                    <FormItem className={isChild ? 'md:col-span-8' : 'md:col-span-4'}>
                       <FormLabel>Gênero *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
@@ -444,48 +623,53 @@ const MemberForm = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="maritalStatus"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-4">
-                      <FormLabel>Estado Civil *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {MARITAL_STATUSES.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {status}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {!isChild && (
+                  <FormField
+                    control={form.control}
+                    name="maritalStatus"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-4">
+                        <FormLabel>Estado Civil *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {MARITAL_STATUSES.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
-                <FormField
-                  control={form.control}
-                  name="occupation"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-12">
-                      <FormLabel>Profissão *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Digite a profissão" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {!isChild && (
+                  <FormField
+                    control={form.control}
+                    name="occupation"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-12">
+                        <FormLabel>Profissão *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite a profissão" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </CardContent>
             </Card>
 
             {/* Contato */}
+            {!isChild && (
             <Card>
               <CardHeader>
                 <CardTitle>Contato</CardTitle>
@@ -549,8 +733,10 @@ const MemberForm = () => {
                 />
               </CardContent>
             </Card>
+            )}
 
             {/* Endereço */}
+            {!isChild && (
             <Card>
               <CardHeader>
                 <CardTitle>Endereço</CardTitle>
@@ -681,6 +867,7 @@ const MemberForm = () => {
                 />
               </CardContent>
             </Card>
+            )}
 
             {/* Informações Eclesiásticas */}
             <Card>
@@ -692,8 +879,8 @@ const MemberForm = () => {
                   control={form.control}
                   name="church"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-4">
-                      <FormLabel>Igreja</FormLabel>
+                    <FormItem className={isChild ? 'md:col-span-12' : 'md:col-span-4'}>
+                      <FormLabel>Igreja{isChild ? ' *' : ''}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || undefined}>
                         <FormControl>
                           <SelectTrigger>
@@ -713,97 +900,106 @@ const MemberForm = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="churchRole"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-4">
-                      <FormLabel>Função na Igreja</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                {!isChild && (
+                  <FormField
+                    control={form.control}
+                    name="churchRole"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-4">
+                        <FormLabel>Função na Igreja</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a função" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {CHURCH_ROLES.map((role) => (
+                              <SelectItem key={role} value={role}>
+                                {role}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {!isChild && (
+                  <FormField
+                    control={form.control}
+                    name="membershipStatus"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-4">
+                        <FormLabel>Status de Membro</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {MEMBERSHIP_STATUSES.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {!isChild && (
+                  <FormField
+                    control={form.control}
+                    name="baptismDate"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Data de Batismo</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a função" />
-                          </SelectTrigger>
+                          <DateInput
+                            value={field.value}
+                            onChangeString={field.onChange}
+                            maxDate={new Date()}
+                            className="w-[180px]"
+                          />
                         </FormControl>
-                        <SelectContent>
-                          {CHURCH_ROLES.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {role}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
-                <FormField
-                  control={form.control}
-                  name="membershipStatus"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-4">
-                      <FormLabel>Status de Membro</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                {!isChild && (
+                  <FormField
+                    control={form.control}
+                    name="joinDate"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-3">
+                        <FormLabel>Data que Aceitou Jesus</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
+                          <DateInput
+                            value={field.value}
+                            onChangeString={field.onChange}
+                            maxDate={new Date()}
+                            className="w-[180px]"
+                          />
                         </FormControl>
-                        <SelectContent>
-                          {MEMBERSHIP_STATUSES.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {status}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="baptismDate"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>Data de Batismo</FormLabel>
-                      <FormControl>
-                        <DateInput
-                          value={field.value}
-                          onChangeString={field.onChange}
-                          maxDate={new Date()}
-                          className="w-[180px]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="joinDate"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-3">
-                      <FormLabel>Data que Aceitou Jesus</FormLabel>
-                      <FormControl>
-                        <DateInput
-                          value={field.value}
-                          onChangeString={field.onChange}
-                          maxDate={new Date()}
-                          className="w-[180px]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </CardContent>
             </Card>
 
             {/* Consentimentos */}
+            {!isChild && (
             <Card>
               <CardHeader>
                 <CardTitle>Consentimentos</CardTitle>
@@ -900,6 +1096,174 @@ const MemberForm = () => {
                 />
               </CardContent>
             </Card>
+            )}
+
+            {/* Vínculos Familiares */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Vínculos Familiares{isChild ? ' *' : ''}</CardTitle>
+                <CardDescription>
+                  {isChild
+                    ? 'É obrigatório informar ao menos um vínculo familiar para cadastrar uma criança.'
+                    : 'Opcional. Associe este membro a uma ou mais famílias.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {familyMembershipsArray.fields.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum vínculo familiar adicionado.
+                  </p>
+                )}
+
+                {familyMembershipsArray.fields.map((fieldItem, index) => (
+                  <div
+                    key={fieldItem.id}
+                    className="rounded-lg border bg-card p-4 space-y-4 relative"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => familyMembershipsArray.remove(index)}
+                      className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
+                      aria-label="Remover vínculo"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+
+                    <FormField
+                      control={form.control}
+                      name={`familyMemberships.${index}.mode`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Família</FormLabel>
+                          <Tabs
+                            value={field.value}
+                            onValueChange={(v) => {
+                              field.onChange(v);
+                              // Limpa o campo oposto ao trocar de modo
+                              if (v === 'existing') {
+                                form.setValue(`familyMemberships.${index}.familyName`, '');
+                              } else {
+                                form.setValue(`familyMemberships.${index}.familyId`, undefined);
+                              }
+                            }}
+                          >
+                            <TabsList className="grid w-full grid-cols-2">
+                              <TabsTrigger value="existing">
+                                Família existente
+                              </TabsTrigger>
+                              <TabsTrigger value="new">
+                                Criar nova família
+                              </TabsTrigger>
+                            </TabsList>
+                          </Tabs>
+                        </FormItem>
+                      )}
+                    />
+
+                    {form.watch(`familyMemberships.${index}.mode`) === 'existing' ? (
+                      <FormField
+                        control={form.control}
+                        name={`familyMemberships.${index}.familyId`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Selecione a família *</FormLabel>
+                            <Select
+                              onValueChange={(v) => field.onChange(parseInt(v))}
+                              value={field.value ? String(field.value) : undefined}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={isLoadingFamilies ? 'Carregando...' : 'Selecione'} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {families.length === 0 && !isLoadingFamilies ? (
+                                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                                    Nenhuma família cadastrada
+                                  </div>
+                                ) : (
+                                  families.map((family) => (
+                                    <SelectItem key={family.id} value={String(family.id)}>
+                                      {family.name}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ) : (
+                      <FormField
+                        control={form.control}
+                        name={`familyMemberships.${index}.familyName`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome da nova família *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: Família Silva" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              A família será criada automaticamente ao salvar
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name={`familyMemberships.${index}.role`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Grau de parentesco *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o parentesco" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {PARENTESCO_ROLES.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                  {role}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() =>
+                    familyMembershipsArray.append({
+                      mode: 'existing',
+                      familyId: undefined,
+                      familyName: '',
+                      role: undefined as unknown as typeof PARENTESCO_ROLES[number],
+                    })
+                  }
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar vínculo familiar
+                </Button>
+
+                {form.formState.errors.familyMemberships?.message && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.familyMemberships.message}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Observações */}
             <Card>
@@ -915,7 +1279,7 @@ const MemberForm = () => {
                       <FormLabel>Notas/Observações</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Informações adicionais sobre o membro..."
+                          placeholder={isChild ? 'Informações adicionais sobre a criança...' : 'Informações adicionais sobre o membro...'}
                           className="min-h-[120px]"
                           {...field}
                         />
@@ -946,7 +1310,7 @@ const MemberForm = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    {isEditing ? 'Salvar Alterações' : 'Cadastrar Membro'}
+                    {isEditing ? 'Salvar Alterações' : (isChild ? 'Cadastrar Criança' : 'Cadastrar Membro')}
                   </>
                 )}
               </Button>

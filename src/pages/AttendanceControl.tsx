@@ -911,6 +911,26 @@ const AttendanceControl = () => {
     setSwipeOffset(0);
   }, [swipeOffset, swipeThreshold, handleSwipeMarkPresent, handleSwipeRemovePresent]);
 
+  // Listener global não-passivo para bloquear scroll nativo do iOS Safari
+  // durante swipe horizontal. Resolve o problema de itens abaixo da dobra
+  // não respondendo ao swipe porque o browser captura o gesto para scroll.
+  useEffect(() => {
+    const preventScrollOnSwipe = (e: TouchEvent) => {
+      if (!touchStartRef.current) return;
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - touchStartRef.current.x;
+      const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+
+      // Se movimento horizontal é dominante e significativo, impede scroll
+      if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > 10) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchmove', preventScrollOnSwipe, { passive: false });
+    return () => document.removeEventListener('touchmove', preventScrollOnSwipe);
+  }, []);
+
   // Abrir modal para editar visitante
   const openVisitorEditModal = (visitor: Attendance) => {
     setEditingVisitor(visitor);

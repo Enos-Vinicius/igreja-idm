@@ -19,6 +19,41 @@ export type MembershipStatus = 'Ativo' | 'Inativo' | 'Visitante' | 'Congregado' 
 
 export type ChurchLocation = 'Uberaba' | 'Conceição das Alagoas';
 
+export type MemberType = 'Adulto' | 'Criança';
+
+export type ParentescoRole =
+  | 'Pai'
+  | 'Mãe'
+  | 'Filho'
+  | 'Filha'
+  | 'Irmão'
+  | 'Irmã'
+  | 'Avô'
+  | 'Avó'
+  | 'Neto'
+  | 'Neta'
+  | 'Tio'
+  | 'Tia'
+  | 'Sobrinho'
+  | 'Sobrinha'
+  | 'Primo'
+  | 'Prima'
+  | 'Cônjuge'
+  | 'Responsável'
+  | 'Outro';
+
+export interface FamilyMembershipInput {
+  familyId?: number;
+  familyName?: string;
+  role: ParentescoRole;
+}
+
+export interface FamilyMembership {
+  familyId: number;
+  familyName: string;
+  role: ParentescoRole;
+}
+
 export interface Member {
   id: number;
   userId?: number;
@@ -66,6 +101,12 @@ export interface Member {
   // Observações
   notes?: string;
 
+  // Tipo de membro (adulto/criança)
+  memberType?: MemberType;
+
+  // Vínculos familiares
+  familyMemberships?: FamilyMembership[];
+
   // Metadados
   createdAt: string;
   updatedAt: string;
@@ -106,6 +147,30 @@ export const MEMBERSHIP_STATUSES: MembershipStatus[] = [
 export const CHURCH_LOCATIONS: ChurchLocation[] = [
   'Uberaba',
   'Conceição das Alagoas',
+];
+
+export const MEMBER_TYPES: MemberType[] = ['Adulto', 'Criança'];
+
+export const PARENTESCO_ROLES: ParentescoRole[] = [
+  'Pai',
+  'Mãe',
+  'Filho',
+  'Filha',
+  'Irmão',
+  'Irmã',
+  'Avô',
+  'Avó',
+  'Neto',
+  'Neta',
+  'Tio',
+  'Tia',
+  'Sobrinho',
+  'Sobrinha',
+  'Primo',
+  'Prima',
+  'Cônjuge',
+  'Responsável',
+  'Outro',
 ];
 
 export interface AttendanceStats {

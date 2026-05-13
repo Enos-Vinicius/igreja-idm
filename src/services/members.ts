@@ -1,6 +1,14 @@
 import { api } from './api';
-import { Member, AttendanceStats } from '../types/member';
+import { Member, AttendanceStats, FamilyMembershipInput } from '../types/member';
 import { Schedule } from '../types/schedule';
+
+export type CreateMemberInput = Omit<Member, 'id' | 'createdAt' | 'updatedAt' | 'familyMemberships'> & {
+  familyMemberships?: FamilyMembershipInput[];
+};
+
+export type UpdateMemberInput = Partial<Omit<Member, 'familyMemberships'>> & {
+  familyMemberships?: FamilyMembershipInput[];
+};
 
 const CACHE_KEY = 'members_cache';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
@@ -74,22 +82,28 @@ export const membersService = {
     return api.get<Member>(`/members/${id}`);
   },
 
-  async create(member: Omit<Member, 'id' | 'createdAt' | 'updatedAt'>): Promise<Member> {
+  async create(member: CreateMemberInput): Promise<Member> {
     const result = await api.post<Member>('/members', member);
     this.clearCache(); // Limpa cache após criar
     return result;
   },
 
-  async update(id: number | string, member: Partial<Member>): Promise<Member> {
+  async update(id: number | string, member: UpdateMemberInput): Promise<Member> {
     const result = await api.put<Member>(`/members/${id}`, member);
     this.clearCache(); // Limpa cache após atualizar
     return result;
   },
 
-  async updateMe(member: Partial<Member>): Promise<Member> {
+  async updateMe(member: UpdateMemberInput): Promise<Member> {
     const result = await api.put<Member>('/members/me', member);
     this.clearCache(); // Limpa cache após atualizar
     return result;
+  },
+
+  async getAllByType(memberType: 'Adulto' | 'Criança'): Promise<Member[]> {
+    const params = new URLSearchParams();
+    params.append('memberType', memberType);
+    return api.get<Member[]>(`/members?${params.toString()}`);
   },
 
   async delete(id: number | string): Promise<void> {

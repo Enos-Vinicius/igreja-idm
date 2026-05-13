@@ -36,7 +36,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { songsService } from "@/services/songs";
-import { MUSICAL_KEYS, SongMinister } from "@/types/worship";
+import { MUSICAL_KEYS, MUSICAL_KEY_PENDING, SongMinister } from "@/types/worship";
 import { cn } from "@/lib/utils";
 import { environment } from "@/config/environment";
 import { hasPermission } from "@/config/permissions";
@@ -51,7 +51,7 @@ const worshipSchema = z.object({
       (url) => url.includes("youtube.com") || url.includes("youtu.be"),
       "Deve ser um link do YouTube"
     ),
-  key: z.string().optional(),
+  key: z.string().min(1, "Tonalidade é obrigatória"),
   singer: z.string().max(100, "Nome do cantor muito longo").optional(),
   lyrics: z.string().optional(),
 });
@@ -684,7 +684,7 @@ const WorshipForm = () => {
                         name="key"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Tonalidade</FormLabel>
+                            <FormLabel>Tonalidade *</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
@@ -729,6 +729,9 @@ const WorshipForm = () => {
                                 </Command>
                               </PopoverContent>
                             </Popover>
+                            <FormDescription>
+                              Caso não saiba o tom, selecione: "{MUSICAL_KEY_PENDING}".
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}

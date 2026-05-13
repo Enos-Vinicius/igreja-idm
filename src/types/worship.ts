@@ -53,7 +53,10 @@ export interface Worship {
   updatedAt: Date;
 }
 
+export const MUSICAL_KEY_PENDING = "A definir";
+
 export const MUSICAL_KEYS = [
+  MUSICAL_KEY_PENDING,
   "C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B",
   "Cm", "C#m", "Dm", "D#m", "Ebm", "Em", "Fm", "F#m", "Gm", "G#m", "Am", "A#m", "Bbm", "Bm"
 ] as const;
