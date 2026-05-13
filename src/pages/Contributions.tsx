@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
   Plus,
   Edit,
@@ -59,6 +57,14 @@ import { hasPermission } from "@/config/permissions";
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
+// Formata "YYYY-MM-DD" como "DD/MM/YYYY" sem aplicar timezone
+function formatIsoDateBR(isoDate: string): string {
+  if (!isoDate) return "—";
+  const [year, month, day] = isoDate.slice(0, 10).split("-");
+  if (!year || !month || !day) return "—";
+  return `${day}/${month}/${year}`;
 }
 
 const Contributions = () => {
@@ -376,9 +382,7 @@ const Contributions = () => {
                     contributions.map((c) => {
                       const rowDeleting = isDeleting === c.id;
                       const personName = c.member?.name || c.nonMemberName || "—";
-                      const eventDate = c.serviceSchedule?.date
-                        ? format(new Date(c.serviceSchedule.date), "dd/MM/yyyy", { locale: ptBR })
-                        : "—";
+                      const eventDate = formatIsoDateBR(c.serviceSchedule?.date || "");
                       return (
                         <TableRow key={c.id} className={rowDeleting ? "opacity-50 pointer-events-none" : ""}>
                           <TableCell className="font-medium">{eventDate}</TableCell>

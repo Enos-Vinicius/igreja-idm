@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
   ArrowLeft,
   Plus,
@@ -78,6 +76,14 @@ const emptyItem = (): ContributionItemForm => ({
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
+// Formata "YYYY-MM-DD" como "DD/MM/YYYY" sem aplicar timezone
+function formatIsoDateBR(isoDate: string): string {
+  if (!isoDate) return "";
+  const [year, month, day] = isoDate.slice(0, 10).split("-");
+  if (!year || !month || !day) return isoDate;
+  return `${day}/${month}/${year}`;
 }
 
 function formatAmountInput(value: number): string {
@@ -458,7 +464,7 @@ const ContributionForm = () => {
                   ) : (
                     services.map((s) => (
                       <SelectItem key={s.id} value={String(s.id)}>
-                        {format(new Date(s.date), "dd/MM/yyyy", { locale: ptBR })} — {s.title} ({s.city})
+                        {formatIsoDateBR(s.date)} — {s.title} ({s.city})
                       </SelectItem>
                     ))
                   )}
