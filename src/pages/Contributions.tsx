@@ -11,6 +11,7 @@ import {
   Filter,
   X,
   PieChart,
+  Download,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import MobileBackButton from "@/components/MobileBackButton";
@@ -54,6 +55,7 @@ import {
 import { CHURCH_LOCATIONS, ChurchLocation } from "@/types/member";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/config/permissions";
+import { downloadCsv, getTimestampSuffix, formatCurrencyBR } from "@/lib/csvExport";
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -76,6 +78,44 @@ const Contributions = () => {
   const [isLoadingSummary, setIsLoadingSummary] = useState(true);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Contribution | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const isAdmin = currentUser?.role === "admin";
+
+  const handleBackup = async () => {
+    setIsExporting(true);
+    try {
+      // Busca TODAS as contribuições, sem filtros
+      const all = await contributionsService.getAll({});
+      downloadCsv(
+        `contribuicoes-backup-${getTimestampSuffix()}.csv`,
+        all,
+        [
+          { label: "ID", value: (c) => c.id },
+          { label: "Data do Culto", value: (c) => formatIsoDateBR(c.serviceSchedule?.date || "") },
+          { label: "Culto", value: (c) => c.serviceSchedule?.title || "" },
+          { label: "Igreja", value: (c) => c.church },
+          { label: "Membro", value: (c) => c.member?.name || "" },
+          { label: "Não-membro", value: (c) => c.nonMemberName || "" },
+          { label: "Tipo", value: (c) => c.type },
+          { label: "Valor", value: (c) => formatCurrencyBR(c.amount) },
+          { label: "Método de Pagamento", value: (c) => c.paymentMethod || "" },
+          { label: "Observações", value: (c) => c.notes || "" },
+          { label: "Registrado por", value: (c) => c.registeredBy?.name || c.registeredBy?.email || "" },
+          { label: "Última edição por", value: (c) => c.lastEditedBy?.name || c.lastEditedBy?.email || "" },
+          { label: "Última edição em", value: (c) => formatIsoDateBR(c.lastEditedAt || "") },
+          { label: "Excluída em", value: (c) => formatIsoDateBR(c.deletedAt || "") },
+          { label: "Criada em", value: (c) => formatIsoDateBR(c.createdAt) },
+        ]
+      );
+      toast.success(`Backup de ${all.length} contribuição(ões) baixado com sucesso!`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao gerar backup";
+      toast.error(message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Filtros
   const [churchFilter, setChurchFilter] = useState<string>(() => currentUser?.member?.church ?? "all");
@@ -196,12 +236,20 @@ const Contributions = () => {
               Gerencie dízimos, ofertas e demais contribuições da igreja
             </p>
           </div>
-          {currentUser && hasPermission(currentUser.role, "contributions", "create") && (
-            <Button onClick={() => navigate("/contributions/new")} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Lançar Contribuições
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {isAdmin && (
+              <Button variant="outline" onClick={handleBackup} disabled={isExporting} className="gap-2">
+                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Backup de Dados
+              </Button>
+            )}
+            {currentUser && hasPermission(currentUser.role, "contributions", "create") && (
+              <Button onClick={() => navigate("/contributions/new")} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Lançar Contribuições
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Summary Cards */}

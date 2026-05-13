@@ -22,6 +22,7 @@ import {
   ArrowRight,
   ChevronDown,
   BarChart3,
+  Download,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import MobileBackButton from "@/components/MobileBackButton";
@@ -64,6 +65,7 @@ import { Member } from "@/types/member";
 import { Attendance, AttendanceStats, SERVICE_TIMES } from "@/types/attendance";
 import { SCHEDULE_CATEGORIES, CHURCHES, ScheduleCategory, Church as ChurchType } from "@/types/schedule";
 import { ServiceSchedule } from "@/types/serviceSchedule";
+import { downloadCsv, getTimestampSuffix, formatIsoDateBR } from "@/lib/csvExport";
 
 // Coordenadas das igrejas
 const CHURCH_COORDINATES: Record<ChurchType, { lat: number; lng: number }> = {
@@ -133,7 +135,7 @@ function formatPhone(value: string): string {
 
 const AttendanceControl = () => {
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
 
   // Filtros do culto
   const [selectedChurch, setSelectedChurch] = useState<ChurchType | "">("");
@@ -186,6 +188,43 @@ const AttendanceControl = () => {
   // Mobile: controle de etapas (filtros vs listagem)
   const [mobileStep, setMobileStep] = useState<"filters" | "list">("filters");
   const [showMobileStats, setShowMobileStats] = useState(false);
+  const [isExportingBackup, setIsExportingBackup] = useState(false);
+
+  const isStrictAdmin = user?.role === "admin";
+
+  const handleBackup = async () => {
+    setIsExportingBackup(true);
+    try {
+      const all = await attendanceService.getAllForBackup();
+      downloadCsv(
+        `presencas-backup-${getTimestampSuffix()}.csv`,
+        all,
+        [
+          { label: "ID", value: (a) => a.id },
+          { label: "Data do Culto", value: (a) => formatIsoDateBR(a.serviceDate) },
+          { label: "Hora", value: (a) => a.serviceTime },
+          { label: "Tipo de Culto", value: (a) => a.serviceType },
+          { label: "Igreja", value: (a) => a.church },
+          { label: "ID do Culto", value: (a) => a.serviceScheduleId || "" },
+          { label: "Membro", value: (a) => a.member?.name || "" },
+          { label: "ID do Membro", value: (a) => a.memberId ?? "" },
+          { label: "Visitante", value: (a) => a.visitorName || "" },
+          { label: "Telefone do Visitante", value: (a) => a.visitorPhone || "" },
+          { label: "Registrado por", value: (a) => a.recordedByUser?.name || a.recordedByUser?.email || "" },
+          { label: "Registrado em", value: (a) => formatIsoDateBR(a.createdAt) },
+        ]
+      );
+      toast({
+        title: "Backup concluído",
+        description: `${all.length} registro(s) de presença baixado(s).`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao gerar backup";
+      toast({ title: "Erro", description: message, variant: "destructive" });
+    } finally {
+      setIsExportingBackup(false);
+    }
+  };
 
   // Swipe: estados para o gesto de arrastar
   const [swipingMemberId, setSwipingMemberId] = useState<number | null>(null);
@@ -1306,6 +1345,18 @@ const AttendanceControl = () => {
               Registre a presenca dos membros e visitantes nos cultos
             </p>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {isStrictAdmin && (
+              <Button
+                variant="outline"
+                onClick={handleBackup}
+                disabled={isExportingBackup}
+                className="gap-2"
+              >
+                {isExportingBackup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Backup de Dados
+              </Button>
+            )}
           <Dialog open={visitorDialogOpen} onOpenChange={(open) => !open && closeVisitorDialog()}>
             <DialogTrigger asChild>
               <Button
@@ -1362,6 +1413,7 @@ const AttendanceControl = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Alerta quando não pode gerenciar presenças */}

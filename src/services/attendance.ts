@@ -86,4 +86,12 @@ export const attendanceService = {
   async delete(id: number): Promise<void> {
     return api.delete(`/attendance/${id}`);
   },
+
+  /**
+   * Lista todas as presenças do sistema (sem filtros) — usado para backup.
+   * Endpoint /attendance sem query params.
+   */
+  async getAllForBackup(): Promise<Attendance[]> {
+    return api.get<Attendance[]>('/attendance');
+  },
 };

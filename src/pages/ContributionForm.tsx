@@ -10,6 +10,8 @@ import {
   User,
   UserX,
   DollarSign,
+  Check,
+  ChevronsUpDown,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -31,7 +33,9 @@ import {
 } from "@/components/ui/popover";
 import {
   Command,
+  CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -233,9 +237,15 @@ const ContributionForm = () => {
   const [isLoadingData, setIsLoadingData] = useState(isEditing);
   const [errorIndexes, setErrorIndexes] = useState<Set<number>>(new Set());
 
-  // Modo batch (criar) - guardamos o ID como string (vem do Select) e convertemos no submit
+  // Modo batch (criar) - guardamos o ID como string (slug do culto)
   const [serviceScheduleId, setServiceScheduleId] = useState<string>("");
+  const [cultoPickerOpen, setCultoPickerOpen] = useState(false);
   const [items, setItems] = useState<ContributionItemForm[]>([emptyItem()]);
+
+  const selectedService = useMemo(
+    () => services.find((s) => s.id === serviceScheduleId),
+    [services, serviceScheduleId]
+  );
 
   // Modo edição: usamos um único item
   // (carrega no useEffect abaixo e reaproveita a UI do item)
@@ -448,28 +458,68 @@ const ContributionForm = () => {
               <CardDescription>Selecione o culto referente a essas contribuições</CardDescription>
             </CardHeader>
             <CardContent>
-              <Select
-                value={serviceScheduleId || undefined}
-                onValueChange={setServiceScheduleId}
-                disabled={isLoadingServices}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={isLoadingServices ? "Carregando..." : "Selecione o culto"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.length === 0 ? (
-                    <div className="px-3 py-2 text-sm text-muted-foreground">
-                      Nenhum culto cadastrado nos últimos meses
-                    </div>
-                  ) : (
-                    services.map((s) => (
-                      <SelectItem key={s.id} value={String(s.id)}>
-                        {formatIsoDateBR(s.date)} — {s.title} ({s.city})
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <Popover open={cultoPickerOpen} onOpenChange={setCultoPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    type="button"
+                    className={cn(
+                      "w-full justify-between font-normal",
+                      !serviceScheduleId && "text-muted-foreground"
+                    )}
+                    disabled={isLoadingServices}
+                  >
+                    {selectedService
+                      ? `${formatIsoDateBR(selectedService.date)} — ${selectedService.title} (${selectedService.city})`
+                      : isLoadingServices
+                        ? "Carregando..."
+                        : "Selecione o culto"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar por data, título ou cidade..." />
+                    <CommandList className="max-h-[300px]">
+                      {services.length === 0 ? (
+                        <div className="py-4 text-center text-sm text-muted-foreground">
+                          Nenhum culto cadastrado nos últimos meses
+                        </div>
+                      ) : (
+                        <>
+                          <CommandEmpty>Nenhum culto encontrado</CommandEmpty>
+                          <CommandGroup>
+                            {services.map((s) => (
+                              <CommandItem
+                                key={s.id}
+                                value={`${formatIsoDateBR(s.date)} ${s.title} ${s.city}`}
+                                onSelect={() => {
+                                  setServiceScheduleId(s.id);
+                                  setCultoPickerOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    serviceScheduleId === s.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex flex-col">
+                                  <span className="font-medium">
+                                    {formatIsoDateBR(s.date)} — {s.title}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">{s.city}</span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </>
+                      )}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </CardContent>
           </Card>
         )}

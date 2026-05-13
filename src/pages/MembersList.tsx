@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Filter, Loader2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Filter, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -44,6 +44,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import MobileBackButton from '@/components/MobileBackButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { hasPermission } from '@/config/permissions';
+import { downloadCsv, getTimestampSuffix, formatIsoDateBR } from '@/lib/csvExport';
 
 const MembersList = () => {
   const { user: currentUser } = useAuth();
@@ -58,7 +59,59 @@ const MembersList = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const hasLoadedRef = useRef(false);
+
+  const isAdmin = currentUser?.role === 'admin';
+
+  const handleBackup = async () => {
+    setIsExporting(true);
+    try {
+      // Busca TODOS os membros, sem cache nem filtros
+      const all = await membersService.getAll({ useCache: false });
+      downloadCsv(
+        `membros-backup-${getTimestampSuffix()}.csv`,
+        all,
+        [
+          { label: 'ID', value: (m) => m.id },
+          { label: 'Tipo', value: (m) => m.memberType || 'Adulto' },
+          { label: 'Nome', value: (m) => m.name },
+          { label: 'Email', value: (m) => m.email || '' },
+          { label: 'Data de Nascimento', value: (m) => formatIsoDateBR(m.birthDate) },
+          { label: 'Gênero', value: (m) => m.gender },
+          { label: 'Estado Civil', value: (m) => m.maritalStatus || '' },
+          { label: 'Profissão', value: (m) => m.occupation || '' },
+          { label: 'Telefone Principal', value: (m) => m.primaryPhone || '' },
+          { label: 'Telefone Secundário', value: (m) => m.secondaryPhone || '' },
+          { label: 'Contato de Emergência', value: (m) => m.emergencyContact || '' },
+          { label: 'CEP', value: (m) => m.zipCode || '' },
+          { label: 'Endereço', value: (m) => m.street || '' },
+          { label: 'Número', value: (m) => m.number || '' },
+          { label: 'Complemento', value: (m) => m.complement || '' },
+          { label: 'Bairro', value: (m) => m.neighborhood || '' },
+          { label: 'Cidade', value: (m) => m.city || '' },
+          { label: 'Estado', value: (m) => m.state || '' },
+          { label: 'Igreja', value: (m) => m.church || '' },
+          { label: 'Função na Igreja', value: (m) => m.churchRole || '' },
+          { label: 'Status de Membro', value: (m) => m.membershipStatus || '' },
+          { label: 'Data de Batismo', value: (m) => formatIsoDateBR(m.baptismDate) },
+          { label: 'Aceitou Jesus em', value: (m) => formatIsoDateBR(m.joinDate) },
+          { label: 'Consentimento Imagem', value: (m) => (m.imageConsentGiven ? 'Sim' : 'Não') },
+          { label: 'Consentimento Email', value: (m) => (m.emailConsentGiven ? 'Sim' : 'Não') },
+          { label: 'Consentimento WhatsApp', value: (m) => (m.whatsappConsentGiven ? 'Sim' : 'Não') },
+          { label: 'Famílias', value: (m) => (m.familyMemberships || []).map(f => `${f.familyName} (${f.role})`).join('; ') },
+          { label: 'Observações', value: (m) => m.notes || '' },
+          { label: 'Cadastrado em', value: (m) => formatIsoDateBR(m.createdAt) },
+        ]
+      );
+      toast.success(`Backup de ${all.length} membro(s) baixado com sucesso!`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao gerar backup';
+      toast.error(message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     // Só recarrega se for a primeira vez OU se vier com flag de refresh
@@ -169,12 +222,20 @@ const MembersList = () => {
               Gerencie os membros da igreja
             </p>
           </div>
-          {currentUser && hasPermission(currentUser.role, 'members', 'create') && (
-            <Button onClick={() => navigate('/members/new')}>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Membro
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {isAdmin && (
+              <Button variant="outline" onClick={handleBackup} disabled={isExporting} className="gap-2">
+                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Backup de Dados
+              </Button>
+            )}
+            {currentUser && hasPermission(currentUser.role, 'members', 'create') && (
+              <Button onClick={() => navigate('/members/new')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Membro
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filters */}
