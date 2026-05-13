@@ -8,7 +8,8 @@ export type Feature =
   | 'prayer-requests'
   | 'schedules'
   | 'songs'
-  | 'attendance';
+  | 'attendance'
+  | 'contributions';
 
 // Define all possible actions
 export type Action =
@@ -40,6 +41,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     { feature: 'schedules', actions: ['list', 'create', 'edit', 'delete'] },
     { feature: 'songs', actions: ['list', 'create', 'edit', 'delete'] },
     { feature: 'attendance', actions: ['list', 'register'] },
+    { feature: 'contributions', actions: ['list', 'create', 'edit', 'delete'] },
   ],
 
   // Admin2 - Broad access without delete
@@ -64,10 +66,11 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     { feature: 'attendance', actions: ['list', 'register'] },
   ],
 
-  // Treasurer - Financial access and reports (prepared for future features)
+  // Treasurer - Financial access and reports
   treasurer: [
     { feature: 'members', actions: ['list'] },
     { feature: 'attendance', actions: ['list'] },
+    { feature: 'contributions', actions: ['list', 'create', 'edit', 'delete'] },
   ],
 
   // Receptionist - Front desk, attendance, and first screening

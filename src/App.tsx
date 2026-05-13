@@ -25,6 +25,8 @@ import Schedules from "./pages/Schedules";
 import ScheduleForm from "./pages/ScheduleForm";
 import ServiceScheduleManagement from "./pages/ServiceScheduleManagement";
 import CalendarPage from "./pages/CalendarPage";
+import Contributions from "./pages/Contributions";
+import ContributionForm from "./pages/ContributionForm";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +66,9 @@ const App = () => (
           <Route path="/schedules/edit/:id" element={<ProtectedRoute><ScheduleForm /></ProtectedRoute>} />
           <Route path="/service-schedule" element={<ProtectedRoute><ServiceScheduleManagement /></ProtectedRoute>} />
           <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+          <Route path="/contributions" element={<ProtectedRoute><Contributions /></ProtectedRoute>} />
+          <Route path="/contributions/new" element={<ProtectedRoute><ContributionForm /></ProtectedRoute>} />
+          <Route path="/contributions/edit/:id" element={<ProtectedRoute><ContributionForm /></ProtectedRoute>} />
 
           {/* Catch-all Route */}
           <Route path="*" element={<NotFound />} />

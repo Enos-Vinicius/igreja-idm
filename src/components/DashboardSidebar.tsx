@@ -15,6 +15,7 @@ import {
   Heart,
   CreditCard,
   Church,
+  DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -124,6 +125,19 @@ const menuGroups: MenuGroup[] = [
         icon: CalendarCheck,
         path: "/calendar",
         // Calendar might not have specific permissions yet
+      },
+    ],
+  },
+  {
+    id: "finances",
+    label: "Finanças",
+    items: [
+      {
+        id: "contributions",
+        label: "Contribuições",
+        icon: DollarSign,
+        path: "/contributions",
+        feature: "contributions",
       },
     ],
   },
