@@ -1,5 +1,5 @@
 import * as React from "react";
-import { format, parse, isValid } from "date-fns";
+import { format, parse, isValid, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 
@@ -64,6 +64,15 @@ function formatDateToISO(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
 
+// Compara apenas o dia (ignora a hora) para que minDate/maxDate criados com
+// new Date() não invalidem o próprio dia de hoje
+function isWithinBounds(date: Date, minDate?: Date, maxDate?: Date): boolean {
+  const day = startOfDay(date);
+  if (minDate && day < startOfDay(minDate)) return false;
+  if (maxDate && day > startOfDay(maxDate)) return false;
+  return true;
+}
+
 // Apply DD/MM/YYYY mask to input
 function applyDateMask(value: string): string {
   // Remove all non-numeric characters
@@ -116,12 +125,8 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       if (masked.length === 10) {
         const parsed = parseDisplayDate(masked);
         if (parsed) {
-          // Check if within bounds
-          const isInBounds =
-            (!minDate || parsed >= minDate) &&
-            (!maxDate || parsed <= maxDate);
-
-          if (isInBounds) {
+          // Check if within bounds (comparação por dia, não por instante)
+          if (isWithinBounds(parsed, minDate, maxDate)) {
             if (onChange) {
               onChange(parsed);
             }
@@ -215,12 +220,7 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               mode="single"
               selected={calendarValue}
               onSelect={handleCalendarSelect}
-              disabled={(date) => {
-                // Only disable if constraints are provided
-                const isTooLate = maxDate ? date > maxDate : false;
-                const isTooEarly = minDate ? date < minDate : false;
-                return isTooLate || isTooEarly;
-              }}
+              disabled={(date) => !isWithinBounds(date, minDate, maxDate)}
               initialFocus
               locale={ptBR}
               captionLayout="dropdown-buttons"

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format, parse } from "date-fns";
+import { format, parse, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Plus,
@@ -126,8 +126,29 @@ const ServiceScheduleManagement = () => {
     return { address: "", mapsUrl: "" };
   };
 
+  const validateForm = () => {
+    if (!formData.title.trim()) {
+      toast.error("Informe o título do culto");
+      return false;
+    }
+    if (!formData.city) {
+      toast.error("Selecione a igreja");
+      return false;
+    }
+    if (!formData.date) {
+      toast.error("Informe uma data válida (DD/MM/AAAA)");
+      return false;
+    }
+    if (!formData.time) {
+      toast.error("Informe o horário de início");
+      return false;
+    }
+    return true;
+  };
+
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setIsSubmitting(true);
 
     try {
@@ -161,6 +182,7 @@ const ServiceScheduleManagement = () => {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService) return;
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
@@ -461,7 +483,9 @@ const ServiceScheduleManagement = () => {
                     id="date"
                     value={formData.date}
                     onChangeString={(value) => setFormData({ ...formData, date: value })}
-                    minDate={new Date()}
+                    minDate={startOfDay(new Date())}
+                    fromYear={new Date().getFullYear()}
+                    toYear={new Date().getFullYear() + 5}
                   />
                 </div>
 
@@ -578,7 +602,8 @@ const ServiceScheduleManagement = () => {
                     id="edit-date"
                     value={formData.date}
                     onChangeString={(value) => setFormData({ ...formData, date: value })}
-                    minDate={new Date()}
+                    fromYear={new Date().getFullYear() - 5}
+                    toYear={new Date().getFullYear() + 5}
                   />
                 </div>
 
