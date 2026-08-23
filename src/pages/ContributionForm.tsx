@@ -78,6 +78,19 @@ const emptyItem = (): ContributionItemForm => ({
   notes: "",
 });
 
+// Filtro do seletor de culto
+const RECENT_FILTER = "recent"; // mês atual + mês anterior (padrão)
+const ALL_MONTHS = "all";
+const YEARS_BACK = 5; // quantos anos anteriores ficam disponíveis no filtro
+
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => {
+  const label = new Date(2000, i, 1).toLocaleDateString("pt-BR", { month: "long" });
+  return {
+    value: String(i + 1).padStart(2, "0"),
+    label: label.charAt(0).toUpperCase() + label.slice(1),
+  };
+});
+
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
@@ -242,10 +255,17 @@ const ContributionForm = () => {
   const [cultoPickerOpen, setCultoPickerOpen] = useState(false);
   const [items, setItems] = useState<ContributionItemForm[]>([emptyItem()]);
 
-  const selectedService = useMemo(
-    () => services.find((s) => s.id === serviceScheduleId),
-    [services, serviceScheduleId]
-  );
+  // Filtro do seletor de culto: RECENT_FILTER = comportamento padrão (mês atual + anterior)
+  const [filterYear, setFilterYear] = useState<string>(RECENT_FILTER);
+  const [filterMonth, setFilterMonth] = useState<string>(ALL_MONTHS);
+
+  // Guardamos o culto escolhido para o rótulo não se perder ao trocar o filtro
+  const [selectedService, setSelectedService] = useState<ServiceSchedule | null>(null);
+
+  const yearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: YEARS_BACK + 1 }, (_, i) => String(currentYear - i));
+  }, []);
 
   // Modo edição: usamos um único item
   // (carrega no useEffect abaixo e reaproveita a UI do item)
@@ -256,16 +276,33 @@ const ContributionForm = () => {
     const loadServices = async () => {
       setIsLoadingServices(true);
       try {
-        // Busca cultos do mês atual e próximo
+        // Monta a lista de meses (YYYY-MM) a buscar conforme o filtro escolhido
         const today = new Date();
-        const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-        const prevDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
-        const [current, prev] = await Promise.all([
-          serviceScheduleService.getAll({ month: currentMonth }),
-          serviceScheduleService.getAll({ month: prevMonth }),
-        ]);
-        const merged = [...prev, ...current].sort(
+        let months: string[];
+
+        if (filterYear === RECENT_FILTER) {
+          // Padrão: mês atual + mês anterior
+          const prevDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+          months = [
+            `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`,
+            `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`,
+          ];
+        } else if (filterMonth === ALL_MONTHS) {
+          // Ano inteiro: no ano corrente não buscamos meses futuros
+          const lastMonth =
+            filterYear === String(today.getFullYear()) ? today.getMonth() + 1 : 12;
+          months = Array.from(
+            { length: lastMonth },
+            (_, i) => `${filterYear}-${String(i + 1).padStart(2, "0")}`
+          );
+        } else {
+          months = [`${filterYear}-${filterMonth}`];
+        }
+
+        const results = await Promise.all(
+          months.map((month) => serviceScheduleService.getAll({ month }))
+        );
+        const merged = results.flat().sort(
           (a, b) => new Date(`${b.date}T${b.time || "00:00"}`).getTime() - new Date(`${a.date}T${a.time || "00:00"}`).getTime()
         );
         setServices(merged);
@@ -276,7 +313,7 @@ const ContributionForm = () => {
       }
     };
     loadServices();
-  }, [isEditing]);
+  }, [isEditing, filterYear, filterMonth]);
 
   // Carrega contribuição para edição
   useEffect(() => {
@@ -457,7 +494,47 @@ const ContributionForm = () => {
               <CardTitle>Culto</CardTitle>
               <CardDescription>Selecione o culto referente a essas contribuições</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              {/* Filtro de período - por padrão traz os 2 últimos meses */}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Select
+                  value={filterYear}
+                  onValueChange={(value) => {
+                    setFilterYear(value);
+                    setFilterMonth(ALL_MONTHS);
+                  }}
+                >
+                  <SelectTrigger className="sm:w-[220px]">
+                    <SelectValue placeholder="Período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={RECENT_FILTER}>Últimos 2 meses</SelectItem>
+                    {yearOptions.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        Ano {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={filterMonth}
+                  onValueChange={setFilterMonth}
+                  disabled={filterYear === RECENT_FILTER}
+                >
+                  <SelectTrigger className="sm:w-[220px]">
+                    <SelectValue placeholder="Mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_MONTHS}>Todos os meses</SelectItem>
+                    {MONTH_OPTIONS.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Popover open={cultoPickerOpen} onOpenChange={setCultoPickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -484,7 +561,9 @@ const ContributionForm = () => {
                     <CommandList className="max-h-[300px]">
                       {services.length === 0 ? (
                         <div className="py-4 text-center text-sm text-muted-foreground">
-                          Nenhum culto cadastrado nos últimos meses
+                          {filterYear === RECENT_FILTER
+                            ? "Nenhum culto cadastrado nos últimos meses"
+                            : "Nenhum culto cadastrado no período selecionado"}
                         </div>
                       ) : (
                         <>
@@ -496,6 +575,7 @@ const ContributionForm = () => {
                                 value={`${formatIsoDateBR(s.date)} ${s.title} ${s.city}`}
                                 onSelect={() => {
                                   setServiceScheduleId(s.id);
+                                  setSelectedService(s);
                                   setCultoPickerOpen(false);
                                 }}
                               >
