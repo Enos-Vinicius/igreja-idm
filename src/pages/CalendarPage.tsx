@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/config/permissions";
 import { schedulesService } from "@/services/schedules";
+import { parseCivilDate } from "@/lib/date";
 import { useToast } from "@/hooks/use-toast";
 
 type ViewType = "day" | "week" | "month" | "year";
@@ -25,7 +26,8 @@ const scheduleToEvents = (schedules: Schedule[]) => {
     title: schedule.type === "Louvor"
       ? `Louvor - ${schedule.ministers?.map(m => m.name).join(", ") || "Não definido"}`
       : `Palavra - ${schedule.preacher?.name || "Não definido"}`,
-    date: new Date(schedule.date),
+    // Data civil: converter no fuso local, senão o dia 1º cai no mês anterior
+    date: parseCivilDate(schedule.date) ?? new Date(),
     time: "19:00", // Default time for worship services
     color: schedule.type === "Louvor" ? "bg-primary" : "bg-accent",
     type: schedule.type,

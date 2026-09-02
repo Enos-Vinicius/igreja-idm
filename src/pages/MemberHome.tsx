@@ -35,6 +35,7 @@ import {
   FileText,
 } from "lucide-react";
 import { format, differenceInYears, isSameDay, getMonth, getDate } from "date-fns";
+import { civilDateOrder, formatCivilDate, parseCivilDate } from "@/lib/date";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -651,11 +652,10 @@ const MemberHome = () => {
 
       const memberSchedules = schedules
         .filter(schedule => {
-          const scheduleDate = new Date(schedule.date);
-          scheduleDate.setHours(0, 0, 0, 0);
-          return scheduleDate >= today;
+          const scheduleDate = parseCivilDate(schedule.date);
+          return !!scheduleDate && scheduleDate >= today;
         })
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .sort((a, b) => civilDateOrder(a.date) - civilDateOrder(b.date))
         .slice(0, 3); // Limitar a 3 próximas escalas
 
       setUpcomingSchedules(memberSchedules);
@@ -690,11 +690,10 @@ const MemberHome = () => {
 
       let nextServiceSchedule = services
         .filter(service => {
-          const serviceDate = new Date(service.date);
-          serviceDate.setHours(0, 0, 0, 0);
-          return serviceDate >= today;
+          const serviceDate = parseCivilDate(service.date);
+          return !!serviceDate && serviceDate >= today;
         })
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+        .sort((a, b) => civilDateOrder(a.date) - civilDateOrder(b.date))[0];
 
       // Se não encontrou, buscar no próximo mês
       if (!nextServiceSchedule) {
@@ -707,7 +706,7 @@ const MemberHome = () => {
         });
 
         nextServiceSchedule = nextMonthServices
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+          .sort((a, b) => civilDateOrder(a.date) - civilDateOrder(b.date))[0];
       }
 
       setNextService(nextServiceSchedule || null);
@@ -1615,7 +1614,7 @@ END:VCALENDAR`;
                             <span className="text-sm text-muted-foreground">Última presença</span>
                           </div>
                           <span className="text-sm font-medium">
-                            {format(new Date(attendanceStats.lastAttendance.date), "dd/MM/yyyy", { locale: ptBR })}
+                            {formatCivilDate(attendanceStats.lastAttendance.date)}
                           </span>
                         </div>
                       )}

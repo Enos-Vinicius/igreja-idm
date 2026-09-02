@@ -22,6 +22,23 @@ interface RequestOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
+/**
+ * Erro de requisição que preserva o status HTTP. Permite decidir se vale
+ * repetir a chamada (5xx, instância hibernando) ou não (401, 403, 4xx em geral).
+ * A mensagem continua sendo a do servidor, para quem já trata error.message.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly data: unknown;
+
+  constructor(message: string, status: number, data?: unknown) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { skipAuth = false, headers: customHeaders, ...restOptions } = options;
 
@@ -53,13 +70,17 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   if (response.status === 401) {
     removeToken();
     window.dispatchEvent(new CustomEvent('auth:session-expired'));
-    throw new Error('Sessão expirada. Por favor, faça login novamente.');
+    throw new ApiError('Sessão expirada. Por favor, faça login novamente.', 401);
   }
 
   // Handle non-OK responses
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Erro na requisição: ${response.status}`);
+    throw new ApiError(
+      errorData.message || `Erro na requisição: ${response.status}`,
+      response.status,
+      errorData
+    );
   }
 
   // Handle empty responses

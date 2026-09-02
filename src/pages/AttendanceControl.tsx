@@ -280,6 +280,54 @@ const AttendanceControl = () => {
     ).length;
   }, [members, presentMemberIds, memberChurchFilter]);
 
+  /**
+   * Aplica uma presença de MEMBRO nas estatísticas locais usando a mesma conta
+   * da API: só entra na taxa quem é Ativo E pertence à igreja do culto. Membro
+   * da outra igreja, congregado e inativo aparecem na lista mas ficam fora do
+   * numerador — foi o que fazia a taxa passar de 100%.
+   *
+   * Quando o membro não é conhecido localmente (não está na lista de ativos),
+   * a taxa fica parada até o próximo refresh em vez de ser adivinhada.
+   */
+  const applyMemberPresenceDelta = useCallback(
+    (prev: AttendanceStats | null, delta: 1 | -1, member?: Member): AttendanceStats | null => {
+      if (!prev) return null;
+
+      const presentMembers = Math.max(0, prev.presentMembers + delta);
+      const isKnown = !!member;
+      const isActive = member?.membershipStatus === "Ativo";
+      const isSameChurch = !!member?.church && member.church === selectedService?.city;
+      const countsForRate = isKnown && isActive && isSameChurch;
+
+      const bump = (current: number | undefined, applies: boolean) =>
+        current === undefined ? undefined : Math.max(0, current + (applies ? delta : 0));
+
+      const activeMembersPresent = bump(prev.activeMembersPresent, countsForRate);
+      const numerator = activeMembersPresent ?? prev.activeMembersPresent ?? presentMembers;
+
+      return {
+        ...prev,
+        presentMembers,
+        activeMembersPresent,
+        otherChurchMembers: bump(prev.otherChurchMembers, isKnown && isActive && !isSameChurch),
+        nonActiveMembers: bump(prev.nonActiveMembers, isKnown && !isActive),
+        absentMembers: Math.max(0, prev.totalMembers - numerator),
+        attendanceRate:
+          prev.totalMembers > 0
+            ? Math.min(100, Math.round((numerator / prev.totalMembers) * 100))
+            : 0,
+      };
+    },
+    [selectedService]
+  );
+
+  /** Visitante não entra na taxa nem em presentMembers — só no próprio contador. */
+  const applyVisitorPresenceDelta = useCallback(
+    (prev: AttendanceStats | null, delta: 1 | -1): AttendanceStats | null =>
+      prev ? { ...prev, visitors: Math.max(0, (prev.visitors ?? 0) + delta) } : null,
+    []
+  );
+
   // Função para recarregar dados após mudanças
   const reloadData = useCallback(async () => {
     if (!selectedService) return;
@@ -618,12 +666,7 @@ const AttendanceControl = () => {
       setAttendances(prev => prev.filter(a => a.memberId !== memberId));
 
       // Atualiza stats IMEDIATAMENTE
-      setStats(prev => prev ? {
-        ...prev,
-        presentMembers: Math.max(0, prev.presentMembers - 1),
-        absentMembers: prev.absentMembers + 1,
-        attendanceRate: Math.round(((prev.presentMembers - 1) / prev.totalMembers) * 100),
-      } : null);
+      setStats(prev => applyMemberPresenceDelta(prev, -1, member));
 
       // Chama API em background
       try {
@@ -682,12 +725,7 @@ const AttendanceControl = () => {
       setAttendances(prev => [...prev, tempAttendance]);
 
       // Atualiza stats IMEDIATAMENTE
-      setStats(prev => prev ? {
-        ...prev,
-        presentMembers: prev.presentMembers + 1,
-        absentMembers: Math.max(0, prev.absentMembers - 1),
-        attendanceRate: Math.round(((prev.presentMembers + 1) / prev.totalMembers) * 100),
-      } : null);
+      setStats(prev => applyMemberPresenceDelta(prev, 1, member));
 
       // Chama API em background
       try {
@@ -786,12 +824,7 @@ const AttendanceControl = () => {
     setAttendances(prev => [...prev, tempAttendance]);
 
     // Atualiza stats IMEDIATAMENTE
-    setStats(prev => prev ? {
-      ...prev,
-      presentMembers: prev.presentMembers + 1,
-      absentMembers: Math.max(0, prev.absentMembers - 1),
-      attendanceRate: Math.round(((prev.presentMembers + 1) / prev.totalMembers) * 100),
-    } : null);
+    setStats(prev => applyMemberPresenceDelta(prev, 1, member));
 
     // Chama API em background
     try {
@@ -837,7 +870,7 @@ const AttendanceControl = () => {
         return newSet;
       });
     }
-  }, [selectedService, toast, attendances, stats, setPendingSwipes]);
+  }, [selectedService, toast, attendances, stats, setPendingSwipes, applyMemberPresenceDelta]);
 
   // Swipe: remover presença via swipe esquerda (mobile)
   const handleSwipeRemovePresent = useCallback(async (memberId: number, memberName: string) => {
@@ -868,12 +901,8 @@ const AttendanceControl = () => {
     setAttendances(prev => prev.filter(a => a.memberId !== memberId));
 
     // Atualiza stats IMEDIATAMENTE
-    setStats(prev => prev ? {
-      ...prev,
-      presentMembers: Math.max(0, prev.presentMembers - 1),
-      absentMembers: prev.absentMembers + 1,
-      attendanceRate: Math.round(((prev.presentMembers - 1) / prev.totalMembers) * 100),
-    } : null);
+    const removedMember = members.find(m => m.id === memberId);
+    setStats(prev => applyMemberPresenceDelta(prev, -1, removedMember));
 
     // Chama API em background
     try {
@@ -903,7 +932,7 @@ const AttendanceControl = () => {
         return newSet;
       });
     }
-  }, [selectedService, toast, attendances, stats, setPendingSwipes]);
+  }, [selectedService, toast, attendances, stats, setPendingSwipes, applyMemberPresenceDelta, members]);
 
   // Touch handlers para swipe
   const handleTouchStart = useCallback((e: React.TouchEvent, memberId: number) => {
@@ -1065,12 +1094,8 @@ const AttendanceControl = () => {
     // Adiciona IMEDIATAMENTE à lista
     setAttendances(prev => [...prev, tempAttendance]);
 
-    // Atualiza stats IMEDIATAMENTE (visitantes não contam nos stats de membros, mas incrementa o total presente)
-    setStats(prev => prev ? {
-      ...prev,
-      presentMembers: prev.presentMembers + 1,
-      attendanceRate: Math.round(((prev.presentMembers + 1) / prev.totalMembers) * 100),
-    } : null);
+    // Atualiza stats IMEDIATAMENTE (visitante conta em visitors, não em presentMembers nem na taxa)
+    setStats(prev => applyVisitorPresenceDelta(prev, 1));
 
     // Limpa campos e fecha dialog IMEDIATAMENTE
     const savedVisitorName = visitorName.trim();
@@ -1269,13 +1294,7 @@ const AttendanceControl = () => {
     setAttendances(prev => prev.filter(a => a.id !== attendance.id));
 
     // Atualiza stats IMEDIATAMENTE
-    setStats(prev => prev ? {
-      ...prev,
-      presentMembers: Math.max(0, prev.presentMembers - 1),
-      attendanceRate: prev.totalMembers > 0
-        ? Math.round(((prev.presentMembers - 1) / prev.totalMembers) * 100)
-        : 0,
-    } : null);
+    setStats(prev => applyVisitorPresenceDelta(prev, -1));
 
     // Chama API em background
     try {
@@ -1733,6 +1752,30 @@ const AttendanceControl = () => {
               </CardContent>
             </Card>
             </div>
+
+            {/* Composição dos presentes.
+                "Presentes" conta todo mundo com cadastro que entrou na sala; a taxa
+                conta só membros Ativo da igreja do culto. Sem esta linha, algo como
+                "71 presentes, 81%" parece erro de soma. A garantia aritmética da API é
+                ativos + outra igreja + não-ativos = presentes. */}
+            {stats && stats.activeMembersPresent !== undefined && (
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {stats.presentMembers} membro(s) na sala
+                </span>
+                {": "}
+                {stats.activeMembersPresent} ativo(s)
+                {selectedService?.city ? ` de ${selectedService.city}` : ""}
+                {stats.otherChurchMembers ? ` · ${stats.otherChurchMembers} de outra igreja` : ""}
+                {stats.nonActiveMembers ? ` · ${stats.nonActiveMembers} não-ativo(s)` : ""}
+                {(stats.visitors ?? visitorsPresent)
+                  ? ` · ${stats.visitors ?? visitorsPresent} visitante(s)`
+                  : ""}
+                {". "}
+                A taxa de {stats.attendanceRate}% considera apenas membros ativos da igreja onde o
+                culto aconteceu.
+              </p>
+            )}
           </div>
 
         {/* Visitantes */}

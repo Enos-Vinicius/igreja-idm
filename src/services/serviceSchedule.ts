@@ -7,7 +7,12 @@ import {
 } from "@/types/serviceSchedule";
 
 export const serviceScheduleService = {
-  // Listar todos os cultos (com filtros opcionais)
+  /**
+   * Listar cultos.
+   *
+   * Sempre envie `month`: sem filtro a resposta traz a agenda inteira (530+
+   * cultos hoje, ~1,1 s só nessa consulta) e a lista só cresce.
+   */
   async getAll(filters?: ServiceScheduleFilters): Promise<ServiceSchedule[]> {
     const params = new URLSearchParams();
 

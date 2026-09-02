@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { ApiError } from "@/services/api";
 import { serviceScheduleService } from "@/services/serviceSchedule";
 import { ServiceSchedule, CreateServiceScheduleDto } from "@/types/serviceSchedule";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,6 +74,8 @@ const ServiceScheduleManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [duplicateServices, setDuplicateServices] = useState<ServiceSchedule[]>([]);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceSchedule | null>(null);
 
   // Form data
@@ -85,6 +88,7 @@ const ServiceScheduleManagement = () => {
     date: "",
     time: "19:00",
     endTime: "",
+    hasKidsMinistry: false,
   });
 
   useEffect(() => {
@@ -146,11 +150,22 @@ const ServiceScheduleManagement = () => {
     return true;
   };
 
-  const handleCreateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    setIsSubmitting(true);
+  /**
+   * A API não impede mais duplicata por data e cidade: a unicidade passou a ser
+   * do identificador, justamente para caber mais de um culto na mesma cidade no
+   * mesmo dia. Avisar sobre repetição virou responsabilidade desta tela — sem
+   * isso a agenda pode mostrar o mesmo domingo duas vezes.
+   */
+  const findServicesOnSameDate = async (date: string, city: string) => {
+    const existing = await serviceScheduleService.getAll({
+      month: date.slice(0, 7),
+      church: city,
+    });
+    return existing.filter((service) => service.date === date && service.city === city);
+  };
 
+  const createService = async () => {
+    setIsSubmitting(true);
     try {
       const id = generateId(formData.date, formData.city, formData.title);
       const cityDetails = getCityDetails(formData.city);
@@ -173,10 +188,36 @@ const ServiceScheduleManagement = () => {
       loadServices();
     } catch (error) {
       console.error("Erro ao criar culto:", error);
-      toast.error("Erro ao criar culto");
+      if (error instanceof ApiError && error.status === 409) {
+        toast.error("Já existe um culto com este identificador. Mude o título ou a data.");
+      } else {
+        toast.error(error instanceof Error ? error.message : "Erro ao criar culto");
+      }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    try {
+      const sameDate = await findServicesOnSameDate(formData.date, formData.city);
+      if (sameDate.length > 0) {
+        setDuplicateServices(sameDate);
+        setShowDuplicateDialog(true);
+        return;
+      }
+    } catch (error) {
+      // Falha na checagem não deve impedir o cadastro — segue e deixa a API decidir
+      console.error("Erro ao checar cultos da data:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+
+    await createService();
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -262,6 +303,7 @@ const ServiceScheduleManagement = () => {
       date: "",
       time: "19:00",
       endTime: "",
+      hasKidsMinistry: false,
     });
     setSelectedService(null);
   };
@@ -681,6 +723,43 @@ const ServiceScheduleManagement = () => {
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Deletar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Aviso de culto já cadastrado na mesma data e igreja */}
+        <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Já existe culto nesta data</AlertDialogTitle>
+              <AlertDialogDescription>
+                {formData.city} já tem {duplicateServices.length === 1 ? "um culto" : `${duplicateServices.length} cultos`}{" "}
+                em {formatServiceDate(formData.date).restOfDate}. Cadastrar de novo pode deixar a
+                agenda em duplicidade.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <ul className="space-y-1 rounded-md bg-muted/50 p-3 text-sm">
+              {duplicateServices.map((service) => (
+                <li key={service.id} className="flex items-baseline justify-between gap-3">
+                  <span className="truncate text-foreground">{service.title}</span>
+                  <span className="shrink-0 text-muted-foreground">{service.time.slice(0, 5)}</span>
+                </li>
+              ))}
+            </ul>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isSubmitting}>Revisar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setShowDuplicateDialog(false);
+                  createService();
+                }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Cadastrar mesmo assim
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

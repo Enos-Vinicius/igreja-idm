@@ -46,10 +46,25 @@ export interface AttendanceListResponse {
 }
 
 export interface AttendanceStats {
+  /** Membros Ativo da igreja onde o culto aconteceu — denominador da taxa. */
   totalMembers: number;
+  /**
+   * Membros na sala, de qualquer igreja e qualquer status (não inclui visitantes).
+   * Preservado de propósito para não mudar o número que a tela já mostrava — mas
+   * ele e a taxa contam coisas diferentes, então a tela precisa explicar a diferença
+   * com os campos abaixo.
+   */
   presentMembers: number;
+  /** Numerador da taxa: presentes que são Ativo E da igreja do culto. */
+  activeMembersPresent?: number;
   absentMembers: number;
+  /** Nunca passa de 100: activeMembersPresent / totalMembers. */
   attendanceRate: number;
+  visitors?: number;
+  /** Presentes que são membros da outra igreja — na lista, fora da conta. */
+  otherChurchMembers?: number;
+  /** Presentes que não são Ativo (congregado, inativo) — na lista, fora da conta. */
+  nonActiveMembers?: number;
 }
 
 export interface AttendanceToggleResponse {

@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
+import { parseCivilDate } from "@/lib/date";
 import { ptBR } from "date-fns/locale";
 import {
   ArrowLeft,
@@ -221,7 +222,7 @@ const ScheduleForm = () => {
 
           if (schedule.type === "Louvor") {
             worshipForm.reset({
-              date: new Date(schedule.date),
+              date: parseCivilDate(schedule.date) ?? undefined,
               ministerIds: schedule.ministers.map(m => m.id),
               category: schedule.category,
               church: schedule.church,
@@ -231,7 +232,7 @@ const ScheduleForm = () => {
             setSelectedMinisters(schedule.ministers as Member[]);
           } else {
             preachingForm.reset({
-              date: new Date(schedule.date),
+              date: parseCivilDate(schedule.date) ?? undefined,
               preacherId: schedule.preacher.id.toString(),
               category: schedule.category,
               church: schedule.church,

@@ -55,6 +55,17 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 215 28% 25%;
     --sidebar-ring: 221 83% 40%;
+
+    /* Paleta de gráficos (data-viz) — hexadecimais validados para CVD e
+       contraste sobre a superfície dos cards. Ordem fixa: nunca cicle slots. */
+    --viz-1: #2a78d6;   /* azul   — slot categórico 1 / série única */
+    --viz-2: #eb6834;   /* laranja — slot 2 */
+    --viz-3: #1baf7a;   /* aqua   — slot 3 */
+    --viz-4: #eda100;   /* amarelo — slot 4 */
+    --viz-track: #cde2fb;      /* trilha de medidor: passo claro do mesmo azul */
+    --viz-good: #0ca30c;       /* status — fixos, nunca tematizados */
+    --viz-warning: #fab219;
+    --viz-critical: #d03b3b;
   }
 
   .dark {
@@ -85,6 +96,16 @@
     --border: 215 28% 20%;
     --input: 215 28% 20%;
     --ring: 221 83% 53%;
+
+    /* Paleta de gráficos — mesmos matizes, passos escolhidos para a superfície escura */
+    --viz-1: #3987e5;
+    --viz-2: #d95926;
+    --viz-3: #199e70;
+    --viz-4: #c98500;
+    --viz-track: #184f95;
+    --viz-good: #0ca30c;
+    --viz-warning: #fab219;
+    --viz-critical: #d03b3b;
   }
 }
 

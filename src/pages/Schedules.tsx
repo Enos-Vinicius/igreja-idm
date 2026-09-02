@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, Search, Edit, Trash2, Calendar, Music, BookOpen, Loader2, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatCivilDate } from "@/lib/date";
 import DashboardLayout from "@/components/DashboardLayout";
 import MobileBackButton from "@/components/MobileBackButton";
 import { Button } from "@/components/ui/button";
@@ -317,10 +318,10 @@ const Schedules = () => {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            {format(new Date(schedule.date), "dd 'de' MMMM", { locale: ptBR })}
+                            {formatCivilDate(schedule.date, "dd 'de' MMMM")}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {format(new Date(schedule.date), "EEEE", { locale: ptBR })}
+                            {formatCivilDate(schedule.date, "EEEE")}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -387,7 +388,7 @@ const Schedules = () => {
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
                                       Tem certeza que deseja excluir esta escala de{" "}
-                                      {format(new Date(schedule.date), "dd/MM/yyyy")}? Esta ação não
+                                      {formatCivilDate(schedule.date)}? Esta ação não
                                       pode ser desfeita.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
